@@ -51,7 +51,7 @@ def load_bitext(sourcefn, targetfn, alignfn):
             out_target.append(target.strip().lower().split())
             out_align.append(alignment.strip().split())
             count += 1
-            # if count == (10 * 1000): break
+            if count == (20 * 1000): break
     return list(zip(out_source, out_target, out_align))
 
 def get_argparser():
@@ -61,6 +61,21 @@ def get_argparser():
     parser.add_argument('--targettext', type=str, required=True)
     parser.add_argument('--alignments', type=str, required=True)
     return parser
+
+def repl(tagger, cfd):
+    while True:
+        ss = None
+        try:
+            ss = input("en> ")
+        except:
+            pass
+        if not ss: return
+        ss = ss.lower().split()
+        print("source sentence:", ss)
+        tagged = skinnyhmm.mfs(tagger, cfd, ss)
+        print("mfs:", " ".join([t for (w, t) in tagged]))
+        tagged = skinnyhmm.viterbi(tagger, cfd, ss)
+        print("viterbi:", " ".join([t for (w, t) in tagged]))
 
 def main():
     parser = get_argparser()
@@ -74,14 +89,7 @@ def main():
     print("training on {0} sentences.".format(len(triple_sentences)))
     tagger, cfd = build_tagger_and_cfd(triple_sentences)
 
-    print(cfd)
-
     print(tagger)
-    ss = "You will be aware from the press and television that there have been a number of bomb explosions and killings in Sri Lanka .".lower().split()
-    print("first source sentence", ss)
-    print("translate to Spanish.")
-    tagged = skinnyhmm.mfs(tagger, cfd, ss)
-    print(tagged)
-    print(" ".join([t for (w, t) in tagged]))
+    repl(tagger, cfd)
 
 if __name__ == "__main__": main()
