@@ -36,7 +36,7 @@ def build_tagger_and_cfd(triple_sentences):
     tagger = nltk.tag.HiddenMarkovModelTagger.train(sentences)
     return tagger, cfd
 
-def load_bitext(sourcefn, targetfn, alignfn):
+def load_bitext(sourcefn, targetfn, alignfn, fast=False):
     """Take in three filenames, return a list of (source,target,alignment)
     lists a list of 3-tuples of lists."""
     out_source = []
@@ -51,7 +51,7 @@ def load_bitext(sourcefn, targetfn, alignfn):
             out_target.append(target.strip().lower().split())
             out_align.append(alignment.strip().split())
             count += 1
-            if count == (20 * 1000): break
+            if count == (20 * 1000) and fast: break
     return list(zip(out_source, out_target, out_align))
 
 def get_argparser():
@@ -60,6 +60,7 @@ def get_argparser():
     parser.add_argument('--sourcetext', type=str, required=True)
     parser.add_argument('--targettext', type=str, required=True)
     parser.add_argument('--alignments', type=str, required=True)
+    parser.add_argument('--fast', type=bool, default=False, required=False)
     return parser
 
 def repl(tagger, cfd):
@@ -69,7 +70,9 @@ def repl(tagger, cfd):
             ss = input("en> ")
         except:
             pass
-        if not ss: return
+        if not ss:
+            print()
+            return
         ss = ss.lower().split()
         print("source sentence:", ss)
         tagged = skinnyhmm.mfs(tagger, cfd, ss)
@@ -84,8 +87,9 @@ def main():
     sourcefn = args.sourcetext
     targetfn = args.targettext
     alignmentfn = args.alignments
+    fast = args.fast
 
-    triple_sentences = load_bitext(sourcefn, targetfn, alignmentfn)
+    triple_sentences = load_bitext(sourcefn, targetfn, alignmentfn, fast=fast)
     print("training on {0} sentences.".format(len(triple_sentences)))
     tagger, cfd = build_tagger_and_cfd(triple_sentences)
 
