@@ -80,6 +80,12 @@ def repl(tagger, cfd):
         tagged = skinnyhmm.viterbi(tagger, cfd, ss)
         print("viterbi:", " ".join([t for (w, t) in tagged]))
 
+def get_tagger_and_cfd(sourcefn, targetfn, alignmentfn, fast):
+    triple_sentences = load_bitext(sourcefn, targetfn, alignmentfn, fast=fast)
+    print("training on {0} sentences.".format(len(triple_sentences)))
+    tagger, cfd = build_tagger_and_cfd(triple_sentences)
+    return tagger, cfd
+
 def main():
     parser = get_argparser()
     args = parser.parse_args()
@@ -89,10 +95,7 @@ def main():
     alignmentfn = args.alignments
     fast = args.fast
 
-    triple_sentences = load_bitext(sourcefn, targetfn, alignmentfn, fast=fast)
-    print("training on {0} sentences.".format(len(triple_sentences)))
-    tagger, cfd = build_tagger_and_cfd(triple_sentences)
-
+    tagger, cfd = get_tagger_and_cfd(sourcefn, targetfn, alignmentfn, fast)
     print(tagger)
     repl(tagger, cfd)
 

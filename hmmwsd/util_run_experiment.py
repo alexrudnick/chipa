@@ -41,6 +41,10 @@ def get_argparser():
     parser.add_argument('--sourceword', type=str, required=True)
     parser.add_argument('--targetlang', type=str, required=True)
     parser.add_argument('--trialdir', type=str, required=True)
+    parser.add_argument('--sourcetext', type=str, required=True)
+    parser.add_argument('--targettext', type=str, required=True)
+    parser.add_argument('--alignments', type=str, required=True)
+    parser.add_argument('--fast', type=bool, default=False, required=False)
     return parser
 
 def get_test_instances(trialdir, sourceword):
