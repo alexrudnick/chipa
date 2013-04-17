@@ -4,10 +4,15 @@ import argparse
 from operator import itemgetter
 import pickle
 import nltk
+from nltk.probability import ConditionalFreqDist
+from nltk.probability import ConditionalProbDist
+from nltk.probability import ELEProbDist
 
 import skinnyhmm
 import util_run_experiment
 import treetagger
+
+START = "***START***"
 
 def target_words_for_each_source_word(ss, ts, alignment):
     """Given a list of tokens in source language, a list of tokens in target
@@ -38,6 +43,27 @@ def build_tagger_and_cfd(triple_sentences):
 
     tagger = nltk.tag.HiddenMarkovModelTagger.train(sentences)
     return tagger, cfd
+
+def transitions_emissions(triple_sentences):
+    """Return some CFDs for the transitions and the emissions. Note that the
+    transitions are over target labels."""
+
+    ## cfd = nltk.probability.ConditionalFreqDist()
+    transitions = ConditionalFreqDist()
+    emissions = ConditionalFreqDist()
+    sentences = []
+
+    for (ss, ts, alignment) in triple_sentences:
+        tws = target_words_for_each_source_word(ss, ts, alignment)
+        tagged = list(zip(ss, tws))
+        ## XXX(alexr): this is sort of ridiculous
+        nozeros = [(source, target) for (source,target) in tagged if target]
+        prevs = (START, START)
+        for (source, target) in nozeros:
+            emissions[target].inc(source)
+            transitions[prevs].inc(target)
+            prevs = prevs[1:] + (target,)
+    return transitions, emissions
 
 def load_bitext(args):
     """Take in three filenames, return a list of (source,target,alignment)
@@ -114,20 +140,26 @@ def get_tagger_and_cfd(args):
     tagger, cfd = build_tagger_and_cfd(triple_sentences)
     return tagger, cfd
 
+def get_transition_emission_cfds(args):
+    triple_sentences = load_bitext(args)
+    print("training on {0} sentences.".format(len(triple_sentences)))
+    transitions, emissions = transitions_emissions(triple_sentences)
+    return transitions, emissions
+
 def main():
     parser = get_argparser()
     args = parser.parse_args()
     target = args.targetlang
     assert target in util_run_experiment.all_target_languages
-    tagger, cfd = get_tagger_and_cfd(args)
-    print(tagger)
+    transitions, emissions = get_transition_emission_cfds(args)
 
-    picklefn = "pickles/{0}.tagger.pickle".format(target)
+    picklefn = "pickles/{0}.trans.pickle".format(target)
     with open(picklefn, "wb") as outfile:
-        pass
-        # pickle.dump(tagger, outfile)
-    picklefn = "pickles/{0}.cfd.pickle".format(target)
+        pickle.dump(transitions, outfile)
+    picklefn = "pickles/{0}.emit.pickle".format(target)
     with open(picklefn, "wb") as outfile:
-        pickle.dump(cfd, outfile)
+        pickle.dump(emissions, outfile)
+    trans_cpd = ConditionalProbDist(transitions, ELEProbDist)
+    emit_cpd = ConditionalProbDist(emissions, ELEProbDist)
 
 if __name__ == "__main__": main()
