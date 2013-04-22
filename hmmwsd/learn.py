@@ -7,12 +7,13 @@ import nltk
 from nltk.probability import ConditionalFreqDist
 from nltk.probability import ConditionalProbDist
 from nltk.probability import ELEProbDist
+from nltk.model import NgramModel
 
 import skinnyhmm
+from skinnyhmm import START
+from skinnyhmm import UNTRANSLATED
 import util_run_experiment
 import treetagger
-
-START = "***START***"
 
 def target_words_for_each_source_word(ss, ts, alignment):
     """Given a list of tokens in source language, a list of tokens in target
@@ -25,25 +26,6 @@ def target_words_for_each_source_word(ss, ts, alignment):
         out[si].append(ts[ti])
     return [" ".join(targetwords) for targetwords in out]
 
-def build_tagger_and_cfd(triple_sentences):
-    """Builds the tagger and a conditional freqdist."""
-
-    cfd = nltk.probability.ConditionalFreqDist()
-    sentences = []
-    for (ss, ts, alignment) in triple_sentences:
-        tws = target_words_for_each_source_word(ss, ts, alignment)
-        tagged = list(zip(ss, tws))
-        ## XXX(alexr): this is sort of ridiculous
-        nozeros = [(source, target) for (source,target) in tagged if target]
-
-        for (source, target) in nozeros:
-            cfd[source].inc(target)
-        # print(nozeros)
-        sentences.append(nozeros)
-
-    tagger = nltk.tag.HiddenMarkovModelTagger.train(sentences)
-    return tagger, cfd
-
 def transitions_emissions(triple_sentences):
     """Return some CFDs for the transitions and the emissions. Note that the
     transitions are over target labels."""
@@ -51,12 +33,10 @@ def transitions_emissions(triple_sentences):
     ## cfd = nltk.probability.ConditionalFreqDist()
     transitions = ConditionalFreqDist()
     emissions = ConditionalFreqDist()
-    sentences = []
-
+    emissions[UNTRANSLATED].inc(UNTRANSLATED)
     for (ss, ts, alignment) in triple_sentences:
         tws = target_words_for_each_source_word(ss, ts, alignment)
         tagged = list(zip(ss, tws))
-        ## XXX(alexr): this is sort of ridiculous
         nozeros = [(source, target) for (source,target) in tagged if target]
         prevs = (START, START)
         for (source, target) in nozeros:
@@ -64,6 +44,21 @@ def transitions_emissions(triple_sentences):
             transitions[prevs].inc(target)
             prevs = prevs[1:] + (target,)
     return transitions, emissions
+
+def get_target_language_sentences(triple_sentences):
+    """Return all of the "sentences" over the target language, used for training
+    the Source-Order language model."""
+    sentences = []
+    for (ss, ts, alignment) in triple_sentences:
+        tws = target_words_for_each_source_word(ss, ts, alignment)
+        sentence = []
+        for label in tws:
+            if label:
+                sentence.append(label)
+            else:
+                sentence.append(UNTRANSLATED)
+        sentences.append(sentence)
+    return sentences
 
 def load_bitext(args):
     """Take in three filenames, return a list of (source,target,alignment)
@@ -87,7 +82,7 @@ def load_bitext(args):
             out_target.append(target.strip().lower().split())
             out_align.append(alignment.strip().split())
             count += 1
-            if count == (20 * 1000) and fast: break
+            if count == (1 * 1000) and fast: break
 
     out_source = maybe_lemmatize(out_source, "en", tt_home)
     out_target = maybe_lemmatize(out_target, args.targetlang, tt_home)
@@ -122,6 +117,24 @@ def maybe_lemmatize(sentences, language, tt_home=None):
         out.append(this)
     return out
 
+def get_transition_emission_cfds(args):
+    triple_sentences = load_bitext(args)
+    print("training on {0} sentences.".format(len(triple_sentences)))
+    transitions, emissions = transitions_emissions(triple_sentences)
+    return transitions, emissions
+
+def cpd(cfd):
+    """Take a ConditionalFreqDist and turn it into a ConditionalProdDist"""
+    return ConditionalProbDist(cfd, ELEProbDist)
+
+def reverse_cfd(cfd):
+    """Given a ConditionalFreqDist, reverse the conditions and the samples!!"""
+    out = ConditionalFreqDist()
+    for condition in cfd.conditions():
+        for sample in cfd[condition].samples():
+            out[sample].inc(condition)
+    return out
+
 def get_argparser():
     """Build the argument parser for main."""
     parser = argparse.ArgumentParser(description='hmmwsd')
@@ -134,32 +147,31 @@ def get_argparser():
                         default="../TreeTagger/cmd")
     return parser
 
-def get_tagger_and_cfd(args):
-    triple_sentences = load_bitext(args)
-    print("training on {0} sentences.".format(len(triple_sentences)))
-    tagger, cfd = build_tagger_and_cfd(triple_sentences)
-    return tagger, cfd
-
-def get_transition_emission_cfds(args):
-    triple_sentences = load_bitext(args)
-    print("training on {0} sentences.".format(len(triple_sentences)))
-    transitions, emissions = transitions_emissions(triple_sentences)
-    return transitions, emissions
-
 def main():
     parser = get_argparser()
     args = parser.parse_args()
-    target = args.targetlang
-    assert target in util_run_experiment.all_target_languages
-    transitions, emissions = get_transition_emission_cfds(args)
+    print(args)
+    targetlang = args.targetlang
+    assert targetlang in util_run_experiment.all_target_languages
 
-    picklefn = "pickles/{0}.trans.pickle".format(target)
+    triple_sentences = load_bitext(args)
+    transitions, emissions = transitions_emissions(triple_sentences)
+
+    tl_sentences = get_target_language_sentences(triple_sentences)
+    lm = NgramModel(3, tl_sentences)
+
+    print(lm)
+    print('P(todd) = ', lm.logprob('quizas', context=['foo','bar']))
+    print('P(todd) = ', lm.logprob('quizas', context=['foo','bard']))
+
+    picklefn = "pickles/{0}.trans.pickle".format(targetlang)
     with open(picklefn, "wb") as outfile:
         pickle.dump(transitions, outfile)
-    picklefn = "pickles/{0}.emit.pickle".format(target)
+    picklefn = "pickles/{0}.emit.pickle".format(targetlang)
     with open(picklefn, "wb") as outfile:
         pickle.dump(emissions, outfile)
-    trans_cpd = ConditionalProbDist(transitions, ELEProbDist)
-    emit_cpd = ConditionalProbDist(emissions, ELEProbDist)
+    picklefn = "pickles/{0}.lm.pickle".format(targetlang)
+    with open(picklefn, "wb") as outfile:
+        pickle.dump(lm, outfile)
 
 if __name__ == "__main__": main()

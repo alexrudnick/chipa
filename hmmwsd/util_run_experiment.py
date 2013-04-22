@@ -10,9 +10,6 @@ all_target_languages = "de es fr it nl".split()
 all_words = "bank coach education execution figure job letter match mission mood movement occupation paper passage plant post pot range rest ring scene side soil strain test".split()
 final_test_words = "coach education execution figure job letter match mission mood paper post pot range rest ring scene side soil strain test".split()
 
-
-trial_words = "bank coach education ring test range mood".split()##some trial data for choosing features.
-
 def output_one_best(problem, target, solution):
     """Return output for a solution for the one-best."""
     return "{0}.{1} {2} :: {3};".format(problem.source_lex,
@@ -41,10 +38,6 @@ def get_argparser():
     parser.add_argument('--sourceword', type=str, required=True)
     parser.add_argument('--targetlang', type=str, required=True)
     parser.add_argument('--trialdir', type=str, required=True)
-    parser.add_argument('--sourcetext', type=str, required=True)
-    parser.add_argument('--targettext', type=str, required=True)
-    parser.add_argument('--alignments', type=str, required=True)
-    parser.add_argument('--fast', type=bool, default=False, required=False)
     return parser
 
 def get_test_instances(trialdir, sourceword):

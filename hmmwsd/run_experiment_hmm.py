@@ -2,22 +2,23 @@
 
 import sys
 import argparse
+import pickle
+
 import nltk
 
-from learn import get_tagger_and_cfd
 import skinnyhmm
-
+import learn
 import util_run_experiment
 from util_run_experiment import output_one_best
 from util_run_experiment import output_five_best
 from util_run_experiment import all_target_languages
 from util_run_experiment import all_words
 
-def classify_for_hmm(problem, tagger, cfd):
+def classify_for_hmm(problem, transitions, emissions, cfd):
     """For a given wsd_problem, run the HMM and see what answer we get."""
     print("what's your problem?", problem.tokenized)
     ss = problem.tokenized
-    tagged = skinnyhmm.viterbi(tagger, cfd, ss)
+    tagged = skinnyhmm.viterbi(transitions, emissions, cfd, ss)
     print(tagged)
     print(tagged[problem.head_indices[0]])
     s,t = tagged[problem.head_indices[0]]
@@ -33,14 +34,17 @@ def main():
     sourceword = args.sourceword
     trialdir = args.trialdir
 
-    ## we'll probably want to move all of this into another file soon (train the
-    ## models and pickle them), but for now just leave it here.
-    sourcefn = args.sourcetext
-    targetfn = args.targettext
-    alignmentfn = args.alignments
-    fast = args.fast
+    transitions, emissions = None, None
+    picklefn = "pickles/{0}.trans.pickle".format(targetlang)
+    with open(picklefn, "rb") as infile:
+        transitions = pickle.load(infile)
+    picklefn = "pickles/{0}.emit.pickle".format(targetlang)
+    with open(picklefn, "rb") as infile:
+        emissions = pickle.load(infile)
 
-    tagger,cfd = get_tagger_and_cfd(sourcefn, targetfn, alignmentfn, fast)
+    cfd = learn.reverse_cfd(emissions)
+    transitions = learn.cpd(transitions)
+    emissions = learn.cpd(emissions)
 
     print("Loading test problems...")
     problems = util_run_experiment.get_test_instances(trialdir, sourceword)
@@ -53,7 +57,7 @@ def main():
     with open(bestoutfn, "w") as bestoutfile, \
          open(oofoutfn, "w") as oofoutfile:
         for problem in problems:
-            answer = classify_for_hmm(problem, tagger, cfd)
+            answer = classify_for_hmm(problem, transitions, emissions, cfd)
             oof_answers = "uno dos tres quatro cinco".split()
             print(output_one_best(problem, targetlang, answer),
                   file=bestoutfile)
