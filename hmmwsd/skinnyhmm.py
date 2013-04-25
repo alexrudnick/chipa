@@ -10,8 +10,7 @@ Viterbi version that takes that into account.
 """
 
 UNTRANSLATED = "<untranslated>"
-START = "***START***"
-END = "***END***"
+START = ""
 
 def mfs(cfd, unlabeled_sequence):
     """Here cfd is the conditional frequency distribution where target-language
@@ -34,7 +33,7 @@ def maybe_untranslated(samples):
     """Take a list of possibilities and add the untranslated symbol too."""
     return [UNTRANSLATED] + list(samples)
 
-def viterbi(transitions, emissions, cfd, unlabeled_sequence):
+def viterbi(lm, emissions, cfd, unlabeled_sequence):
     """Viterbi algorithm. Here we're assuming a trigram model, but it should be
     easy-ish to try other widths.
     Takes:
@@ -44,8 +43,6 @@ def viterbi(transitions, emissions, cfd, unlabeled_sequence):
       surface state.
     - the sequence to label.
     """
-    print(type(transitions))
-
     T = len(unlabeled_sequence)
     ## sparse it up!!
     V = defaultdict(float)
@@ -59,14 +56,12 @@ def viterbi(transitions, emissions, cfd, unlabeled_sequence):
     # find the starting log probabilities for each state
     symbol = unlabeled_sequence[0]
     for sj in cfd[symbol].samples():
-        print("sj", sj)
-        ## make sure we're always using logprobs
-        t = transitions[START,START].logprob(sj)
-        e = emissions[sj].logprob(symbol)
+        ## make sure we're always using logprobs and they always return negative
+        ## logprobs, ie, positive penalties.
+        t = lm.logprob(sj, [])
+        e = -emissions[sj].logprob(symbol)
         V[0, sj] = t + e
         B[0, sj] = None
-    print("V!!\n", V)
-    print("B!!\n", B)
 
     # find the maximum log probabilities for reaching each state at time t
     for t in range(1, T):
@@ -74,18 +69,22 @@ def viterbi(transitions, emissions, cfd, unlabeled_sequence):
         if t-2 < 0:
             pps = [START]
         else:
-            pps = cfd[unlabeled_sequence[t-2]].samples()
-        ps = cfd[unlabeled_sequence[t-1]].samples()
+            pps = list(cfd[unlabeled_sequence[t-2]].samples()) or [UNTRANSLATED]
+        ps = list(cfd[unlabeled_sequence[t-1]].samples()) or [UNTRANSLATED]
 
         for sj in cfd[symbol].samples():
             best = None
-            prevstatepairs = itertools.product(pps, ps)
+            emission_penalty = -emissions[sj].logprob(symbol)
+            prevstatepairs = list(itertools.product(pps, ps))
             for si in prevstatepairs:
-                print(si)
-                va = V[t-1, si] + transitions[si].logprob(sj)
-                if not best or va > best[0]:
+                context = si
+                transition_prob = lm.prob(sj, context)
+                transition_penalty = (lm.logprob(sj, context) if transition_prob
+                                                              else (1000*1000))
+                va = V[t-1, si] + transition_penalty + emission_penalty
+                if not best or va < best[0]:
                     best = (va, si)
-            V[t, sj] = best[0] + hmm._output_logprob(sj, symbol)
+            V[t, sj] = best[0] + -emissions[sj].logprob(symbol)
             B[t, sj] = best[1]
 
     # find the highest probability final state
@@ -98,6 +97,7 @@ def viterbi(transitions, emissions, cfd, unlabeled_sequence):
     # traverse the back-pointers B to find the state sequence
     current = best[1]
     sequence = [current]
+    ## XXX overlapping windows of tags...
     for t in range(T-1, 0, -1):
         last = B[t, current]
         sequence.append(last)

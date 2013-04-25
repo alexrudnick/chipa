@@ -14,11 +14,11 @@ from util_run_experiment import output_five_best
 from util_run_experiment import all_target_languages
 from util_run_experiment import all_words
 
-def classify_for_hmm(problem, transitions, emissions, cfd):
+def classify_for_hmm(problem, lm, emissions, cfd):
     """For a given wsd_problem, run the HMM and see what answer we get."""
     print("what's your problem?", problem.tokenized)
     ss = problem.tokenized
-    tagged = skinnyhmm.viterbi(transitions, emissions, cfd, ss)
+    tagged = skinnyhmm.viterbi(lm, emissions, cfd, ss)
     print(tagged)
     print(tagged[problem.head_indices[0]])
     s,t = tagged[problem.head_indices[0]]
@@ -34,16 +34,15 @@ def main():
     sourceword = args.sourceword
     trialdir = args.trialdir
 
-    transitions, emissions = None, None
-    picklefn = "pickles/{0}.trans.pickle".format(targetlang)
+    lm, emissions = None, None
+    picklefn = "pickles/{0}.lm.pickle".format(targetlang)
     with open(picklefn, "rb") as infile:
-        transitions = pickle.load(infile)
+        lm = pickle.load(infile)
     picklefn = "pickles/{0}.emit.pickle".format(targetlang)
     with open(picklefn, "rb") as infile:
         emissions = pickle.load(infile)
 
     cfd = learn.reverse_cfd(emissions)
-    transitions = learn.cpd(transitions)
     emissions = learn.cpd(emissions)
 
     print("Loading test problems...")
@@ -57,7 +56,7 @@ def main():
     with open(bestoutfn, "w") as bestoutfile, \
          open(oofoutfn, "w") as oofoutfile:
         for problem in problems:
-            answer = classify_for_hmm(problem, transitions, emissions, cfd)
+            answer = classify_for_hmm(problem, lm, emissions, cfd)
             oof_answers = "uno dos tres quatro cinco".split()
             print(output_one_best(problem, targetlang, answer),
                   file=bestoutfile)
