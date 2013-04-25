@@ -33,7 +33,7 @@ def maybe_untranslated(samples):
     """Take a list of possibilities and add the untranslated symbol too."""
     return [UNTRANSLATED] + list(samples)
 
-def viterbi(lm, emissions, cfd, unlabeled_sequence):
+def wrongviterbi(lm, emissions, cfd, unlabeled_sequence):
     """Viterbi algorithm. Here we're assuming a trigram model, but it should be
     easy-ish to try other widths.
     Takes:
@@ -85,6 +85,7 @@ def viterbi(lm, emissions, cfd, unlabeled_sequence):
                 if not best or va < best[0]:
                     best = (va, si)
             V[t, sj] = best[0] + -emissions[sj].logprob(symbol)
+            ## XXX maybe we could write it down here?
             B[t, sj] = best[1]
 
     # find the highest probability final state
@@ -100,7 +101,69 @@ def viterbi(lm, emissions, cfd, unlabeled_sequence):
     ## XXX overlapping windows of tags...
     for t in range(T-1, 0, -1):
         last = B[t, current]
+        print("LAST", last)
+        last = last[-1]
         sequence.append(last)
         current = last
     sequence.reverse()
     return list(zip(unlabeled_sequence, sequence))
+
+def viterbi(lm, emissions, cfd, unlabeled_sequence):
+    """Many thanks to Michael Collins and his great notes on how to do this for
+    trigrams."""
+    T = len(unlabeled_sequence)
+    ## possible vocabulary, indexed by each position
+    vocab = {}
+    vocab[-2] = ['']
+    vocab[-1] = ['']
+
+    for t in range(T):
+        symbol = unlabeled_sequence[t]
+        vocab[t] = list(cfd[symbol].samples())
+        if not vocab[t]:
+            vocab[t] = ["<untranslated>"]
+
+    # the scores, will be indexed by (t, u, v) triples.
+    V = { (-1,'',''):0 }
+    # the backpointers, will be indexed by (t, u, v) triples.
+    B = {}
+
+    print("... solving...")
+    for t in range(T):
+        print("t =", t)
+        
+        symbol = unlabeled_sequence[t]
+        myvocab = vocab[t]
+        pvocab = vocab[t-1]
+        ppvocab = vocab[t-2]
+        for (u,v) in itertools.product(pvocab, myvocab):
+            emission_penalty = -emissions[v].logprob(symbol)
+            best = None
+            for w in ppvocab:
+                context = (w,u)
+                ## transition_penalty = lm.logprob(v, context)
+                transition_prob = lm.prob(v, context)
+                transition_penalty = (lm.logprob(v, context) if transition_prob
+                                                             else (1000*1000))
+                va = V[t-1, w, u] + transition_penalty + emission_penalty
+                if not best or va < best[0]:
+                    best = (va, w)
+            V[t,u,v] = best[0]
+            B[t,u,v] = best[1]
+
+    ## find the best pair for the last two!!
+    bestend = None
+    for (u,v) in itertools.product(pvocab, myvocab):
+        context = (u,v)
+        penalty = V[T-1, u, v] + lm.logprob('', context)
+        if not bestend or penalty < bestend[0]:
+            bestend = (penalty, context)
+    print(bestend)
+
+    labels = [''] * len(unlabeled_sequence)
+    labels[T-1] = bestend[1][1]
+    labels[T-2] = bestend[1][0]
+    ## labels.extend(bestend[1].reversed())
+    for t in range(T-3, -1, -1):
+        labels[t] = B[t+2, labels[t+1], labels[t+2]]
+    return list(zip(unlabeled_sequence, labels))

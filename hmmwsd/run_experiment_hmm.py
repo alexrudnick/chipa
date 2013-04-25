@@ -14,10 +14,12 @@ from util_run_experiment import output_five_best
 from util_run_experiment import all_target_languages
 from util_run_experiment import all_words
 
-def classify_for_hmm(problem, lm, emissions, cfd):
+
+def classify_for_hmm(problem, lm, emissions, cfd, targetlang, tt_home):
     """For a given wsd_problem, run the HMM and see what answer we get."""
     print("what's your problem?", problem.tokenized)
-    ss = problem.tokenized
+    sss = learn.maybe_lemmatize([problem.tokenized], targetlang, tt_home)
+    ss = sss[0]
     tagged = skinnyhmm.viterbi(lm, emissions, cfd, ss)
     print(tagged)
     print(tagged[problem.head_indices[0]])
@@ -33,6 +35,7 @@ def main():
     targetlang = args.targetlang
     sourceword = args.sourceword
     trialdir = args.trialdir
+    tt_home = args.treetaggerhome
 
     lm, emissions = None, None
     picklefn = "pickles/{0}.lm.pickle".format(targetlang)
@@ -56,7 +59,8 @@ def main():
     with open(bestoutfn, "w") as bestoutfile, \
          open(oofoutfn, "w") as oofoutfile:
         for problem in problems:
-            answer = classify_for_hmm(problem, lm, emissions, cfd)
+            answer = classify_for_hmm(problem, lm, emissions, cfd,
+                                      targetlang, tt_home)
             oof_answers = "uno dos tres quatro cinco".split()
             print(output_one_best(problem, targetlang, answer),
                   file=bestoutfile)

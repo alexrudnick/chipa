@@ -38,6 +38,8 @@ def get_argparser():
     parser.add_argument('--sourceword', type=str, required=True)
     parser.add_argument('--targetlang', type=str, required=True)
     parser.add_argument('--trialdir', type=str, required=True)
+    parser.add_argument('--treetaggerhome', type=str, required=False,
+                        default="../TreeTagger/cmd")
     return parser
 
 def get_test_instances(trialdir, sourceword):

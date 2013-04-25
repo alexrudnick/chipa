@@ -158,7 +158,7 @@ def main():
     transitions, emissions = transitions_emissions(triple_sentences)
 
     tl_sentences = get_target_language_sentences(triple_sentences)
-    lm = NgramModel(3, tl_sentences)
+    lm = NgramModel(3, tl_sentences, pad_left=True, pad_right=True)
 
     print(lm)
     print('P(todd) = ', lm.logprob('quizas', context=['foo','bar']))
