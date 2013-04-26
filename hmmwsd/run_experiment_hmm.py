@@ -21,7 +21,7 @@ def classify_for_hmm(problem, lm, emissions, cfd, targetlang, tt_home):
     sss = learn.maybe_lemmatize([problem.tokenized], targetlang, tt_home)
     ss = sss[0]
     ## tagged = skinnyhmm.viterbi(lm, emissions, cfd, ss)
-    tagged = searches.astar(lm, emissions, cfd, ss)
+    tagged = searches.beam(lm, emissions, cfd, ss)
     print(tagged)
     print(tagged[problem.head_indices[0]])
     s,t = tagged[problem.head_indices[0]]
