@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import itertools
-import utils
 from collections import defaultdict
 
 from util_search import build_vocab
