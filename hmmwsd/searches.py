@@ -70,6 +70,7 @@ def beam(lm, emissions, cfd, unlabeled_sequence, beamwidth=5):
                 transition_prob = lm.prob(newword, context)
                 transition_penalty = (lm.logprob(newword, context)
                                       if transition_prob else (1000*1000))
+                ## XXX transition_logprob here too
                 emission_penalty = -emissions[newword].logprob(sourceword)
                 newpenalty = penalty + transition_penalty + emission_penalty
                 newconfigurations.append(Configuration(newseq, newpenalty))

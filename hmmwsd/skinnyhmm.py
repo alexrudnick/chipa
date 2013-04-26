@@ -5,6 +5,7 @@ import utils
 from collections import defaultdict
 
 from util_search import build_vocab
+from util_search import transition_logprob
 
 """
 Considering all tags in this kind of setting is a bad idea; there are only maybe
@@ -82,9 +83,7 @@ def wrongviterbi(lm, emissions, cfd, unlabeled_sequence):
             prevstatepairs = list(itertools.product(pps, ps))
             for si in prevstatepairs:
                 context = si
-                transition_prob = lm.prob(sj, context)
-                transition_penalty = (lm.logprob(sj, context) if transition_prob
-                                                              else (1000*1000))
+                transition_penalty = transition_logprob(lm, sj, context)
                 va = V[t-1, si] + transition_penalty + emission_penalty
                 if not best or va < best[0]:
                     best = (va, si)
@@ -136,10 +135,7 @@ def viterbi(lm, emissions, cfd, unlabeled_sequence):
             best = None
             for w in ppvocab:
                 context = (w,u)
-                ## transition_penalty = lm.logprob(v, context)
-                transition_prob = lm.prob(v, context)
-                transition_penalty = (lm.logprob(v, context) if transition_prob
-                                                             else (1000*1000))
+                transition_penalty = transition_logprob(lm, v, context)
                 va = V[t-1, w, u] + transition_penalty + emission_penalty
                 if not best or va < best[0]:
                     best = (va, w)
@@ -150,9 +146,7 @@ def viterbi(lm, emissions, cfd, unlabeled_sequence):
     bestend = None
     for (u,v) in itertools.product(pvocab, myvocab):
         context = (u,v)
-        transition_prob = lm.prob('', context)
-        transition_penalty = (lm.logprob('', context) if transition_prob
-                                                      else (1000*1000))
+        transition_penalty = transition_logprob(lm, '', context)
         penalty = V[T-1, u, v] + transition_penalty 
         if not bestend or penalty < bestend[0]:
             bestend = (penalty, context)
