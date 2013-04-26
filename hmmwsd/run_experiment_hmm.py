@@ -7,6 +7,7 @@ import pickle
 import nltk
 
 import skinnyhmm
+import searches
 import learn
 import util_run_experiment
 from util_run_experiment import output_one_best
@@ -17,10 +18,10 @@ from util_run_experiment import all_words
 
 def classify_for_hmm(problem, lm, emissions, cfd, targetlang, tt_home):
     """For a given wsd_problem, run the HMM and see what answer we get."""
-    print("what's your problem?", problem.tokenized)
     sss = learn.maybe_lemmatize([problem.tokenized], targetlang, tt_home)
     ss = sss[0]
-    tagged = skinnyhmm.viterbi(lm, emissions, cfd, ss)
+    ## tagged = skinnyhmm.viterbi(lm, emissions, cfd, ss)
+    tagged = searches.astar(lm, emissions, cfd, ss)
     print(tagged)
     print(tagged[problem.head_indices[0]])
     s,t = tagged[problem.head_indices[0]]

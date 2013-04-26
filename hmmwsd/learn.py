@@ -111,9 +111,9 @@ def maybe_lemmatize(sentences, language, tt_home=None):
         this = []
         for (wl, w) in zip(lemmatized, orig):
             if wl != "<unknown>":
-                this.append(wl)
+                this.append(wl.lower())
             else:
-                this.append(w)
+                this.append(w.lower())
         out.append(this)
     return out
 
@@ -132,7 +132,7 @@ def reverse_cfd(cfd):
     out = ConditionalFreqDist()
     for condition in cfd.conditions():
         for sample in cfd[condition].samples():
-            out[sample].inc(condition)
+            out[sample].inc(condition, cfd[condition][sample])
     return out
 
 def get_argparser():
@@ -164,9 +164,9 @@ def main():
     print('P(todd) = ', lm.logprob('quizas', context=['foo','bar']))
     print('P(todd) = ', lm.logprob('quizas', context=['foo','bard']))
 
-    picklefn = "pickles/{0}.trans.pickle".format(targetlang)
-    with open(picklefn, "wb") as outfile:
-        pickle.dump(transitions, outfile)
+    # picklefn = "pickles/{0}.trans.pickle".format(targetlang)
+    # with open(picklefn, "wb") as outfile:
+    #     pickle.dump(transitions, outfile)
     picklefn = "pickles/{0}.emit.pickle".format(targetlang)
     with open(picklefn, "wb") as outfile:
         pickle.dump(emissions, outfile)

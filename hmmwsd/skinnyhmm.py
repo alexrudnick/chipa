@@ -111,15 +111,23 @@ def wrongviterbi(lm, emissions, cfd, unlabeled_sequence):
 def viterbi(lm, emissions, cfd, unlabeled_sequence):
     """Many thanks to Michael Collins and his great notes on how to do this for
     trigrams."""
+    print("sequence:", " ".join(unlabeled_sequence))
     T = len(unlabeled_sequence)
     ## possible vocabulary, indexed by each position
     vocab = {}
     vocab[-2] = ['']
     vocab[-1] = ['']
 
+    MINCOUNT = 5
     for t in range(T):
         symbol = unlabeled_sequence[t]
-        vocab[t] = list(cfd[symbol].samples())
+        # labels = set(cfd[symbol].samples()) - set(cfd[symbol].hapaxes())
+        thevocab = []
+        for (label, count) in cfd[symbol].items():
+            if count >= MINCOUNT:
+                thevocab.append(label)
+            else: break
+        vocab[t] = thevocab
         if not vocab[t]:
             vocab[t] = ["<untranslated>"]
 
@@ -130,10 +138,9 @@ def viterbi(lm, emissions, cfd, unlabeled_sequence):
 
     print("... solving...")
     for t in range(T):
-        print("t =", t)
-        
         symbol = unlabeled_sequence[t]
         myvocab = vocab[t]
+        # print(t, symbol, "->", len(myvocab), "different things")
         pvocab = vocab[t-1]
         ppvocab = vocab[t-2]
         for (u,v) in itertools.product(pvocab, myvocab):
@@ -155,7 +162,10 @@ def viterbi(lm, emissions, cfd, unlabeled_sequence):
     bestend = None
     for (u,v) in itertools.product(pvocab, myvocab):
         context = (u,v)
-        penalty = V[T-1, u, v] + lm.logprob('', context)
+        transition_prob = lm.prob('', context)
+        transition_penalty = (lm.logprob('', context) if transition_prob
+                                                      else (1000*1000))
+        penalty = V[T-1, u, v] + transition_penalty 
         if not bestend or penalty < bestend[0]:
             bestend = (penalty, context)
     print(bestend)
