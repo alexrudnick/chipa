@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 
 import itertools
+import utils
 from collections import defaultdict
+
+from util_search import build_vocab
 
 """
 Considering all tags in this kind of setting is a bad idea; there are only maybe
@@ -11,6 +14,7 @@ Viterbi version that takes that into account.
 
 UNTRANSLATED = "<untranslated>"
 START = ""
+MINCOUNT = 5
 
 def mfs(cfd, unlabeled_sequence):
     """Here cfd is the conditional frequency distribution where target-language
@@ -113,23 +117,7 @@ def viterbi(lm, emissions, cfd, unlabeled_sequence):
     trigrams."""
     print("sequence:", " ".join(unlabeled_sequence))
     T = len(unlabeled_sequence)
-    ## possible vocabulary, indexed by each position
-    vocab = {}
-    vocab[-2] = ['']
-    vocab[-1] = ['']
-
-    MINCOUNT = 5
-    for t in range(T):
-        symbol = unlabeled_sequence[t]
-        # labels = set(cfd[symbol].samples()) - set(cfd[symbol].hapaxes())
-        thevocab = []
-        for (label, count) in cfd[symbol].items():
-            if count >= MINCOUNT:
-                thevocab.append(label)
-            else: break
-        vocab[t] = thevocab
-        if not vocab[t]:
-            vocab[t] = ["<untranslated>"]
+    vocab = build_vocab(unlabeled_sequence, cfd, MINCOUNT=MINCOUNT)
 
     # the scores, will be indexed by (t, u, v) triples.
     V = { (-1,'',''):0 }

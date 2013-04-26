@@ -5,25 +5,9 @@ from collections import defaultdict
 from collections import namedtuple
 from operator import itemgetter
 
-Configuration = namedtuple('Configuration', ['sequence', 'penalty'])
+from util_search import build_vocab
 
-def build_vocab(unlabeled_sequence, cfd, MINCOUNT):
-    T = len(unlabeled_sequence)
-    vocab = {}
-    vocab[-2] = ['']
-    vocab[-1] = ['']
-    for t in range(T):
-        symbol = unlabeled_sequence[t]
-        # labels = set(cfd[symbol].samples()) - set(cfd[symbol].hapaxes())
-        thevocab = []
-        for (label, count) in cfd[symbol].items():
-            if count >= MINCOUNT:
-                thevocab.append(label)
-            else: break
-        vocab[t] = thevocab
-        if not vocab[t]:
-            vocab[t] = ["<untranslated>"]
-    return vocab
+Configuration = namedtuple('Configuration', ['sequence', 'penalty'])
 
 def astar(lm, emissions, cfd, unlabeled_sequence):
     """Best-first search stack decoder. Do it."""
