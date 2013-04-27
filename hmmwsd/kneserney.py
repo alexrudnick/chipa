@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import nltk
-from skinnyhmm import START
+from constants import START
 
 sentences = [
 "the dog ran quickly across the yard .",
