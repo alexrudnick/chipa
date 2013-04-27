@@ -18,8 +18,10 @@ from util_run_experiment import all_words
 
 def classify_for_hmm(problem, lm, emissions, cfd, targetlang, tt_home):
     """For a given wsd_problem, run the HMM and see what answer we get."""
-    sss = learn.maybe_lemmatize([problem.tokenized], targetlang, tt_home)
+    sss = learn.maybe_lemmatize([problem.tokenized], 'en', tt_home)
     ss = sss[0]
+    print("tokenized:", problem.tokenized)
+    print("purportedly lemmatized:", ss)
     ## tagged = skinnyhmm.viterbi(lm, emissions, cfd, ss)
     tagged = searches.beam(lm, emissions, cfd, ss)
     print(tagged)

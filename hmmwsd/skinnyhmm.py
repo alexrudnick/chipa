@@ -12,9 +12,9 @@ at most tens of tags that are possible for each word. So let's build a new
 Viterbi version that takes that into account.
 """
 
-UNTRANSLATED = "<untranslated>"
-START = ""
-MINCOUNT = 5
+from constants import UNTRANSLATED
+from constants import START
+from constants import MINCOUNT
 
 def mfs(cfd, unlabeled_sequence):
     """Here cfd is the conditional frequency distribution where target-language

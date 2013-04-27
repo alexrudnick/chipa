@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from constants import UNTRANSLATED
+
 def build_vocab(unlabeled_sequence, cfd, MINCOUNT):
     T = len(unlabeled_sequence)
     vocab = {}
@@ -14,6 +16,10 @@ def build_vocab(unlabeled_sequence, cfd, MINCOUNT):
                 thevocab.append(label)
             else: break
         vocab[t] = thevocab
+        if UNTRANSLATED in thevocab:
+            print(symbol, thevocab)
+            print(cfd[symbol].items())
+            assert False
         if not vocab[t]:
             vocab[t] = ["<untranslated>"]
     return vocab
