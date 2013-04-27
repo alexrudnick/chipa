@@ -22,7 +22,7 @@ class WSDProblem:
         assert type(context) is str
         self.head_indices = []
 
-        context = context.replace("<head>", START)
+        context = context.replace("<head>", " " + START)
         ## XXX(alexr): this is completely terrible.
         context = context.replace("</head>", END + " ")
 
