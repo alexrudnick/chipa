@@ -20,11 +20,9 @@ def classify_for_hmm(problem, lm, emissions, cfd, targetlang, tt_home):
     """For a given wsd_problem, run the HMM and see what answer we get."""
     sss = learn.maybe_lemmatize([problem.tokenized], 'en', tt_home)
     ss = sss[0]
-    print("tokenized:", problem.tokenized)
-    print("purportedly lemmatized:", ss)
+    print(" ".join(problem.tokenized))
     ## tagged = skinnyhmm.viterbi(lm, emissions, cfd, ss)
-    tagged = searches.beam(lm, emissions, cfd, ss)
-    print(tagged)
+    tagged = searches.beam(lm, emissions, cfd, ss, beamwidth=100)
     print(tagged[problem.head_indices[0]])
     s,t = tagged[problem.head_indices[0]]
     return t
@@ -33,13 +31,12 @@ def main():
     parser = util_run_experiment.get_argparser()
     args = parser.parse_args()
     assert args.targetlang in all_target_languages
-    assert args.sourceword in all_words
 
     targetlang = args.targetlang
-    sourceword = args.sourceword
     trialdir = args.trialdir
     tt_home = args.treetaggerhome
 
+    print("Loading models...")
     lm, emissions = None, None
     picklefn = "pickles/{0}.lm.pickle".format(targetlang)
     with open(picklefn, "rb") as infile:
@@ -50,24 +47,18 @@ def main():
 
     cfd = learn.reverse_cfd(emissions)
     emissions = learn.cpd(emissions)
+    print("OK loaded models.")
 
-    print("Loading test problems...")
-    problems = util_run_experiment.get_test_instances(trialdir, sourceword)
-    print("OK loaded.")
+    for sourceword in util_run_experiment.final_test_words:
+        print("Loading test problems for {0}".format(sourceword))
+        problems = util_run_experiment.get_test_instances(trialdir, sourceword)
 
-    ## load or build hmm here or something.
-
-    bestoutfn = "HMMoutput/{0}.{1}.best".format(sourceword, targetlang)
-    oofoutfn = "HMMoutput/{0}.{1}.oof".format(sourceword, targetlang)
-    with open(bestoutfn, "w") as bestoutfile, \
-         open(oofoutfn, "w") as oofoutfile:
-        for problem in problems:
-            answer = classify_for_hmm(problem, lm, emissions, cfd,
-                                      targetlang, tt_home)
-            oof_answers = "uno dos tres quatro cinco".split()
-            print(output_one_best(problem, targetlang, answer),
-                  file=bestoutfile)
-            print(output_five_best(problem, targetlang, oof_answers),
-                  file=oofoutfile)
+        bestoutfn = "HMMoutput/{0}.{1}.best".format(sourceword, targetlang)
+        with open(bestoutfn, "w") as bestoutfile:
+            for problem in problems:
+                answer = classify_for_hmm(problem, lm, emissions, cfd,
+                                          targetlang, tt_home)
+                print(output_one_best(problem, targetlang, answer),
+                      file=bestoutfile)
 
 if __name__ == "__main__": main()

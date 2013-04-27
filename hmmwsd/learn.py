@@ -104,7 +104,7 @@ def batch_lemmatize_sentences(sentences, language, tt_home=None):
     return [[lemma.lower() for word,tag,lemma in sent] for sent in output]
 
 def maybe_lemmatize(sentences, language, tt_home=None):
-    print("MAYBE LEMMATIZING {0} sentences".format(len(sentences)))
+    # print("MAYBE LEMMATIZING {0} sentences".format(len(sentences)))
     lemmatizeds = batch_lemmatize_sentences(sentences, language, tt_home)
     out = []
     for (lemmatized, orig) in zip(lemmatizeds, sentences):
