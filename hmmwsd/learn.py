@@ -158,20 +158,18 @@ def main():
     transitions, emissions = transitions_emissions(triple_sentences)
 
     tl_sentences = get_target_language_sentences(triple_sentences)
-    lm = NgramModel(3, tl_sentences, pad_left=True, pad_right=True)
 
-    print(lm)
-    print('P(todd) = ', lm.logprob('quizas', context=['foo','bar']))
-    print('P(todd) = ', lm.logprob('quizas', context=['foo','bard']))
+    lm_trigram = NgramModel(3, tl_sentences, pad_left=True, pad_right=True)
+    lm_bigram = NgramModel(2, tl_sentences, pad_left=True, pad_right=True)
 
-    # picklefn = "pickles/{0}.trans.pickle".format(targetlang)
-    # with open(picklefn, "wb") as outfile:
-    #     pickle.dump(transitions, outfile)
     picklefn = "pickles/{0}.emit.pickle".format(targetlang)
     with open(picklefn, "wb") as outfile:
         pickle.dump(emissions, outfile)
-    picklefn = "pickles/{0}.lm.pickle".format(targetlang)
+    picklefn = "pickles/{0}.lm_trigram.pickle".format(targetlang)
     with open(picklefn, "wb") as outfile:
-        pickle.dump(lm, outfile)
+        pickle.dump(lm_trigram, outfile)
+    picklefn = "pickles/{0}.lm_bigram.pickle".format(targetlang)
+    with open(picklefn, "wb") as outfile:
+        pickle.dump(lm_bigram, outfile)
 
 if __name__ == "__main__": main()
