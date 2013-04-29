@@ -37,10 +37,8 @@ def maybe_untranslated(samples):
     """Take a list of possibilities and add the untranslated symbol too."""
     return [UNTRANSLATED] + list(samples)
 
-def wrongviterbi(lm, emissions, cfd, unlabeled_sequence):
-    """Viterbi algorithm. Here we're assuming a trigram model, but it should be
-    easy-ish to try other widths.
-    Takes:
+def viterbi(lm, emissions, cfd, unlabeled_sequence):
+    """Takes:
     - the transition probabilities over hidden states as an NgramModel
     - emission probabilities as a ConditionalProbDist
     - a ConditionalFreqDist of the times each hidden state occurred with each
@@ -48,69 +46,43 @@ def wrongviterbi(lm, emissions, cfd, unlabeled_sequence):
     - the sequence to label.
     """
     T = len(unlabeled_sequence)
-    ## sparse it up!!
-    V = defaultdict(float)
+    V = { (-1,''):0}
     B = {}
+    vocab = build_vocab(unlabeled_sequence, cfd, MINCOUNT=MINCOUNT)
 
-    for word in unlabeled_sequence:
-        if word not in cfd.conditions():
-            cfd[word].inc(UNTRANSLATED)
-            ## XXX do we need to do something about emissions? ...
-
-    # find the starting log probabilities for each state
-    symbol = unlabeled_sequence[0]
-    for sj in cfd[symbol].samples():
-        ## make sure we're always using logprobs and they always return negative
-        ## logprobs, ie, positive penalties.
-        t = lm.logprob(sj, [])
-        e = -emissions[sj].logprob(symbol)
-        V[0, sj] = t + e
-        B[0, sj] = None
-
-    # find the maximum log probabilities for reaching each state at time t
-    for t in range(1, T):
+    print("... solving...")
+    for t in range(T):
         symbol = unlabeled_sequence[t]
-        if t-2 < 0:
-            pps = [START]
-        else:
-            pps = list(cfd[unlabeled_sequence[t-2]].samples()) or [UNTRANSLATED]
-        ps = list(cfd[unlabeled_sequence[t-1]].samples()) or [UNTRANSLATED]
-
-        for sj in cfd[symbol].samples():
-            best = None
+        myvocab = vocab[t]
+        pvocab = vocab[t-1]
+        for sj in myvocab:
             emission_penalty = -emissions[sj].logprob(symbol)
-            prevstatepairs = list(itertools.product(pps, ps))
-            for si in prevstatepairs:
-                context = si
+            best = None
+            for si in pvocab:
+                context = [si]
                 transition_penalty = transition_logprob(lm, sj, context)
                 va = V[t-1, si] + transition_penalty + emission_penalty
                 if not best or va < best[0]:
                     best = (va, si)
-            V[t, sj] = best[0] + -emissions[sj].logprob(symbol)
-            ## XXX maybe we could write it down here?
-            B[t, sj] = best[1]
+            V[t,sj] = best[0]
+            B[t,sj] = best[1]
 
-    # find the highest probability final state
-    best = None
-    for sj in cfd[symbol].samples():
-        val = V[T-1, sj]
-        if not best or val > best[0]:
-            best = (val, sj)
+    ## find the best last state!
+    bestend = None
+    for si in myvocab:
+        context = [si]
+        transition_penalty = transition_logprob(lm, '', context)
+        penalty = V[T-1, si] + transition_penalty 
+        if not bestend or penalty < bestend[0]:
+            bestend = (penalty, si)
 
-    # traverse the back-pointers B to find the state sequence
-    current = best[1]
-    sequence = [current]
-    ## XXX overlapping windows of tags...
-    for t in range(T-1, 0, -1):
-        last = B[t, current]
-        print("LAST", last)
-        last = last[-1]
-        sequence.append(last)
-        current = last
-    sequence.reverse()
-    return list(zip(unlabeled_sequence, sequence))
+    labels = [''] * len(unlabeled_sequence)
+    labels[T-1] = bestend[1]
+    for t in range(T-2, -1, -1):
+        labels[t] = B[t+1, labels[t+1]]
+    return list(zip(unlabeled_sequence, labels))
 
-def viterbi(lm, emissions, cfd, unlabeled_sequence):
+def viterbi_trigram(lm, emissions, cfd, unlabeled_sequence):
     """Many thanks to Michael Collins and his great notes on how to do this for
     trigrams."""
     print("sequence:", " ".join(unlabeled_sequence))

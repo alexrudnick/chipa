@@ -35,6 +35,7 @@ def topfive(dist):
 
 def get_argparser():
     parser = argparse.ArgumentParser(description='clwsd')
+    parser.add_argument('--model', type=str, required=True)
     parser.add_argument('--targetlang', type=str, required=True)
     parser.add_argument('--trialdir', type=str, required=True)
     parser.add_argument('--treetaggerhome', type=str, required=False,

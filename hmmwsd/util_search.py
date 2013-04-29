@@ -26,7 +26,7 @@ def build_vocab(unlabeled_sequence, cfd, MINCOUNT):
 
 def transition_logprob(lm, state, context):
     """... make sure we don't accidentally take the log of 0."""
-    transition_prob = lm.prob(v, context)
-    transition_penalty = (lm.logprob(v, context) if transition_prob
-                                                 else (1000*1000))
+    transition_prob = lm.prob(state, context)
+    transition_penalty = (lm.logprob(state, context) if transition_prob
+                                                     else (1000*1000))
     return transition_penalty

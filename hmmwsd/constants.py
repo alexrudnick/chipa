@@ -3,3 +3,5 @@ START = ""
 MINCOUNT = 5
 
 UNTRANSLATED = "<untranslated>"
+
+BEAMWIDTH=50

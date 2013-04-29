@@ -24,6 +24,8 @@ def target_words_for_each_source_word(ss, ts, alignment):
     alignment.sort(key=itemgetter(1))
     for (ti,si) in alignment:
         out[si].append(ts[ti])
+
+    ## TODO strip punctuation and words that happen more than once somehow.
     return [" ".join(targetwords) for targetwords in out]
 
 def transitions_emissions(triple_sentences):
