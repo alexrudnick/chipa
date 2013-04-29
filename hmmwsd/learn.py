@@ -15,37 +15,43 @@ from skinnyhmm import UNTRANSLATED
 import util_run_experiment
 import treetagger
 
+DEBUG=False
+def pause():
+    if DEBUG: input("ENTER TO CONTINUE")
+
 def target_words_for_each_source_word(ss, ts, alignment):
     """Given a list of tokens in source language, a list of tokens in target
     language, and a list of Berkeley-style alignments of the form target-source,
     for each source word, return the list of corresponding target words."""
     alignment = [tuple(map(int, pair.split('-'))) for pair in alignment]
     out = [list() for i in range(len(ss))]
-    alignment.sort(key=itemgetter(1))
+    indices = [list() for i in range(len(ss))]
+    alignment.sort(key=itemgetter(0))
     for (ti,si) in alignment:
-        out[si].append(ts[ti])
-
-    ## TODO strip punctuation and words that happen more than once somehow.
+        ## make sure we're grabbing contiguous phrases
+        ## TODO strip punctuation
+        if (not indices[si]) or (ti == indices[si][-1] + 1):
+            indices[si].append(ti)
+            out[si].append(ts[ti])
     return [" ".join(targetwords) for targetwords in out]
 
-def transitions_emissions(triple_sentences):
-    """Return some CFDs for the transitions and the emissions. Note that the
-    transitions are over target labels."""
-
-    ## cfd = nltk.probability.ConditionalFreqDist()
-    transitions = ConditionalFreqDist()
+def get_emissions(triple_sentences):
+    """Return a CFD for the emissions. Note that here we are emitting source
+    language words from target language phrases. """
     emissions = ConditionalFreqDist()
     emissions[UNTRANSLATED].inc(UNTRANSLATED)
     for (ss, ts, alignment) in triple_sentences:
         tws = target_words_for_each_source_word(ss, ts, alignment)
         tagged = list(zip(ss, tws))
+        if DEBUG:
+            print("source sentence:", " ".join(ss))
+            print("target sentence:", " ".join(ts))
+            print(tagged)
+        pause()
         nozeros = [(source, target) for (source,target) in tagged if target]
-        prevs = (START, START)
         for (source, target) in nozeros:
             emissions[target].inc(source)
-            transitions[prevs].inc(target)
-            prevs = prevs[1:] + (target,)
-    return transitions, emissions
+    return emissions
 
 def get_target_language_sentences(triple_sentences):
     """Return all of the "sentences" over the target language, used for training
@@ -86,8 +92,9 @@ def load_bitext(args):
             count += 1
             if count == (1 * 1000) and fast: break
 
-    out_source = maybe_lemmatize(out_source, "en", tt_home)
-    out_target = maybe_lemmatize(out_target, args.targetlang, tt_home)
+    ## input files should already be lemmatized
+    ## out_source = maybe_lemmatize(out_source, "en", tt_home)
+    ## out_target = maybe_lemmatize(out_target, args.targetlang, tt_home)
     return list(zip(out_source, out_target, out_align))
 
 def batch_lemmatize_sentences(sentences, language, tt_home=None):
@@ -118,12 +125,6 @@ def maybe_lemmatize(sentences, language, tt_home=None):
                 this.append(w.lower())
         out.append(this)
     return out
-
-def get_transition_emission_cfds(args):
-    triple_sentences = load_bitext(args)
-    print("training on {0} sentences.".format(len(triple_sentences)))
-    transitions, emissions = transitions_emissions(triple_sentences)
-    return transitions, emissions
 
 def cpd(cfd):
     """Take a ConditionalFreqDist and turn it into a ConditionalProdDist"""
@@ -157,21 +158,26 @@ def main():
     assert targetlang in util_run_experiment.all_target_languages
 
     triple_sentences = load_bitext(args)
-    transitions, emissions = transitions_emissions(triple_sentences)
+    print("training on {0} sentences.".format(len(triple_sentences)))
+
+    emissions = get_emissions(triple_sentences)
+    picklefn = "pickles/{0}.emit.pickle".format(targetlang)
+    with open(picklefn, "wb") as outfile:
+        pickle.dump(emissions, outfile)
+    del emissions
 
     tl_sentences = get_target_language_sentences(triple_sentences)
 
     lm_trigram = NgramModel(3, tl_sentences, pad_left=True, pad_right=True)
-    lm_bigram = NgramModel(2, tl_sentences, pad_left=True, pad_right=True)
-
-    picklefn = "pickles/{0}.emit.pickle".format(targetlang)
-    with open(picklefn, "wb") as outfile:
-        pickle.dump(emissions, outfile)
     picklefn = "pickles/{0}.lm_trigram.pickle".format(targetlang)
     with open(picklefn, "wb") as outfile:
         pickle.dump(lm_trigram, outfile)
+    del lm_trigram
+
+    lm_bigram = NgramModel(2, tl_sentences, pad_left=True, pad_right=True)
     picklefn = "pickles/{0}.lm_bigram.pickle".format(targetlang)
     with open(picklefn, "wb") as outfile:
         pickle.dump(lm_bigram, outfile)
+    del lm_bigram
 
 if __name__ == "__main__": main()
