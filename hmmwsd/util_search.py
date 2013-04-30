@@ -1,6 +1,17 @@
 #!/usr/bin/env python3
 
 from constants import UNTRANSLATED
+from util_run_experiment import final_test_words
+import read_gold
+
+preset_dictionary = {}
+def init_preset_dictionary(targetlang):
+    count = 0
+    for sourceword in final_test_words:
+        preset_dictionary[sourceword] = \
+            read_gold.get_possible_senses(sourceword, targetlang)
+        count += 1
+    print("OK, initialized dictionary for {0} words.".format(count))
 
 def build_vocab(unlabeled_sequence, cfd, MINCOUNT):
     T = len(unlabeled_sequence)
@@ -11,10 +22,15 @@ def build_vocab(unlabeled_sequence, cfd, MINCOUNT):
         symbol = unlabeled_sequence[t]
         # labels = set(cfd[symbol].samples()) - set(cfd[symbol].hapaxes())
         thevocab = []
-        for (label, count) in cfd[symbol].items():
-            if count >= MINCOUNT:
-                thevocab.append(label)
-            else: break
+        if symbol in preset_dictionary:
+            thevocab = list(preset_dictionary[symbol])
+        else:
+            for (label, count) in cfd[symbol].items():
+                if count >= MINCOUNT:
+                    thevocab.append(label)
+                else:
+                    ## they're guaranteed to come out in sorted order.
+                    break
         vocab[t] = thevocab
         if UNTRANSLATED in thevocab:
             print(symbol, thevocab)

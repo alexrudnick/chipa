@@ -14,6 +14,7 @@ from util_run_experiment import output_one_best
 from util_run_experiment import output_five_best
 from util_run_experiment import all_target_languages
 from util_run_experiment import all_words
+import util_search
 from constants import BEAMWIDTH
 
 def classify_for_hmm(problem, lm, emissions, cfd, targetlang, tt_home, model):
@@ -22,6 +23,8 @@ def classify_for_hmm(problem, lm, emissions, cfd, targetlang, tt_home, model):
     ss = sss[0]
     print(" ".join(problem.tokenized))
 
+    if model == "unigram":
+        tagged = skinnyhmm.mfs(cfd, ss)
     if model == "bigram":
         tagged = skinnyhmm.viterbi(lm, emissions, cfd, ss)
     elif model == "trigram":
@@ -35,7 +38,7 @@ def main():
     parser = util_run_experiment.get_argparser()
     args = parser.parse_args()
     assert args.targetlang in all_target_languages
-    assert args.model in ["bigram", "trigram"]
+    assert args.model in ["unigram", "bigram", "trigram"]
 
     targetlang = args.targetlang
     trialdir = args.trialdir
@@ -44,15 +47,20 @@ def main():
 
     print("Loading models...")
     lm, emissions = None, None
-    picklefn = "pickles/{0}.lm_{1}.pickle".format(targetlang, model)
-    with open(picklefn, "rb") as infile:
-        lm = pickle.load(infile)
+
+    if model != "unigram":
+        picklefn = "pickles/{0}.lm_{1}.pickle".format(targetlang, model)
+        with open(picklefn, "rb") as infile:
+            lm = pickle.load(infile)
+
     picklefn = "pickles/{0}.emit.pickle".format(targetlang)
     with open(picklefn, "rb") as infile:
         emissions = pickle.load(infile)
     cfd = learn.reverse_cfd(emissions)
     emissions = learn.cpd(emissions)
     print("OK loaded models.")
+
+    util_search.init_preset_dictionary(targetlang)
 
     for sourceword in util_run_experiment.final_test_words:
         print("Loading test problems for {0}".format(sourceword))

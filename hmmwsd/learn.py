@@ -19,6 +19,27 @@ DEBUG=False
 def pause():
     if DEBUG: input("ENTER TO CONTINUE")
 
+import string
+punctuations = string.punctuation + "«»¡"
+def strip_edge_punctuation(label):
+    """Strip out punctuation along the edges. It's pretty bad if this gets into
+    the training data."""
+
+    if all((c in string.punctuation) for c in label):
+        return label
+    ## XXX: this is terrible.
+    if label == "@card@":
+        return label
+
+    for punc in punctuations:
+        if label.startswith(punc):
+            ## print("STRIPPED", punc, "FROM", label)
+            label = label[1:]
+        if label.endswith(punc):
+            ## print("STRIPPED", punc, "FROM", label)
+            label = label[:1]
+    return label
+
 def target_words_for_each_source_word(ss, ts, alignment):
     """Given a list of tokens in source language, a list of tokens in target
     language, and a list of Berkeley-style alignments of the form target-source,
@@ -32,7 +53,8 @@ def target_words_for_each_source_word(ss, ts, alignment):
         ## TODO strip punctuation
         if (not indices[si]) or (ti == indices[si][-1] + 1):
             indices[si].append(ti)
-            out[si].append(ts[ti])
+            targetword = strip_edge_punctuation(ts[ti])
+            out[si].append(targetword)
     return [" ".join(targetwords) for targetwords in out]
 
 def get_emissions(triple_sentences):

@@ -61,6 +61,7 @@ def extract_wsd_problems(fn):
 
     out = []
     for (lexelt, head_count, context, inst) in list(handler.sentences):
+        context = context.lower()
         problem = WSDProblem(lexelt, context, instance_id=inst, testset=True)
         out.append(problem)
     return out

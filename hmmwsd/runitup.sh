@@ -3,5 +3,5 @@
 python3 run_experiment_hmm.py \
   --targetlang=es \
   --trialdir=finaltest/ \
-  --model=bigram \
+  --model=trigram \
 

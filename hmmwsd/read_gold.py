@@ -2,11 +2,11 @@
 
 from operator import itemgetter
 
-def get_gold_answers(sourceword, target):
+def get_possible_senses(sourceword, target):
     """Given a source word and a target language, load up the gold answers for
-    that word and return a map from problem ids to the best answer for that
-    instance."""
-    out = {}
+    that word and return a set of the target-language translations (sense
+    labels) for that source word."""
+    out = set()
     fn = "../eval/{0}.gold.{1}".format(sourceword, target)
     with open(fn) as infile:
         for line in infile:
@@ -19,7 +19,6 @@ def get_gold_answers(sourceword, target):
             word_count_pairs = []
             for wordandcount in rest.split(';'):
                 word, count = wordandcount.rsplit(None, 1) # count is rightmost
-                word_count_pairs.append((word,int(count)))
-            maxpair = max(word_count_pairs, key=itemgetter(1))
-            out[problemid] = maxpair[0]
+                word = word.lower()
+                out.add(word)
     return out

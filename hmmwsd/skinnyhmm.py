@@ -26,7 +26,7 @@ def mfs(cfd, unlabeled_sequence):
         bestscore = float('-inf')
         besttag = UNTRANSLATED
         for state in cfd[symbol].samples():
-            score = cfd['symbol'].logprob(state)
+            score = cfd['symbol'][state]
             if score > bestscore:
                 bestscore = score
                 besttag = state
@@ -56,7 +56,10 @@ def viterbi(lm, emissions, cfd, unlabeled_sequence):
         myvocab = vocab[t]
         pvocab = vocab[t-1]
         for sj in myvocab:
-            emission_penalty = -emissions[sj].logprob(symbol)
+            if sj in emissions.conditions():
+                emission_penalty = -emissions[sj].logprob(symbol)
+            else:
+                emission_penalty = (1000 * 1000)
             best = None
             for si in pvocab:
                 context = [si]
