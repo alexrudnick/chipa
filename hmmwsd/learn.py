@@ -102,7 +102,6 @@ def load_bitext(args):
     targetfn = args.targettext
     alignfn = args.alignments
     fast = args.fast
-    tt_home = args.treetaggerhome
 
     with open(sourcefn) as infile_s, \
          open(targetfn) as infile_t, \
@@ -114,9 +113,7 @@ def load_bitext(args):
             count += 1
             if count == (1 * 1000) and fast: break
 
-    ## input files should already be lemmatized
-    ## out_source = maybe_lemmatize(out_source, "en", tt_home)
-    ## out_target = maybe_lemmatize(out_target, args.targetlang, tt_home)
+    ## NB: input files should already be lemmatized at this point.
     return list(zip(out_source, out_target, out_align))
 
 def batch_lemmatize_sentences(sentences, language, tt_home=None):

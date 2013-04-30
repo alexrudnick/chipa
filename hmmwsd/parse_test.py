@@ -10,6 +10,7 @@ import argparse
 from xml.sax import handler, make_parser
 
 from wsd_problem import WSDProblem
+import stanford
 
 class SentenceExtractor(handler.ContentHandler):
     def __init__(self):
@@ -61,11 +62,19 @@ def extract_wsd_problems(fn):
 
     out = []
     for (lexelt, head_count, context, inst) in list(handler.sentences):
-        context = context.lower()
         problem = WSDProblem(lexelt, context, instance_id=inst, testset=True)
         out.append(problem)
+
+    sents = [problem.tokenized for problem in out]
+    tagger = stanford.get_tagger()
+    tagged_sents = tagger.batch_tag(sents)
+    assert len(tagged_sents) == len(out)
+    for tagged_sent,problem in zip(tagged_sents, out):
+        problem.tagged = [(w.lower(), t.lower()) for (w,t) in tagged_sent]
+    print("tagged.")
     return out
 
+stanford.taggerhome = "/home/alex/software/stanford-postagger-2012-11-11"
 def main():
     parser = argparse.ArgumentParser(description='clwsd')
     parser.add_argument('--problems', type=str, required=True)

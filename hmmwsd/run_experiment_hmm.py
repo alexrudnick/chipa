@@ -16,13 +16,23 @@ from util_run_experiment import all_target_languages
 from util_run_experiment import all_words
 import util_search
 from constants import BEAMWIDTH
+from constants import LIKELY_NP
+
+DEBUG=True
+def pause():
+    if DEBUG: input("ENTER TO CONTINUE")
 
 def classify_for_hmm(problem, lm, emissions, cfd, targetlang, tt_home, model):
     """For a given wsd_problem, run the HMM and see what answer we get."""
     sss = learn.maybe_lemmatize([problem.tokenized], 'en', tt_home)
-    ss = sss[0]
-    print(" ".join(problem.tokenized))
+    lemmas = sss[0]
+    postags = [t for (w,t) in problem.tagged]
+    if postags[problem.head_indices[0]] not in LIKELY_NP:
+        index = problem.head_indices[0]
+        print("FORCING NOUN, was:", problem.tagged[index-2:index+2])
+        postags[problem.head_indices[0]] = 'nn'
 
+    ss = list(map(nltk.tag.tuple2str, zip(lemmas,postags)))
     if model == "unigram":
         tagged = skinnyhmm.mfs(cfd, ss)
     if model == "bigram":
@@ -30,7 +40,7 @@ def classify_for_hmm(problem, lm, emissions, cfd, targetlang, tt_home, model):
     elif model == "trigram":
         tagged = searches.beam(lm, emissions, cfd, ss, beamwidth=BEAMWIDTH)
 
-    print(tagged[problem.head_indices[0]])
+    # print(tagged[problem.head_indices[0]])
     s,t = tagged[problem.head_indices[0]]
     return t
 
@@ -60,7 +70,7 @@ def main():
     emissions = learn.cpd(emissions)
     print("OK loaded models.")
 
-    util_search.init_preset_dictionary(targetlang)
+    ## util_search.init_preset_dictionary(targetlang)
 
     for sourceword in util_run_experiment.final_test_words:
         print("Loading test problems for {0}".format(sourceword))
