@@ -11,6 +11,7 @@ import learn
 import picklestore
 import memm_features
 import searches
+import util_run_experiment
 
 def get_argparser():
     """Build the argument parser for main."""
@@ -51,9 +52,8 @@ def build_instance(tagged_sentence, index):
     label = tagged_sentence[index][1]
     return (features, label)
 
-def extract_instances():
-    tagged_sentences = fake_data()
-
+def extract_instances(tagged_sentences):
+    # tagged_sentences = fake_data()
     ## for each sentence...
     for tagged in tagged_sentences:
         ## for each word in that sentence
@@ -61,9 +61,32 @@ def extract_instances():
             instance = build_instance(tagged, i)
             save_instance(instance, tagged[i][0])
 
+def get_argparser():
+    """Build the argument parser for main."""
+    parser = argparse.ArgumentParser(description='hmmwsd')
+    parser.add_argument('--sourcetext', type=str, required=True)
+    parser.add_argument('--targettext', type=str, required=True)
+    parser.add_argument('--targetlang', type=str, required=True)
+    parser.add_argument('--alignments', type=str, required=True)
+    parser.add_argument('--fast', type=bool, default=True, required=False)
+    return parser
+
 def main():
     nltk.classify.megam.config_megam(bin='/usr/local/bin/megam')
-    extract_instances()
+    parser = get_argparser()
+    args = parser.parse_args()
+    print(args)
+    targetlang = args.targetlang
+    assert targetlang in util_run_experiment.all_target_languages
+
+    triple_sentences = learn.load_bitext(args)
+    print("training on {0} sentences.".format(len(triple_sentences)))
+    tl_sentences = learn.get_target_language_sentences(triple_sentences)
+    sl_sentences = [s for (s,t,a) in triple_sentences]
+    tagged_sentences = [list(zip(ss, ts))
+                        for ss,ts in zip(sl_sentences, tl_sentences)]
+
+    extract_instances(tagged_sentences)
     vocab = list(INSTANCES.keys())
 
     for sw in vocab:
@@ -75,11 +98,11 @@ def main():
         classifier = picklestore.get(sw)
         print(sw, classifier)
 
-    source_sent = []
-    for i in range(random.randint(5,20)):
-        word = random.randint(1, 10)
-        source_sent.append("s{0}".format(word)) 
+    source_sent = sl_sentences[0]
     tagged = searches.beam_memm(source_sent, 10)
+    print("PREDICTED")
     print(tagged)
+    print("CORRECT")
+    print(tagged_sentences[0])
 
 if __name__ == "__main__": main()
