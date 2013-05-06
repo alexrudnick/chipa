@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 
 import itertools
+import math
 from collections import defaultdict
 from collections import namedtuple
 from operator import itemgetter
 
+import memm_features
 from util_search import build_vocab
+import picklestore
 
 Configuration = namedtuple('Configuration', ['sequence', 'penalty'])
 
@@ -79,6 +82,39 @@ def beam(lm, emissions, cfd, unlabeled_sequence, beamwidth=5):
         newconfigurations.sort(key=itemgetter(1))
         configurations = newconfigurations[:beamwidth]
 
+    ## now we're done, and we just have to take the best one!
+    sequence,penalty = configurations[0]
+    return list(zip(unlabeled_sequence, sequence))
+
+def beam_memm(unlabeled_sequence, beamwidth=5):
+    classifiers = list(map(picklestore.get, unlabeled_sequence)) ## AWWW YEAH.
+    configurations = [Configuration([], 0)]
+    T = len(unlabeled_sequence)
+
+    for t in range(T):
+        if not configurations: return None
+        nones = [None] * (T - t)
+        sourceword = unlabeled_sequence[t]
+
+        newconfigurations = []
+        for sequence,penalty in configurations:
+            seqlabels = sequence + nones
+            tagged_sent = list(zip(unlabeled_sequence, seqlabels))
+            print(len(tagged_sent), len(seqlabels), len(unlabeled_sequence))
+            assert len(tagged_sent) == len(unlabeled_sequence)
+
+            features = memm_features.extract(tagged_sent, t)
+            dist = classifiers[t].prob_classify(features)
+            probs_and_labels = [(dist.prob(key), key) for key in dist.samples()]
+
+            for (prob,label) in probs_and_labels:
+                newseq = sequence + [label]
+                ## XXX transition_logprob here too
+                newpenalty = penalty + -math.log(prob)
+                newconfigurations.append(Configuration(newseq, newpenalty))
+        ## filter down the list of new configurations
+        newconfigurations.sort(key=itemgetter(1))
+        configurations = newconfigurations[:beamwidth]
     ## now we're done, and we just have to take the best one!
     sequence,penalty = configurations[0]
     return list(zip(unlabeled_sequence, sequence))

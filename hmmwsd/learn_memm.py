@@ -10,6 +10,7 @@ from nltk.classify.maxent import MaxentClassifier
 import learn
 import picklestore
 import memm_features
+import searches
 
 def get_argparser():
     """Build the argument parser for main."""
@@ -25,7 +26,7 @@ def get_argparser():
 
 def fake_data():
     out = []
-    for sent_num in range(100):
+    for sent_num in range(1000):
         source_sent = []
         target_sent = []
         for i in range(random.randint(5,20)):
@@ -35,13 +36,12 @@ def fake_data():
         out.append(list(zip(source_sent, target_sent)))
     return out
 
-
 INSTANCES = defaultdict(list)
 def save_instance(instance, word):
     """Store this instance in the training data for this particular word. Later
     we'll replace the defaultdict with a db or something, as needed."""
     INSTANCES[word].append(instance)
-    print(word, "->", instance)
+    ## print(word, "->", instance)
 
 def get_instances(word):
     return INSTANCES[word]
@@ -62,16 +62,24 @@ def extract_instances():
             save_instance(instance, tagged[i][0])
 
 def main():
+    nltk.classify.megam.config_megam(bin='/usr/local/bin/megam')
     extract_instances()
     vocab = list(INSTANCES.keys())
 
     for sw in vocab:
         instances = get_instances(sw)
-        classifier = MaxentClassifier.train(instances, trace=0)
+        classifier = MaxentClassifier.train(instances,trace=-1,algorithm='megam')
         picklestore.save(sw, classifier)
 
     for sw in vocab:
         classifier = picklestore.get(sw)
         print(sw, classifier)
+
+    source_sent = []
+    for i in range(random.randint(5,20)):
+        word = random.randint(1, 10)
+        source_sent.append("s{0}".format(word)) 
+    tagged = searches.beam_memm(source_sent, 10)
+    print(tagged)
 
 if __name__ == "__main__": main()
