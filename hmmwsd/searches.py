@@ -6,6 +6,8 @@ from collections import defaultdict
 from collections import namedtuple
 from operator import itemgetter
 
+from nltk.probability import DictionaryProbDist
+
 import memm_features
 from util_search import build_vocab
 import picklestore
@@ -86,7 +88,21 @@ def beam(lm, emissions, cfd, unlabeled_sequence, beamwidth=5):
     sequence,penalty = configurations[0]
     return list(zip(unlabeled_sequence, sequence))
 
+UNKNOWN_DIST = DictionaryProbDist({"<OOV>": 1.0})
+
+def answer_distribution(classifiers, features, t):
+    if not classifiers[t]:
+        return UNKNOWN_DIST
+    if type(classifiers[t]) is str:
+        s = classifiers[t]
+        return DictionaryProbDist({s: 1.0})
+    dist = classifiers[t].prob_classify(features)
+    return dist
+
 def beam_memm(unlabeled_sequence, beamwidth=5):
+    """Do a beam search for the best sequence labels for the given unlabeled
+    sequence using MEMMs!"""
+
     classifiers = list(map(picklestore.get, unlabeled_sequence)) ## AWWW YEAH.
     configurations = [Configuration([], 0)]
     T = len(unlabeled_sequence)
@@ -100,16 +116,14 @@ def beam_memm(unlabeled_sequence, beamwidth=5):
         for sequence,penalty in configurations:
             seqlabels = sequence + nones
             tagged_sent = list(zip(unlabeled_sequence, seqlabels))
-            print(len(tagged_sent), len(seqlabels), len(unlabeled_sequence))
             assert len(tagged_sent) == len(unlabeled_sequence)
 
             features = memm_features.extract(tagged_sent, t)
-            dist = classifiers[t].prob_classify(features)
+            dist = answer_distribution(classifiers, features, t)
             probs_and_labels = [(dist.prob(key), key) for key in dist.samples()]
 
             for (prob,label) in probs_and_labels:
                 newseq = sequence + [label]
-                ## XXX transition_logprob here too
                 newpenalty = penalty + -math.log(prob)
                 newconfigurations.append(Configuration(newseq, newpenalty))
         ## filter down the list of new configurations

@@ -13,18 +13,6 @@ import memm_features
 import searches
 import util_run_experiment
 
-def get_argparser():
-    """Build the argument parser for main."""
-    parser = argparse.ArgumentParser(description='hmmwsd')
-    parser.add_argument('--sourcetext', type=str, required=True)
-    parser.add_argument('--targettext', type=str, required=True)
-    parser.add_argument('--targetlang', type=str, required=True)
-    parser.add_argument('--alignments', type=str, required=True)
-    parser.add_argument('--fast', type=bool, default=False, required=False)
-    parser.add_argument('--treetaggerhome', type=str, required=False,
-                        default="../TreeTagger/cmd")
-    return parser
-
 def fake_data():
     out = []
     for sent_num in range(1000):
@@ -68,7 +56,7 @@ def get_argparser():
     parser.add_argument('--targettext', type=str, required=True)
     parser.add_argument('--targetlang', type=str, required=True)
     parser.add_argument('--alignments', type=str, required=True)
-    parser.add_argument('--fast', type=bool, default=True, required=False)
+    parser.add_argument('--fast', type=bool, default=False, required=False)
     return parser
 
 def main():
@@ -85,7 +73,9 @@ def main():
     sl_sentences = [s for (s,t,a) in triple_sentences]
     tagged_sentences = [list(zip(ss, ts))
                         for ss,ts in zip(sl_sentences, tl_sentences)]
+    print("got {0} tagged sentences.".format(len(tagged_sentences)))
 
+    print("extracting training instances...")
     extract_instances(tagged_sentences)
     vocab = list(INSTANCES.keys())
 

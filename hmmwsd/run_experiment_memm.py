@@ -31,10 +31,12 @@ def classify_for_memm(problem, targetlang, tt_home, model):
         postags[problem.head_indices[0]] = 'nn'
 
     ss = list(map(nltk.tag.tuple2str, zip(lemmas,postags)))
-    if model == "bigram":
-        tagged = skinnyhmm.viterbi(lm, emissions, cfd, ss)
-    elif model == "trigram":
-        tagged = searches.beam(lm, emissions, cfd, ss, beamwidth=BEAMWIDTH)
+    tagged = searches.beam_memm(ss, beamwidth=BEAMWIDTH)
+    print(tagged)
+    ## if model == "bigram":
+    ##     tagged = skinnyhmm.viterbi(lm, emissions, cfd, ss)
+    ## elif model == "trigram":
+    ##     tagged = searches.beam(lm, emissions, cfd, ss, beamwidth=BEAMWIDTH)
 
     # print(tagged[problem.head_indices[0]])
     s,t = tagged[problem.head_indices[0]]
@@ -58,8 +60,7 @@ def main():
             model, sourceword, targetlang)
         with open(bestoutfn, "w") as bestoutfile:
             for problem in problems:
-                answer = classify_for_hmm(problem, lm, emissions, cfd,
-                                          targetlang, tt_home, model)
+                answer = classify_for_memm(problem, targetlang, tt_home, model)
                 print(output_one_best(problem, targetlang, answer),
                       file=bestoutfile)
 
