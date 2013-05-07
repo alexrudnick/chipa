@@ -8,9 +8,10 @@ import nltk
 from nltk.classify.maxent import MaxentClassifier
 
 import learn
-import picklestore
 import memm_features
+import picklestore
 import searches
+import trainingdb
 import util_run_experiment
 
 def fake_data():
@@ -26,14 +27,14 @@ def fake_data():
     return out
 
 INSTANCES = defaultdict(list)
+vocabulary = set()
 def save_instance(instance, word):
-    """Store this instance in the training data for this particular word. Later
-    we'll replace the defaultdict with a db or something, as needed."""
-    INSTANCES[word].append(instance)
-    ## print(word, "->", instance)
+    """Store this instance in the training data for this particular word."""
+    vocabulary.add(word)
+    trainingdb.save(word, instance)
 
 def get_instances(word):
-    return INSTANCES[word]
+    return trainingdb.get_all(word)
 
 def build_instance(tagged_sentence, index):
     features = memm_features.extract(tagged_sentence, index)
@@ -41,10 +42,11 @@ def build_instance(tagged_sentence, index):
     return (features, label)
 
 def extract_instances(tagged_sentences):
-    # tagged_sentences = fake_data()
-    ## for each sentence...
+    """Get all of the training instances that we're going to need to train the
+    classifier, out of the labeled sentences. Store the instances in the
+    training db."""
+    trainingdb.clear()
     for tagged in tagged_sentences:
-        ## for each word in that sentence
         for i in range(len(tagged)):
             instance = build_instance(tagged, i)
             save_instance(instance, tagged[i][0])
@@ -77,16 +79,19 @@ def main():
 
     print("extracting training instances...")
     extract_instances(tagged_sentences)
-    vocab = list(INSTANCES.keys())
 
-    for sw in vocab:
+    for sw in vocabulary:
+        print("training", sw)
         instances = get_instances(sw)
-        classifier = MaxentClassifier.train(instances,trace=-1,algorithm='megam')
-        picklestore.save(sw, classifier)
-
-    for sw in vocab:
-        classifier = picklestore.get(sw)
-        print(sw, classifier)
+        labels = set(label for (feats,label) in instances)
+        if len(labels) > 1:
+            classifier = MaxentClassifier.train(instances,
+                                                trace=0,
+                                                algorithm='megam')
+            picklestore.save(sw, classifier)
+        else:
+            print("SAVING THE ONE STRING!", labels)
+            picklestore.save(sw, list(labels)[0])
 
     source_sent = sl_sentences[0]
     tagged = searches.beam_memm(source_sent, 10)
