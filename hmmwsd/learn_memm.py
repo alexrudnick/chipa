@@ -2,10 +2,14 @@
 
 import argparse
 import random
+import pickle
 from collections import defaultdict
 
 import nltk
 from nltk.classify.maxent import MaxentClassifier
+from nltk.probability import ConditionalFreqDist
+from nltk.probability import ConditionalProbDist
+from nltk.probability import LaplaceProbDist
 
 import learn
 import memm_features
@@ -13,6 +17,8 @@ import picklestore
 import searches
 import trainingdb
 import util_run_experiment
+from constants import CLASSIFIER_THRESHOLD
+from constants import EIGHT
 
 def fake_data():
     out = []
@@ -30,26 +36,31 @@ INSTANCES = defaultdict(list)
 vocabulary = set()
 def save_instance(instance, word):
     """Store this instance in the training data for this particular word."""
-    vocabulary.add(word)
     trainingdb.save(word, instance)
-
-def get_instances(word):
-    return trainingdb.get_all(word)
 
 def build_instance(tagged_sentence, index):
     features = memm_features.extract(tagged_sentence, index)
     label = tagged_sentence[index][1]
     return (features, label)
 
-def extract_instances(tagged_sentences):
+def extract_instances(tagged_sentences, words_to_include):
     """Get all of the training instances that we're going to need to train the
     classifier, out of the labeled sentences. Store the instances in the
     training db."""
     trainingdb.clear()
+    sentnum = 0
     for tagged in tagged_sentences:
+        if (sentnum % 10000 ==0):
+            print("getting instances from sentence", sentnum)
+        savethese = []
         for i in range(len(tagged)):
-            instance = build_instance(tagged, i)
-            save_instance(instance, tagged[i][0])
+            word = tagged[i][0]
+            if word in words_to_include:
+                instance = build_instance(tagged, i)
+                savethese.append((word,instance))
+        # print("batch saving {0} instances".format(len(savethese)))
+        trainingdb.save_many(savethese)
+        sentnum += 1
 
 def get_argparser():
     """Build the argument parser for main."""
@@ -77,27 +88,40 @@ def main():
                         for ss,ts in zip(sl_sentences, tl_sentences)]
     print("got {0} tagged sentences.".format(len(tagged_sentences)))
 
+    uses = ConditionalFreqDist()
+    print("counting uses...")
+    for tagged_sent in tagged_sentences:
+        for (s,t) in tagged_sent:
+            vocabulary.add(s)
+            uses[s].inc(t)
+
+    words_to_include = set()
+    for word in vocabulary:
+        if uses[word].N() > CLASSIFIER_THRESHOLD and uses[word].B() > 1:
+            words_to_include.add(word)
+
+    print("words with over", CLASSIFIER_THRESHOLD, "uses:",
+          len(words_to_include))
+
     print("extracting training instances...")
-    extract_instances(tagged_sentences)
+    extract_instances(tagged_sentences, words_to_include)
+    
+    wordlist_files = []
+    for i in range(EIGHT):
+        wordlist_files.append(open("WORKLIST/{0}".format(i), "w"))
+    for wordnum, sw in enumerate(words_to_include):
+        out = wordlist_files[wordnum % EIGHT]
+        print(sw, file=out)
+    for i in range(EIGHT):
+        wordlist_files[i].close()
 
-    for sw in vocabulary:
-        print("training", sw)
-        instances = get_instances(sw)
-        labels = set(label for (feats,label) in instances)
-        if len(labels) > 1:
-            classifier = MaxentClassifier.train(instances,
-                                                trace=0,
-                                                algorithm='megam')
-            picklestore.save(sw, classifier)
-        else:
-            print("SAVING THE ONE STRING!", labels)
-            picklestore.save(sw, list(labels)[0])
+    ## otherwise: save a big ConditionalProbDist
+    uses_cpd = learn.cpd(uses)
+    picklefn = "pickles/{0}.uses_cpd.pickle".format(targetlang)
+    with open(picklefn, "wb") as outfile:
+        pickle.dump(uses_cpd, outfile)
+    del uses_cpd
 
-    source_sent = sl_sentences[0]
-    tagged = searches.beam_memm(source_sent, 10)
-    print("PREDICTED")
-    print(tagged)
-    print("CORRECT")
-    print(tagged_sentences[0])
+    print("saved everything. done.")
 
 if __name__ == "__main__": main()

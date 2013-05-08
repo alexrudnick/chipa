@@ -53,7 +53,7 @@ def extract(tagged_sent, index):
     """Given a WSDProblem, return the features for the sentence."""
     out = {}
     allfeatures = [
-        bagofwords,
+        #bagofwords, probably too expensive
         window,
         prev_label,
         prev_prev_label,
