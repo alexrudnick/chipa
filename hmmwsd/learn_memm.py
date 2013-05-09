@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 import argparse
-import random
+import itertools
 import pickle
+import random
 from collections import defaultdict
 
 import nltk
@@ -19,6 +20,7 @@ import trainingdb
 import util_run_experiment
 from constants import CLASSIFIER_THRESHOLD
 from constants import EIGHT
+from constants import NOUN
 
 def fake_data():
     out = []
@@ -99,9 +101,12 @@ def main():
     for word in vocabulary:
         if uses[word].N() > CLASSIFIER_THRESHOLD and uses[word].B() > 1:
             words_to_include.add(word)
+    targetwords = util_run_experiment.all_words
+    targetwords_with_tags = [nltk.tag.tuple2str((w,t))
+                             for (w,t) in itertools.product(targetwords, NOUN)]
+    words_to_include.update(targetwords_with_tags)
 
-    print("words with over", CLASSIFIER_THRESHOLD, "uses:",
-          len(words_to_include))
+    print("words we want to train for ", len(words_to_include))
 
     print("extracting training instances...")
     extract_instances(tagged_sentences, words_to_include)

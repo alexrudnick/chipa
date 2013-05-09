@@ -10,6 +10,8 @@ import nltk
 from nltk.classify.maxent import MaxentClassifier
 import picklestore
 import trainingdb
+import random
+from constants import MAX_TRAINING_INSTANCES
 
 def get_instances(word):
     return trainingdb.get_all(word)
@@ -23,10 +25,20 @@ def main():
 
     print("extracting training instances...")
     for wordnum, sw in enumerate(words_to_include):
-        print("training", sw, "{0}/{1}".format(wordnum, len(words_to_include)))
+        instances = get_instances(sw)
+        if not instances:
+            print("no instances for {0}, skipping".format(sw))
+            continue
+        if len(instances) > MAX_TRAINING_INSTANCES:
+            print("TOO MANY! Sampling {0} down.".format(sw))
+            instances = random.sample(instances, MAX_TRAINING_INSTANCES)
+            
+        print("training", sw, "{0}/{1} with {2} instances".format(
+            wordnum, len(words_to_include), len(instances)))
         instances = get_instances(sw)
         classifier = MaxentClassifier.train(instances,
                                             trace=0,
+                                            max_iter=10,
                                             algorithm='megam')
         picklestore.save(sw, classifier)
 

@@ -4,6 +4,7 @@ import argparse
 from operator import itemgetter
 import pickle
 import nltk
+from nltk.probability import FreqDist
 from nltk.probability import ConditionalFreqDist
 from nltk.probability import ConditionalProbDist
 from nltk.probability import ELEProbDist
@@ -74,6 +75,16 @@ def get_emissions(triple_sentences):
         for (source, target) in nozeros:
             emissions[target].inc(source)
     return emissions
+
+def get_source_priors(triple_sentences):
+    """Return a probability distribution over the individual words in the source
+    sentence, which we're going to use later."""
+
+    wordcounts = FreqDist()
+    for (ss, ts, alignment) in triple_sentences:
+        for sw in ss:
+            wordcounts.inc(sw)
+    return ELEProbDist(wordcounts)
 
 def get_target_language_sentences(triple_sentences):
     """Return all of the "sentences" over the target language, used for training
@@ -179,6 +190,15 @@ def main():
     triple_sentences = load_bitext(args)
     print("training on {0} sentences.".format(len(triple_sentences)))
 
+    ## NB: this is ridiculous, why are we doing this.
+    print("source priors")
+    source_priors = get_source_priors(triple_sentences)
+    picklefn = "pickles/{0}.sourcepriors.pickle".format(targetlang)
+    with open(picklefn, "wb") as outfile:
+        pickle.dump(source_priors, outfile)
+    del source_priors
+
+    print("emissions")
     emissions = get_emissions(triple_sentences)
     picklefn = "pickles/{0}.emit.pickle".format(targetlang)
     with open(picklefn, "wb") as outfile:
@@ -187,16 +207,20 @@ def main():
 
     tl_sentences = get_target_language_sentences(triple_sentences)
 
+    print("trigram model")
     lm_trigram = NgramModel(3, tl_sentences, pad_left=True, pad_right=True)
     picklefn = "pickles/{0}.lm_trigram.pickle".format(targetlang)
     with open(picklefn, "wb") as outfile:
         pickle.dump(lm_trigram, outfile)
     del lm_trigram
 
+    print("bigram model")
     lm_bigram = NgramModel(2, tl_sentences, pad_left=True, pad_right=True)
     picklefn = "pickles/{0}.lm_bigram.pickle".format(targetlang)
     with open(picklefn, "wb") as outfile:
         pickle.dump(lm_bigram, outfile)
     del lm_bigram
+
+    print("done.")
 
 if __name__ == "__main__": main()

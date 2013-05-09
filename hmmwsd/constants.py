@@ -10,7 +10,8 @@ BEAMWIDTH=50
 EIGHT = 8
 
 ## Tunable.
-CLASSIFIER_THRESHOLD = 100
+CLASSIFIER_THRESHOLD = 300
+MAX_TRAINING_INSTANCES = 1000
 
 NOUN = {'nn','nns','nnp','np','nnps','nps'}
 LIKELY_NP = {'jj','jjr','jjs','pos','dt','nn','nns','nnp','np','nnps','nps'}
