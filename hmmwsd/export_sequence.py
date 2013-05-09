@@ -25,7 +25,6 @@ def get_argparser():
     parser = argparse.ArgumentParser(description='memmwsd')
     parser.add_argument('--sourcetext', type=str, required=True)
     parser.add_argument('--targettext', type=str, required=True)
-    parser.add_argument('--targetlang', type=str, required=True)
     parser.add_argument('--alignments', type=str, required=True)
     parser.add_argument('--fast', type=bool, default=False, required=False)
     return parser
@@ -33,8 +32,6 @@ def get_argparser():
 def main():
     parser = get_argparser()
     args = parser.parse_args()
-    targetlang = args.targetlang
-    assert targetlang in util_run_experiment.all_target_languages
 
     triple_sentences = learn.load_bitext(args)
     print("loaded bitext!")
