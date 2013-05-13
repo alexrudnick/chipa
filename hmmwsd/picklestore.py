@@ -30,11 +30,11 @@ def main():
     cursor = conn.cursor()
     cursor.execute("""CREATE TABLE if not exists
                       pickles(key STRING PRIMARY KEY, pickle BLOB)""")
-    item = {"foo":"bar", "hello":"hello"}
-    item2 = set(list(range(100)))
-    save('item', item)
-    save('item2', item2)
-    print(item2 == get('item2'))
-    print(item == get('item'))
+    ## item = {"foo":"bar", "hello":"hello"}
+    ## item2 = set(list(range(100)))
+    ## save('item', item)
+    ## save('item2', item2)
+    ## print(item2 == get('item2'))
+    ## print(item == get('item'))
 
 if __name__ == "__main__": main()

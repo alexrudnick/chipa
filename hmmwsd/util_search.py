@@ -1,8 +1,17 @@
 #!/usr/bin/env python3
 
+from collections import namedtuple
+
 from constants import UNTRANSLATED
+from constants import OOV
 from util_run_experiment import final_test_words
 import read_gold
+
+## - language model for transitions over target language
+## - emissions (for emitting source language)
+## - the cfd to extract the vocabulary
+## - priors for source language
+HMMParts = namedtuple('HMM', ['lm', 'emissions', 'cfd', 'sourcepriors'])
 
 preset_dictionary = {}
 def init_preset_dictionary(targetlang):
@@ -37,7 +46,7 @@ def build_vocab(unlabeled_sequence, cfd, MINCOUNT):
             print(cfd[symbol].items())
             assert False
         if not vocab[t]:
-            vocab[t] = ["<untranslated>"]
+            vocab[t] = [OOV]
     return vocab
 
 def transition_logprob(lm, state, context):

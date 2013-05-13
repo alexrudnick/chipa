@@ -8,8 +8,10 @@ from operator import itemgetter
 
 from nltk.probability import DictionaryProbDist
 
-import memm_features
+from constants import OOV
 from util_search import build_vocab
+from util_search import transition_logprob
+import memm_features
 import picklestore
 
 Configuration = namedtuple('Configuration', ['sequence', 'penalty'])
@@ -88,21 +90,41 @@ def beam(lm, emissions, cfd, unlabeled_sequence, beamwidth=5):
     sequence,penalty = configurations[0]
     return list(zip(unlabeled_sequence, sequence))
 
-UNKNOWN_DIST = DictionaryProbDist({"<OOV>": 1.0})
 
-def answer_distribution(classifiers, features, t):
-    if not classifiers[t]:
-        return UNKNOWN_DIST
-    if type(classifiers[t]) is str:
-        s = classifiers[t]
-        return DictionaryProbDist({s: 1.0})
-    dist = classifiers[t].prob_classify(features)
-    return dist
+## XXX what do we need for this one?
+## - hmm parts
+## - current sequence.
+## - timestep
+def backoff_conditional_distribution(tagged_sent, t, vocab, hmmparts):
+    """We don't have a classifier stored for this word. So we want to compute
+    this distribution here:
 
-def beam_memm(unlabeled_sequence, beamwidth=5):
+    P(label | word, prevlabel) = \
+        P(label|prevlabel) * P(word|label,prevlabel) / P(word)
+
+    ... as negative logprobs, of course. P(word|label, prevlabel) we approximate
+    as just P(word|label).
+    """
+    if OOV in vocab[t]:
+        return [(OOV, 1.0)]
+    out = []
+    sw = tagged_sent[t][0]
+    wordpenalty = -hmmparts.sourcepriors.logprob(sw)
+    context = ['','']
+    if t > 0: context[1] = tagged_sent[t-1][1]
+    if t > 1: context[0] = tagged_sent[t-2][1]
+    for newword in vocab[t]:
+        transition_penalty = transition_logprob(hmmparts.lm, newword, context)
+        emission_penalty = -hmmparts.emissions[newword].logprob(sw)
+        newpenalty = transition_penalty + emission_penalty - wordpenalty
+        out.append((newword, newpenalty))
+    return out
+
+def beam_memm(unlabeled_sequence, hmmparts, beamwidth=5):
     """Do a beam search for the best sequence labels for the given unlabeled
     sequence using MEMMs!"""
 
+    vocab = build_vocab(unlabeled_sequence, hmmparts.cfd, 5)
     classifiers = list(map(picklestore.get, unlabeled_sequence)) ## AWWW YEAH.
     configurations = [Configuration([], 0)]
     T = len(unlabeled_sequence)
@@ -118,14 +140,23 @@ def beam_memm(unlabeled_sequence, beamwidth=5):
             tagged_sent = list(zip(unlabeled_sequence, seqlabels))
             assert len(tagged_sent) == len(unlabeled_sequence)
 
-            features = memm_features.extract(tagged_sent, t)
-            dist = answer_distribution(classifiers, features, t)
-            probs_and_labels = [(dist.prob(key), key) for key in dist.samples()]
-
-            for (prob,label) in probs_and_labels:
-                newseq = sequence + [label]
-                newpenalty = penalty + -math.log(prob)
-                newconfigurations.append(Configuration(newseq, newpenalty))
+            if classifiers[t]:
+                # print(unlabeled_sequence[t], "-> classifier.")
+                features = memm_features.extract(tagged_sent, t)
+                dist = classifiers[t].prob_classify(features)
+                probs_and_labels = [(dist.prob(key), key) for key in dist.samples()]
+                for (prob,label) in probs_and_labels:
+                    newseq = sequence + [label]
+                    newpenalty = penalty + -math.log(prob)
+                    newconfigurations.append(Configuration(newseq, newpenalty))
+            else:
+                # print(unlabeled_sequence[t], "-> back off to hmm.")
+                pairs = backoff_conditional_distribution(tagged_sent, t,
+                                                         vocab, hmmparts)
+                for (label, transpenalty) in pairs:
+                    newseq = sequence + [label]
+                    newpenalty = penalty + transpenalty
+                    newconfigurations.append(Configuration(newseq, newpenalty))
         ## filter down the list of new configurations
         newconfigurations.sort(key=itemgetter(1))
         configurations = newconfigurations[:beamwidth]

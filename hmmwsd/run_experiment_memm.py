@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-import sys
 import argparse
+import pickle
+import sys
 
 import nltk
 
@@ -12,6 +13,7 @@ from util_run_experiment import output_one_best
 from util_run_experiment import output_five_best
 from util_run_experiment import all_target_languages
 from util_run_experiment import all_words
+from util_search import HMMParts
 import util_search
 from constants import BEAMWIDTH
 from constants import LIKELY_NP
@@ -20,7 +22,7 @@ DEBUG=True
 def pause():
     if DEBUG: input("ENTER TO CONTINUE")
 
-def classify_for_memm(problem, targetlang, tt_home, model):
+def classify_for_memm(problem, targetlang, tt_home, hmmparts, model):
     """For a given wsd_problem, run the MEMM and see what answer we get."""
     sss = learn.maybe_lemmatize([problem.tokenized], 'en', tt_home)
     lemmas = sss[0]
@@ -31,14 +33,8 @@ def classify_for_memm(problem, targetlang, tt_home, model):
         postags[problem.head_indices[0]] = 'nn'
 
     ss = list(map(nltk.tag.tuple2str, zip(lemmas,postags)))
-    tagged = searches.beam_memm(ss, beamwidth=BEAMWIDTH)
+    tagged = searches.beam_memm(ss, hmmparts, beamwidth=BEAMWIDTH)
     print(tagged)
-    ## if model == "bigram":
-    ##     tagged = skinnyhmm.viterbi(lm, emissions, cfd, ss)
-    ## elif model == "trigram":
-    ##     tagged = searches.beam(lm, emissions, cfd, ss, beamwidth=BEAMWIDTH)
-
-    # print(tagged[problem.head_indices[0]])
     s,t = tagged[problem.head_indices[0]]
     return t
 
@@ -53,6 +49,23 @@ def main():
     tt_home = args.treetaggerhome
     model = args.model
 
+    ## models from the HMM.
+    picklefn = "pickles/{0}.lm_{1}.pickle".format(targetlang, model)
+    with open(picklefn, "rb") as infile:
+        lm = pickle.load(infile)
+    picklefn = "pickles/{0}.emit.pickle".format(targetlang)
+    with open(picklefn, "rb") as infile:
+        emissions = pickle.load(infile)
+    cfd = learn.reverse_cfd(emissions)
+    emissions = learn.cpd(emissions)
+
+    picklefn = "pickles/{0}.sourcepriors.pickle".format(targetlang)
+    with open(picklefn, "rb") as infile:
+        sourcepriors = pickle.load(infile)
+    print("OK loaded models.")
+
+    hmmparts = HMMParts(lm, emissions, cfd, sourcepriors)
+
     for sourceword in util_run_experiment.final_test_words:
         print("Loading test problems for {0}".format(sourceword))
         problems = util_run_experiment.get_test_instances(trialdir, sourceword)
@@ -60,7 +73,8 @@ def main():
             model, sourceword, targetlang)
         with open(bestoutfn, "w") as bestoutfile:
             for problem in problems:
-                answer = classify_for_memm(problem, targetlang, tt_home, model)
+                answer = classify_for_memm(problem, targetlang, tt_home, hmmparts,
+                                           model)
                 print(output_one_best(problem, targetlang, answer),
                       file=bestoutfile)
 
