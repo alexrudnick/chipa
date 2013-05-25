@@ -23,10 +23,10 @@ showstringspaces=false
 %% \title{Cross-Language WSD for Hybrid MT as Sequence Labeling}
 \title{Lexical Selection for Hybrid MT with Sequence Labeling}
 
-\author{Anonymous and Anonymous \\
-  Anonymous University \\
-  {\tt email@domain} \\
-}
+
+\author{Alex Rudnick and Michael Gasser\\
+        Indiana University, School of Informatics and Computing \\
+        {\tt \{alexr,gasser\}@indiana.edu}}
 
 \date{}
 
@@ -87,9 +87,9 @@ word-by-word translation baseline \cite{resnik:aaai}.
 
 This is work in progress and our code is currently ``research-quality", but we
 are developing the software\footnote{Available at
-\url{http://github.com/XXX/XXX}} in the open, with the intention of using it
-with free RBMT systems and producing an easily reusable package as the system
-matures.
+\url{http://github.com/alexrudnick/clwsd}} in the open, with the intention of
+using it with free RBMT systems and producing an easily reusable package as the
+system matures.
 
 \section{Related Work}
 To our knowledge, there has not been work specifically on sequence labeling
@@ -151,7 +151,7 @@ second- or higher-order models, although it slows down considerably and in the
 interest of time we may wish to use an approximate search like beam search.
 
 \section{Sequence Labeling With MEMMs and HMMs}
-In contrast with and HMM, an MEMM is a discriminative sequence model, with
+In contrast with an HMM, an MEMM is a discriminative sequence model, with
 which we can calculate the conditional probability $P(T|S)$, using individual
 discriminative classifiers that model $P(t_i | F)$ (for some features $F$).
 Like an HMM, an MEMM models of transitions over labels, but unlike an HMM, the
@@ -308,10 +308,10 @@ times in the training data.
 
 \section{Morphological Analysis for Guarani}
 \label{sec:guaranima}
-We analyze the Spanish and Guarani Bible using an in-house morphological
-%% XXX: update later
-analyzer, based on the one developed by Michael Gasser for Ethiopian Semitic
-languages \cite{gasser:eacl09}.  As in other, more familiar, modern
+We analyze the Spanish and Guarani Bible using our in-house morphological
+analyzer, originally developed for Ethiopian Semitic languages 
+\cite{gasser:eacl09}.
+As in other, more familiar, modern
 morphological analyzers such as \cite{beesley+karttunen}, analysis in our
 system is modeled by cascades of finite-state transducers (FSTs).  To solve the
 problem of long-distance dependencies, we extend the basic FST framework using
