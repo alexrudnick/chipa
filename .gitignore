@@ -35,3 +35,6 @@ nosetests.xml
 .pydevproject
 
 clwsd/hmmwsd/pickles
+
+## All the output we're going to generate
+hmmwsd/*output*/*
