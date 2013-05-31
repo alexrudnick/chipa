@@ -3,7 +3,6 @@
 \usepackage{times}
 \usepackage{url}
 \usepackage{latexsym}
-\usepackage{subcaption}
 \usepackage{listings}
 \usepackage{float}
 \floatstyle{boxed}
@@ -20,7 +19,6 @@ showstringspaces=false
 %\setlength\titlebox{6.5cm}    % You can expand the title box if you
 % really have to
 
-
 %% helpful suggestions from reviewers
 % TODO please provide linguistic examples and intuitions for the approach
 % - (maybe just the explanation with math is not super-helpful)
@@ -31,20 +29,19 @@ showstringspaces=false
 %% TODO clarify the situation with windows. what do we mean by a three-word
 % window?
 
-%% TODO Define MFS.
-
-%% TODO make it more clear what we mean by "precision" and "accuracy"; the
-% reviewer didn't know whether they were the same thing. (maybe they missed
-% it?)
-
 %% TODO are the results statistically significant?
 
-%% TODO "At the end of the first paragraph of section 7, we can read that the
+%% DONE "At the end of the first paragraph of section 7, we can read that the
 % use of the sequence of previous labels is informative, since MaxEnt and MEMM
 % outperform HMM systems. However, in both Figure 1 and Figure 2, all
 % approaches include previous labels. In fact, the feature that seems to make
 % the difference is the three-word window, that is present in MaxEnt and MEMM
 % and it is not in HMM."
+%% DONE Define MFS.
+%% DONE make it more clear what we mean by "precision" and "accuracy"; the
+% reviewer didn't know whether they were the same thing. (maybe they missed
+% it?)
+
 
 \title{Lexical Selection for Hybrid MT with Sequence Labeling}
 
@@ -224,41 +221,41 @@ For inference with this model, we implemented a beam search rather than the
 Viterbi algorithm, for convenience and speed while using a second-order Markov
 model.
 
-%%A sketch of the beam search implementation is presented in Figure
-%%\ref{fig:beamsearch}.
-%%
-%%\begin{figure*}
-%%\begin{lstlisting}[frame=none]
-%%def beam_search(sequence, HMM, source_word_priors, classifiers):
-%%    """Search over possible label sequences for the input sequence. Return the
-%%       best sequence we find."""
-%%    # list of incomplete candidate labelings, with their penalties
-%%    candidates = [Candidate([], 0)] # empty label sequence with 0 penalty
-%%    for t in range(len(sequence)):
-%%        sourceword = sequence[t]
-%%        new_candidates = []
-%%        for candidate in candidates:
-%%            context = candidates.get_context(t) # last k labels
-%%            if sourceword in classifiers:
-%%                features = extract_features(sequence, t, context)
-%%                label_distribution = classifiers[sourceword].prob_classify(features)
-%%            else:
-%%                label_distribution = Distribution()
-%%                for label in get_vocabulary(sourceword):
-%%                    label_distribution[label] = (HMM.transition(context, label) +
-%%                                                 HMM.emission(sourceword, label) -
-%%                                                 source_word_priors[sourceword])
-%%            new_candidates = add_new_candidates(label_distribution)
-%%        candidates = filter_top_k(new_candidates, BEAMWIDTH)
-%%    return get_best(candidates)
-%%
-%%\end{lstlisting}
-%%\caption{Python-style code sketch for combined MEMM/HMM beam search. We assume
-%%that \texttt{prob\_classify} returns a mapping from labels to negative
-%%log-probabilities, which we interpret as penalties to be minimized.
-%%}
-%%\label{fig:beamsearch}
-%%\end{figure*}
+A sketch of the beam search implementation is presented in Figure
+\ref{fig:beamsearch}.
+
+\begin{figure*}
+\begin{lstlisting}[frame=none]
+def beam_search(sequence, HMM, source_word_priors, classifiers):
+    """Search over possible label sequences for the input sequence. Return the
+       best sequence we find."""
+    # list of incomplete candidate labelings, with their penalties
+    candidates = [Candidate([], 0)] # empty label sequence with 0 penalty
+    for t in range(len(sequence)):
+        sourceword = sequence[t]
+        new_candidates = []
+        for candidate in candidates:
+            context = candidates.get_context(t) # last k labels
+            if sourceword in classifiers:
+                features = extract_features(sequence, t, context)
+                label_distribution = classifiers[sourceword].prob_classify(features)
+            else:
+                label_distribution = Distribution()
+                for label in get_vocabulary(sourceword):
+                    label_distribution[label] = (HMM.transition(context, label) +
+                                                 HMM.emission(sourceword, label) -
+                                                 source_word_priors[sourceword])
+            new_candidates = add_new_candidates(label_distribution)
+        candidates = filter_top_k(new_candidates, BEAMWIDTH)
+    return get_best(candidates)
+
+\end{lstlisting}
+\caption{Python-style code sketch for combined MEMM/HMM beam search. We assume
+that \texttt{prob\_classify} returns a mapping from labels to negative
+log-probabilities, which we interpret as penalties to be minimized.
+}
+\label{fig:beamsearch}
+\end{figure*}
 
 \section{Experiments}
 So far, we have evaluated our sequence-labeling system in two different
@@ -408,21 +405,33 @@ Guarani Bible}
 \end{figure*}
 
 \section{Results}
-We see the scores for the first experiment in Figure \ref{fig:theresults}. The
-first MFS baseline reported (``with tag"), is the baseline in which we always
-take the most frequent label for the source word, conditioned on its POS tag.
-The other MFS baseline is from the SemEval competition, not conditioned on POS
-tag. Perhaps unsurprisingly, here we see part-of-speech tagging doing some of
-the lexical disambiguation work. Neither of the HMM systems beat the
-most-frequent-sense baseline, but both the non-sequence MaxEnt classifier and
-the MEMM system did, suggesting that the previous labels are informative, and
-that the beam search finds fairly good label sequences.
+The scores for the first experiment are presented in Figure
+\ref{fig:theresults}. Here we use the precision metric calculated by the
+scripts for the SemEval shared task \cite{task10}, which compare the answers
+produced by the system against several reference answers given by human
+annotators. There are two ``most-frequent sense" baselines reported.  The first
+one (``with tag"), is the baseline in which we always take the most frequent
+label for a given source word, conditioned on its POS tag. The other MFS
+baseline is not conditioned on POS tag; this was the baseline for the SemEval
+task.  Perhaps unsurprisingly, we see part-of-speech tagging doing some of the
+lexical disambiguation work.
+
+Neither of the HMM systems beat the most-frequent-sense baselines, but both the
+non-sequence MaxEnt classifier and the MEMM system did, which suggests that the
+window features are useful in selecting target-language words. Furthermore, the
+MEMM system outperforms the MaxEnt classifiers.
+%% XXX significance test here?
 
 The scores for the second experiment are presented in Figure
-\ref{fig:theresults2}; here we see similar results. Neither of the HMM systems
-beat the MFS baseline, and the trigram model was noticeably worse. The training
-set here is probably too sparse to train a good trigram model. The MEMM system,
-however, did beat the baseline, posting the highest results.
+\ref{fig:theresults2}. In this experiment, we did not have human-annotated
+reference translations for each word, so we take the labels produced by the
+aligner as ground truth and can only report per-word classfication accuracy,
+rather than the more sophisticated precision metric used in the shared task.
+
+Here we see similar results. Neither of the HMM systems beat the MFS baseline,
+and the trigram model was noticeably worse. The training set here is probably
+too sparse to train a good trigram model. The MEMM system, however, did beat
+the baseline, posting the highest results.
 
 %%english to Spanish
 %%unigrams mean: 24.9745
