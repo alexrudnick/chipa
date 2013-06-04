@@ -67,7 +67,8 @@ this system both in translating English to Spanish and Spanish to Guarani.
 \end{abstract}
 
 \section{Introduction}
-Lexical ambiguity presents a serious challenge for rule-based MT systems, since
+Lexical ambiguity presents a serious challenge for rule-based machine translation
+(RBMT) systems, since
 many words have several possible translations in a given target language, and
 more than one of them may be syntactically valid in context. A translation
 system must choose a translation for each word or phrase in the input sentence,
@@ -83,36 +84,28 @@ enumerate the contexts under which they would choose one translation
 alternative over another. Thus we would like to learn from corpora where
 possible. 
 
-Framing the resolution of lexical ambiguities as an explicit classification
-task has a long history, dating back at least as to early SMT work at IBM
+Framing the resolution of lexical ambiguities in machine translation
+as an explicit classification
+task has a long history, dating back at least to early SMT work at IBM
 \cite{Brown91word-sensedisambiguation}.  More recently, Carpuat and Wu have
 shown how to use word-sense disambiguation techniques to improve modern
 phrase-based SMT systems \cite{carpuatpsd}, even though the language model and
-phrase-tables of these systems can mitigate the problem of lexical ambiguities
+phrase tables of these systems can mitigate the problem of lexical ambiguities
 somewhat. Treating lexical selection as a word-sense disambiguation problem, in
 which the sense inventory for each source-language word is its set of possible
 translations, is often called cross-lingual WSD (CL-WSD). This framing has
-received enough attention to warrant shared tasks at recent SemEvals; the most
-recent running of the task is described in \cite{task10}.
+received enough attention to warrant shared tasks at recent SemEval workshops;
+the most recent running of the task is described in \cite{task10}.
 
 Intuitively, machine translation implies an ``all-words" WSD task, both in that
 we need to choose a translation for every word or phrase in the source
 sentence, and in that we want to produce a \emph{sequence} of translations that
-makes sense taken together. Here we begin to explore CL-WSD not just
-as a classification task, but as one of sequence labeling. Treating the lexical
-selection task as sequence labeling is in some sense like building a simplified
-SMT system, although here we disregard reordering and the multi-word phrases in
-the source language.
-%% While lexical selection by itself does not make a
-%% complete MT system, for languages with relatively close syntax, it could be
-%% useful for extracting the gist of a text, something like Resnik's early
-%% word-by-word translation baseline \cite{resnik:aaai}.
-
-Here we present initial work on a lexical selection system for hybrid MT that
-makes use of a sequence labeling approach, including experiments in which we
-apply it to the SemEval 2013 shared task on CL-WSD \cite{task10} and also an
-all-words labeling task in which we translate text from the Bible from Spanish
-to Guarani. This is work in progress and our code is currently
+makes sense taken together. Here we begin to explore CL-WSD not just as a
+classification task, but as one of sequence labeling. We describe our approach
+and implementation, and present two experiments, one in which we apply the
+system to the SemEval 2013 shared task on CL-WSD \cite{task10}, and a second,
+an all-words labeling task in which we translate text from the Bible from
+Spanish to Guarani. This is work in progress and our code is currently
 ``research-quality", but we are developing the software in the
 open\footnote{\url{http://github.com/alexrudnick/clwsd}}, with the intention of
 using it with free RBMT systems and producing an easily reusable package as the
@@ -120,13 +113,13 @@ system matures.
 
 \section{Related Work}
 To our knowledge, there has not been work specifically on sequence labeling
-applied to lexical selection for rule-based MT systems. However, 
+applied to lexical selection for RBMT systems. However, 
 there has been work recently on using WSD techniques for translation into
 lower-resourced languages, such as the English-Slovene language pair, as in 
 \cite{vintar-fivser-vrvsvcaj:2012:ESIRMT-HyTra2012}. 
 
 The Apertium team has a particular practical interest in improving lexical
-selection in rule-based machine translation; they recently have been developing
+selection in RBMT; they recently have been developing
 a new system, described in \cite{tyers-fst}, that learns finite-state
 transducers for lexical selection from the available parallel corpora. It is
 intended to be both very fast, for use in practical translation systems, and
@@ -181,10 +174,10 @@ interest of speed, in this work we performed decoding for second-order HMMs
 with a beam search.
 
 \section{Sequence Labeling With MEMMs and HMMs}
-In contrast with an HMM, an MEMM is a discriminative sequence model, with
+In contrast to an HMM, an MEMM is a discriminative sequence model, with
 which we can calculate the conditional probability $P(T|S)$, using individual
 discriminative classifiers that model $P(t_i | F)$ (for some features $F$).
-Like an HMM, an MEMM models of transitions over labels, but unlike an HMM, the
+Like an HMM, an MEMM models transitions over labels, but unlike an HMM, the
 input sequence is considered given. This frees us to include any features we
 like from the source-language sentence. The ``Markov" aspect of the MEMM is
 that, unlike a standard maximum entropy classifier, we can include information
@@ -480,11 +473,11 @@ sophisticated sequence tagging models, such as CRFs
 data to make use of richer models.
 
 Our goal for this work is practical in that we are trying to produce a
-primarily-RBMT system for Spanish-Guarani, but we are interested machine
+system for Spanish-Guarani that is primarily RBMT, but we are interested machine
 learning methods where applicable; we have a small amount of training data
-available and plans to collect more.  At the time of writing, we are working
+available and plan to collect more.  At the time of writing, we are working
 with a prototype lexical selection system that is not yet integrated into the
-rule-based MT engine, but this integration is among our near-term goals.
+RBMT engine, but this integration is among our near-term goals.
 
 A limitation of the current design is that we do not yet have a good way to
 make use of monolingual training data. In SMT, it is common practice to train a
@@ -495,7 +488,8 @@ model can only be trained on aligned bitext.  Given Guarani text that had been
 rearranged into a Spanish-like word order, we could build a better model for
 the transition probabilities in the HMM component of the system. It might be
 feasible to use a Guarani-language parser and some linguistic knowledge for
-this purpose, though acquiring a good parser may present some difficulty.
+this purpose; a component of our evolving RBMT system is a rudimentary
+Guarani parser that may be suitable for this purpose.
 We will also investigate ways to identify multiword expressions that should be
 translated as a unit, rather than word-by-word.
 
