@@ -73,7 +73,7 @@ more than one of them may be syntactically valid in context. A translation
 system must choose a translation for each word or phrase in the input sentence,
 and simply taking the most common translation will often fail, as a word in the
 source language may have translations in the target language with significantly
-different meanings. Even when chosing among near-synonyms, we would like to
+different meanings. Even when choosing among near-synonyms, we would like to
 respect selectional preferences and common collocations to produce
 natural-sounding output text.
 
@@ -425,7 +425,7 @@ MEMM system outperforms the MaxEnt classifiers.
 The scores for the second experiment are presented in Figure
 \ref{fig:theresults2}. In this experiment, we did not have human-annotated
 reference translations for each word, so we take the labels produced by the
-aligner as ground truth and can only report per-word classfication accuracy,
+aligner as ground truth and can only report per-word classification accuracy,
 rather than the more sophisticated precision metric used in the shared task.
 
 Here we see similar results. Neither of the HMM systems beat the MFS baseline,
@@ -433,7 +433,7 @@ and the trigram model was noticeably worse. The training set here is probably
 too sparse to train a good trigram model. The MEMM system, however, did beat
 the baseline, posting the highest results.
 
-%%english to Spanish
+%%English to Spanish
 %%unigrams mean: 24.9745
 %%bigrams mean: 21.169999999999998
 %%trigrams mean: 21.227
@@ -449,7 +449,7 @@ the baseline, posting the highest results.
 %% accuracy: 0.5740845070422536
 %% trigrams
 %% accuracy: 0.4304225352112676
-%% memm: MEMM BEATS MOST FREQUENT SENSE
+%% MEMM: MEMM BEATS MOST FREQUENT SENSE
 %% accuracy: 0.668169014084507
 
 \section{Conclusions and Future Work}
