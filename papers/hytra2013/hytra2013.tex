@@ -166,54 +166,53 @@ interest of speed, in this work we performed decoding for second-order HMMs
 with a beam search.
 
 \section{Sequence Labeling With MEMMs and HMMs}
-In contrast to an HMM, an MEMM is a discriminative sequence model, with
-which we can calculate the conditional probability $P(T|S)$, using individual
+In contrast with an HMM, an MEMM is a discriminative sequence model, with
+which we can calculate the conditional probability $P(T|S)$ using individual
 discriminative classifiers that model $P(t_i | F)$ (for some features $F$).
-Like an HMM, an MEMM models transitions over labels, but unlike an HMM, the
+Like an HMM, an MEMM models transitions over labels, although the
 input sequence is considered given. This frees us to include any features we
 like from the source-language sentence. The ``Markov" aspect of the MEMM is
 that, unlike a standard maximum entropy classifier, we can include information
 from the previous $k$ labels as features, for a $k$-th order MEMM. So at every
-step in the sequence labeling, we want to have a classifier that models 
+step in the sequence labeling, we want a classifier that models 
 $P(t_i | S, t_{i-1}...t_{i-k})$, and the probability of a sequence $T$ is just
-the product of each of the individual transition probabilities -- there are no
-``emission" probabilities, since the input sequence is given.
+the product of each of the individual transition probabilities.
 
 To avoid the intractable task of building a single classifier that might return
-many thousands of different labels, we might choose to build a classifier for
-each individual word in the source-language vocabulary, each of which might
-produce tens of output labels at most. However, there will be tens or hundreds
-of thousands of words in the source-language vocabulary, and most word-types
-will only occur very rarely, and it may be too expensive to train and store a
-very large number of classifiers.
+thousands of different labels, we could in principle build a classifier for
+each individual word in the source-language vocabulary, each of which will
+produce perhaps tens of possible target-language labels. However, there will be
+tens or hundreds of thousands of words in the source-language vocabulary, and
+most word-types will only occur very rarely; it may be prohibitively expensive
+to train and store classifiers for each of them.
 
 We would like a way to focus our efforts on some words, but not all, and to
 back off to a simpler model when a classifier is not available for a given
-word. In our system, we allow users to specify criteria under which a given
-source-language word will have its translations explicitly modeled with a
-maximum entropy classifier. When training a system, one might choose, for
-example, the 100 most common ambiguous words, all words that occur a certain
-number of times, or words that are particularly of interest for some other
-reason.
+word. Here, in order to approximate $P(t_i | S, t_{i-1}...t_{i-k})$,
+we use an HMM, as described in the previous section, with which we can estimate
+$P(s_i, t_i | t_{i-1}...t_{i-k})$ as  
+$P(t_i | t_{i-1}...t_{i-k}) * P(s_i | t_i)$.
+This gives us the joint probability, which we divide by $P(s_i)$
+-- prior probabilities of each source-language word must be stored ahead of
+time -- and thus we can approximate the conditional probability that we need to
+continue the sequence labeling.
+
+In the implementation, we can specify criteria under which a source-language
+word will have its translations explicitly modeled with a maximum entropy
+classifier. When training a system, one might choose, for example, the 100 most
+common ambiguous words, all words that are observed a certain number of times
+in the training corpus, or words that are particularly of interest for some
+other reason.
 
 At training time, we find all of the instances of the words that we want to
 model with classifiers, along with their contexts, so that we can extract
-appropriate features for training the classifiers. Then we trains classifiers
+appropriate features for training the classifiers. Then we train classifiers
 for those words, and store the classifiers in a database for retrieval at
 inference time.
 
-The question remains, then, of how to get the probability $P(t_i | F)$ when we
-do not have a stored classifier for the corresponding source word $s_i$. In
-this case, we back off to the HMM, with which we can calculate $P(t_i |
-t_{i-1}...t_{i-k}) * P(s_i | t_i)$. This gives us $P(s_i, t_i |
-t_{i-1}...t_{i-k})$, and if we divide this by $P(s_i)$ -- which must be stored
-ahead of time -- then we can approximate the conditional probability that we
-need to continue the sequence tagging.
-
 For inference with this model, we use a beam search rather than the Viterbi
 algorithm, for convenience and speed while using a second-order Markov model.
-
-A sketch of our beam search implementation is presented in Figure
+A sketch of the beam search implementation is presented in Figure
 \ref{fig:beamsearch}.
 
 \begin{figure*}
@@ -252,8 +251,9 @@ log-probabilities, which we interpret as penalties to be minimized.
 \section{Experiments}
 So far, we have evaluated our sequence-labeling system in two different
 settings, the English-Spanish subset of a recent SemEval shared task
-\cite{task10}, and an all-words prediction task in which we want to predict
-every each word in sentences from the Bible.
+\cite{task10},
+and an all-words prediction task in which we want to translate, from Spanish to
+Guarani, each word in a test set sampled from the Bible.
 
 \subsection{SemEval CL-WSD task}
 In the SemEval CL-WSD task, systems must provide translations for twenty
