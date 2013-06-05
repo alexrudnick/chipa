@@ -218,9 +218,7 @@ A sketch of the beam search implementation is presented in Figure
 \begin{figure*}
 \begin{lstlisting}[frame=none]
 def beam_search(sequence, HMM, source_word_priors, classifiers):
-    """Search over possible label sequences for the input sequence. Return the
-       best label sequence we find."""
-    # list of incomplete candidate labelings, with their penalties
+    """Search over possible label sequences, return the best one we find."""
     candidates = [Candidate([], 0)] # empty label sequence with 0 penalty
     for t in range(len(sequence)):
         sourceword = sequence[t]
@@ -232,19 +230,15 @@ def beam_search(sequence, HMM, source_word_priors, classifiers):
             else:
                 label_distribution = Distribution()
                 for label in get_vocabulary(sourceword):
-                    # using negative log-probabilities here.
                     label_distribution[label] = (HMM.transition(context, label) +
                                                  HMM.emission(sourceword, label) -
                                                  source_word_priors[sourceword])
             new_candidates = add_new_candidates(label_distribution)
         candidates = filter_top_k(new_candidates, BEAMWIDTH)
     return get_best(candidates)
-
 \end{lstlisting}
-\caption{Python-style code sketch for combined MEMM/HMM beam search. We assume
-that \texttt{prob\_classify} returns a mapping from labels to negative
-log-probabilities, which we interpret as penalties to be minimized.
-}
+\caption{Python-style code sketch for MEMM/HMM beam search. Here we are using
+negative log-probabilities, which we interpret as penalties to be minimized.}
 \label{fig:beamsearch}
 \end{figure*}
 
@@ -266,7 +260,8 @@ translations may be a single word or a short phrase in the target language, and
 they should be lemmatized. The task allows systems to produce several output
 labels, although the scoring metric encourages producing one best guess, which
 is matched against several reference translations provided by human annotators.
-The details of the scoring are provided in the task description paper.
+The details of the scoring are provided in the task description paper, and the
+scores reported were calculated with a script provided by the task organizers.
 
 For simplicity and comparability with previous work, we trained our system on
 the Europarl Intersection corpus, which was provided for developing CL-WSD
@@ -274,7 +269,7 @@ systems in the shared task.  The Europarl Intersection is a subset of the
 sentences from Europarl \cite{europarl} that are available in English and all
 five of the target languages for the task, although for these initial
 experiments, we only worked with Spanish. There were 884603 sentences in our
-training data.
+training corpus.
 
 We preprocess the Europarl training data by tokenizing with the default NLTK
 tokenizer \cite{nltkbook}, getting part-of-speech tags for the English text
@@ -288,14 +283,16 @@ except that we ran 20 iterations each of IBM Model 1 and HMM alignment.
 
 We trained classifiers for all of the test words, and also for any words that
 appear more than 500 times in the corpus. The classifiers used the previous two
-labels, and all of the tagged, lemmatized words within a three-token window as
-features, and were trained with the MEGA Model optimization package
-\footnote{\url{http://www.umiacs.umd.edu/~hal/megam/}} and its corresponding
-NLTK interface.
+labels and all of the tagged, lemmatized words within three words on either
+side of the target word as features. Training was done with the MEGA Model
+optimization package \footnote{\url{http://www.umiacs.umd.edu/~hal/megam/}} and
+its corresponding NLTK interface.
 
-At testing time, for each test instance, we used each of the different sequence
-labeling methods to label all input sentences, and took the assigned label for
-the noun in question as the answer for that instance.
+At testing time, for each test instance, we labeled the test sentences with
+four different sequence labeling methods: first-order HMMs, second-order HMMs,
+MaxEnt classifiers with no sequence features, and the MEMMs with HMM backoff.
+We then compared the system output against the reference translations for the
+target words using the script provided by the task organizers.
 
 \subsection{All-words Lexical Selection for Spanish-Guarani}
 Since we are primarily interested in lexical selection for RBMT systems in
