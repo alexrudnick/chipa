@@ -166,7 +166,7 @@ interest of speed, in this work we performed decoding for second-order HMMs
 with a beam search.
 
 \section{Sequence Labeling With MEMMs and HMMs}
-In contrast with an HMM, an MEMM is a discriminative sequence model, with
+Contrastingly, an MEMM is a discriminative sequence model, with
 which we can calculate the conditional probability $P(T|S)$ using individual
 discriminative classifiers that model $P(t_i | F)$ (for some features $F$).
 Like an HMM, an MEMM models transitions over labels, although the
@@ -233,7 +233,8 @@ def beam_search(sequence, HMM, source_word_priors, classifiers):
                     label_distribution[label] = (HMM.transition(context, label) +
                                                  HMM.emission(sourceword, label) -
                                                  source_word_priors[sourceword])
-            new_candidates = add_new_candidates(label_distribution)
+            # extend candidates for next time step to include labels for next word
+            add_new_candidates(candidate, label_distribution, new_candidates)
         candidates = filter_top_k(new_candidates, BEAMWIDTH)
     return get_best(candidates)
 \end{lstlisting}
@@ -296,17 +297,17 @@ target words using the script provided by the task organizers.
 
 \subsection{All-words Lexical Selection for Spanish-Guarani}
 Since we are primarily interested in lexical selection for RBMT systems in
-lower-resource settings, we also experiment with translating from Spanish to
+lower-resource settings, we also experimented with translating from Spanish to
 Guarani, using the Bible as bitext. In this experiment, we labeled all of the
-text in the test set, using each of the different sequence labeling models, and
+text in the test set using each of the different sequence labeling models, and
 we report the classification accuracy over the test set.
 
 In preparing the corpus, since different translations of the Bible do not
 necessarily have direct correspondences between verse numbers (they are not
-unique identifiers across language!), we select only the chapters that contain
+unique identifiers across language!), we selected only the chapters that contain
 the same number of verses in our Spanish and Guarani translations.  This only
 leaves 879 chapters, out of 1189 total, for a total of 22828 bitext verses of
-roughly one sentence each. We randomly sample 100 verses from the corpus and
+roughly one sentence each. We randomly sampled 100 verses from the corpus and
 set these aside as the test set.
 
 Here we trained the HMM and MEMM as before, but with lemmatized Spanish as the
@@ -315,7 +316,7 @@ much more morphologically rich language than either English or Spanish, this
 requires the use of a sophisticated morphological analyzer, which is described
 in section \ref{sec:guaranima}. Due to the much smaller data set, in this
 setting we stored classifiers for any Spanish word that occurs more than 20
-times in the training data.
+times in the training data and backed off to the HMM during decoding otherwise.
 
 \section{Morphological Analysis for Guarani}
 \label{sec:guaranima}
@@ -409,18 +410,20 @@ Neither of the HMM systems beat the most-frequent-sense baselines, but both the
 non-sequence MaxEnt classifier and the MEMM system did, which suggests that the
 window features are useful in selecting target-language words. Furthermore, the
 MEMM system outperforms the MaxEnt classifiers.
-%% XXX significance test here?
 
 The scores for the second experiment are presented in Figure
-\ref{fig:theresults2}. In this experiment, we did not have human-annotated
-reference translations for each word, so we take the labels produced by the
-aligner as ground truth and can only report per-word classification accuracy,
+\ref{fig:theresults2}. Here we did not have human-annotated
+reference translations for each word, so we take the labels extracted from the
+alignments
+as ground truth and can only report per-word classification accuracy,
 rather than the more sophisticated precision metric used in the shared task.
 
 Here we see similar results. Neither of the HMM systems beat the MFS baseline,
 and the trigram model was noticeably worse. The training set here is probably
 too sparse to train a good trigram model. The MEMM system, however, did beat
-the baseline, posting the highest results.
+the baseline, posting the highest results: just over two-thirds of the time, we
+were able to predict the correct label for each Spanish word, whereas the
+most-frequent label was correct about 60\% of the time.
 
 %%English to Spanish
 %%unigrams mean: 24.9745
@@ -447,8 +450,7 @@ sequence labeling approach, and shown some initial successes in using it for
 cross-language word sense disambiguation tasks for English to Spanish and
 Spanish to Guarani.  We have demonstrated a hybrid sequence labeling strategy
 that combines MEMMs and HMMs, which will allow users to set parameters sensibly
-for their computational resources and available training data. The initial
-results with the MEMM/HMM system are promising.
+for their computational resources and available training data.
 
 In future work, we will continue to refine the approach, exploring different
 parameter settings, such as beam widths, numbers of classifiers for the MEMM
@@ -460,26 +462,24 @@ sophisticated sequence tagging models, such as CRFs
 \cite{DBLP:conf/icml/LaffertyMP01}, although we may not have enough training
 data to make use of richer models.
 
-Our goal for this work is practical in that we are trying to produce a
-system for Spanish-Guarani that is primarily RBMT, but we are interested machine
-learning methods where applicable; we have a small amount of training data
-available and plan to collect more.  At the time of writing, we are working
-with a prototype lexical selection system that is not yet integrated into the
-RBMT engine, but this integration is among our near-term goals.
+Our goal for this work is practical; we are trying to produce a hybrid
+Spanish-Guarani MT system that can be used in Paraguay. We have a small amount
+of Guarani training data available, and plan to collect more.  At the time of
+writing, our lexical selection system is a prototype and not yet integrated
+with our RBMT engine, but this integration is among our near-term goals.
 
 A limitation of the current design is that we do not yet have a good way to
 make use of monolingual training data. In SMT, it is common practice to train a
 language model for the target language from a monolingual corpus that is much
 larger than the available bitext. There is a substantial amount of available
-Guarani text on the Web, and we would gladly make use of it, but our current
-model can only be trained on aligned bitext.  Given Guarani text that had been
+Guarani text on the Web, but our current
+model can only be trained on aligned bitext. Given Guarani text that had been
 rearranged into a Spanish-like word order, we could build a better model for
 the transition probabilities in the HMM component of the system. It might be
 feasible to use a Guarani-language parser and some linguistic knowledge for
-this purpose; a component of our evolving RBMT system is a rudimentary
-Guarani parser that may be suitable for this purpose.
-We will also investigate ways to identify multiword expressions that should be
-translated as a unit, rather than word-by-word.
+this purpose.
+We will also investigate ways to translate multiword expressions as a unit
+rather than word-by-word.
 
 \bibliographystyle{acl.bst}
 \bibliography{hytra2013.bib}{}
