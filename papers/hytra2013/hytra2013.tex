@@ -5,6 +5,7 @@
 \usepackage{latexsym}
 \usepackage{listings}
 \usepackage{float}
+\usepackage{gb4e}
 \floatstyle{boxed}
 \restylefloat{figure}
 \lstset{
@@ -23,11 +24,8 @@ showstringspaces=false
 % TODO please provide linguistic examples and intuitions for the approach
 % - (maybe just the explanation with math is not super-helpful)
 
-%% TODO clarify the situation with windows. what do we mean by a three-word
+%% DONE clarify the situation with windows. what do we mean by a three-word
 % window?
-
-%% TODO are the results statistically significant?
-
 % DONE clarify about what we mean by 't', because we use that to refer to both
 % pos tags and target-language words
 %% DONE "At the end of the first paragraph of section 7, we can read that the
@@ -40,7 +38,6 @@ showstringspaces=false
 %% DONE make it more clear what we mean by "precision" and "accuracy"; the
 % reviewer didn't know whether they were the same thing. (maybe they missed
 % it?)
-
 
 \title{Lexical Selection for Hybrid MT with Sequence Labeling}
 
@@ -264,6 +261,22 @@ is matched against several reference translations provided by human annotators.
 The details of the scoring are provided in the task description paper, and the
 scores reported were calculated with a script provided by the task organizers.
 
+As a concrete example, consider the following sentences from the test set for
+this task:
+\begin{exe}
+\ex\label{carta} But a quick look at today's \emph{letters} to the editor in
+the Times suggest that here at least is one department of the paper that could
+use a little more fact-checking.
+\ex\label{letra} All over the ice were little Cohens, little Levys, their names
+sewed in block \emph{letters} on the backs of their jerseys.
+\end{exe}
+
+A system should produce \emph{carta} (a message or document) for Sentence
+(\ref{carta}) and \emph{letra} or \emph{car\'{a}cter} (a symbol or handwriting)
+for (\ref{letra}). During sequence labeling, our system chooses a translation
+for each word in the sentence, but the scoring only takes into account the
+translations for the words marked in italics.
+
 For simplicity and comparability with previous work, we trained our system on
 the Europarl Intersection corpus, which was provided for developing CL-WSD
 systems in the shared task.  The Europarl Intersection is a subset of the
@@ -302,6 +315,32 @@ Guarani, using the Bible as bitext. In this experiment, we labeled all of the
 text in the test set using each of the different sequence labeling models, and
 we report the classification accuracy over the test set.
 
+For example, for the following sentences -- from Isaiah and Psalms,
+respectively -- the system should predict the corresponding Guarani roots for
+each Spanish word. Here we show the inflected Spanish and Guarani text with
+English translation for the sake of readability, although the system was given
+the roots of the Spanish words as output by the morphological analyzer.
+
+\begin{exe}
+%% Isa 37:30
+\ex\label{trans} \begin{xlist}
+\ex Plantaréis viñas y \emph{comeréis} su fruto.
+\ex Peñotỹ parral ha \emph{pe'u} hi'a.
+\ex You will plant vineyards and \emph{eat} their fruit.
+\end{xlist}
+
+\ex\label{intrans} \begin{xlist}
+%% Ps 78:29
+\ex \emph{Comieron} y se saciaron.
+\ex \emph{Okaru} hikuái hyguãtã meve.
+\ex They \emph{ate} and were well filled.
+\end{xlist}
+\end{exe}
+
+In this example, the correct translation of \emph{comer} depends on
+transitivity: if transitive, it should be an inflected form of \emph{'u} as in
+(\ref{trans}), if intransitive it should be \emph{karu}, as in (\ref{intrans}).
+
 In preparing the corpus, since different translations of the Bible do not
 necessarily have direct correspondences between verse numbers (they are not
 unique identifiers across language!), we selected only the chapters that contain
@@ -312,7 +351,7 @@ set these aside as the test set.
 
 Here we trained the HMM and MEMM as before, but with lemmatized Spanish as the
 source language, and the roots of Guarani words as the target.  As Guarani is
-much more morphologically rich language than either English or Spanish, this
+a much more morphologically rich language than either English or Spanish, this
 requires the use of a sophisticated morphological analyzer, which is described
 in section \ref{sec:guaranima}. Due to the much smaller data set, in this
 setting we stored classifiers for any Spanish word that occurs more than 20
