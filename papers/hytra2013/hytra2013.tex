@@ -5,6 +5,7 @@
 \usepackage{latexsym}
 \usepackage{listings}
 \usepackage{float}
+\usepackage[utf8]{inputenc}
 \usepackage{gb4e}
 \floatstyle{boxed}
 \restylefloat{figure}
@@ -249,9 +250,9 @@ Guarani, each word in a test set sampled from the Bible.
 
 \subsection{SemEval CL-WSD task}
 In the SemEval CL-WSD task, systems must provide translations for twenty
-ambiguous English nouns, given a small amount of context, typically a single
+ambiguous English nouns given a small amount of context, typically a single
 sentence. The test set for this task consists of fifty short passages for each
-ambiguous word, for a thousand test instances total; each passage contains one
+ambiguous word, for a thousand test instances in total. Each passage contains one
 or a few uses of the ambiguous word. For each test passage, the system must
 produce a translation of the noun of interest into the target language.  These
 translations may be a single word or a short phrase in the target language, and
@@ -261,8 +262,8 @@ is matched against several reference translations provided by human annotators.
 The details of the scoring are provided in the task description paper, and the
 scores reported were calculated with a script provided by the task organizers.
 
-As a concrete example, consider the following sentences from the test set for
-this task:
+As a concrete example, consider the following sentences from the test set:
+
 \begin{exe}
 \ex\label{carta} But a quick look at today's \emph{letters} to the editor in
 the Times suggest that here at least is one department of the paper that could
@@ -297,7 +298,7 @@ except that we ran 20 iterations each of IBM Model 1 and HMM alignment.
 
 We trained classifiers for all of the test words, and also for any words that
 appear more than 500 times in the corpus. The classifiers used the previous two
-labels and all of the tagged, lemmatized words within three words on either
+labels and all of the tagged, lemmatized words within three tokens on either
 side of the target word as features. Training was done with the MEGA Model
 optimization package \footnote{\url{http://www.umiacs.umd.edu/~hal/megam/}} and
 its corresponding NLTK interface.
@@ -319,13 +320,13 @@ For example, for the following sentences -- from Isaiah and Psalms,
 respectively -- the system should predict the corresponding Guarani roots for
 each Spanish word. Here we show the inflected Spanish and Guarani text with
 English translation for the sake of readability, although the system was given
-the roots of the Spanish words as output by the morphological analyzer.
+the roots of the Spanish words as produced by the morphological analyzer.
 
 \begin{exe}
 %% Isa 37:30
 \ex\label{trans} \begin{xlist}
 \ex Plantaréis viñas y \emph{comeréis} su fruto.
-\ex Peñotỹ parral ha \emph{pe'u} hi'a.
+\ex Peñot\~{y} parral ha \emph{pe'u} hi'a.
 \ex You will plant vineyards and \emph{eat} their fruit.
 \end{xlist}
 
@@ -345,14 +346,14 @@ In preparing the corpus, since different translations of the Bible do not
 necessarily have direct correspondences between verse numbers (they are not
 unique identifiers across language!), we selected only the chapters that contain
 the same number of verses in our Spanish and Guarani translations.  This only
-leaves 879 chapters, out of 1189 total, for a total of 22828 bitext verses of
+leaves 879 chapters out of 1189, for a total of 22828 bitext verses of
 roughly one sentence each. We randomly sampled 100 verses from the corpus and
 set these aside as the test set.
 
 Here we trained the HMM and MEMM as before, but with lemmatized Spanish as the
 source language, and the roots of Guarani words as the target.  As Guarani is
 a much more morphologically rich language than either English or Spanish, this
-requires the use of a sophisticated morphological analyzer, which is described
+requires the use of a sophisticated morphological analyzer, described
 in section \ref{sec:guaranima}. Due to the much smaller data set, in this
 setting we stored classifiers for any Spanish word that occurs more than 20
 times in the training data and backed off to the HMM during decoding otherwise.
@@ -438,7 +439,7 @@ The scores for the first experiment are presented in Figure
 \ref{fig:theresults}. Here we use the precision metric calculated by the
 scripts for the SemEval shared task \cite{task10}, which compare the answers
 produced by the system against several reference answers given by human
-annotators. There are two ``most-frequent sense" baselines reported.  The first
+annotators. There are two ``most frequent sense" baselines reported.  The first
 one (``with tag"), is the baseline in which we always take the most frequent
 label for a given source word, conditioned on its POS tag. The other MFS
 baseline is not conditioned on POS tag; this was the baseline for the SemEval
@@ -462,7 +463,7 @@ and the trigram model was noticeably worse. The training set here is probably
 too sparse to train a good trigram model. The MEMM system, however, did beat
 the baseline, posting the highest results: just over two-thirds of the time, we
 were able to predict the correct label for each Spanish word, whereas the
-most-frequent label was correct about 60\% of the time.
+most frequent label was correct about 60\% of the time.
 
 %%English to Spanish
 %%unigrams mean: 24.9745
