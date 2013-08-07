@@ -76,10 +76,7 @@ def randomvalidate(model, lm, emissions, cfd):
     sl_sentences = [source for (source,target,align) in triple_sentences]
     sentence_pairs = list(zip(sl_sentences, tl_sentences))
 
-    picklefn = "pickles/gn.sourcepriors.pickle"
-    with open(picklefn, "rb") as infile:
-        sourcepriors = pickle.load(infile)
-    hmmparts = HMMParts(lm, emissions, cfd, sourcepriors)
+    hmmparts = HMMParts(lm, emissions, cfd)
 
     totalcorrect = 0
     totalwords = 0

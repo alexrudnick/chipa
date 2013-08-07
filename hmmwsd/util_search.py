@@ -11,7 +11,7 @@ import read_gold
 ## - emissions (for emitting source language)
 ## - the cfd to extract the vocabulary
 ## - priors for source language
-HMMParts = namedtuple('HMM', ['lm', 'emissions', 'cfd', 'sourcepriors'])
+HMMParts = namedtuple('HMM', ['lm', 'emissions', 'cfd'])
 
 preset_dictionary = {}
 def init_preset_dictionary(targetlang):

@@ -59,12 +59,7 @@ def main():
     cfd = learn.reverse_cfd(emissions)
     emissions = learn.cpd(emissions)
 
-    picklefn = "pickles/{0}.sourcepriors.pickle".format(targetlang)
-    with open(picklefn, "rb") as infile:
-        sourcepriors = pickle.load(infile)
-    print("OK loaded models.")
-
-    hmmparts = HMMParts(lm, emissions, cfd, sourcepriors)
+    hmmparts = HMMParts(lm, emissions, cfd)
 
     for sourceword in util_run_experiment.final_test_words:
         print("Loading test problems for {0}".format(sourceword))

@@ -110,14 +110,13 @@ def backoff_conditional_distribution(tagged_sent, t, vocab, hmmparts):
         return [(OOV, 1.0)]
     out = []
     sw = tagged_sent[t][0]
-    wordpenalty = -hmmparts.sourcepriors.logprob(sw)
     context = ['','']
     if t > 0: context[1] = tagged_sent[t-1][1]
     if t > 1: context[0] = tagged_sent[t-2][1]
     for newword in vocab[t]:
         transition_penalty = transition_logprob(hmmparts.lm, newword, context)
         emission_penalty = -hmmparts.emissions[newword].logprob(sw)
-        newpenalty = transition_penalty + emission_penalty - wordpenalty
+        newpenalty = transition_penalty + emission_penalty
         out.append((newword, newpenalty))
     return out
 
