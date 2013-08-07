@@ -12,6 +12,9 @@ EIGHT = 8
 
 ## Tunable.
 CLASSIFIER_THRESHOLD = 500
+## for Guarani experiments, set to 20.
+## CLASSIFIER_THRESHOLD = 20
+
 MAX_TRAINING_INSTANCES = 1000
 
 NOUN = {'nn','nns','nnp','np','nnps','nps'}

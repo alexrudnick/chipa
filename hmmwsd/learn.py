@@ -11,6 +11,7 @@ from nltk.probability import ELEProbDist
 from nltk.model import NgramModel
 
 import skinnyhmm
+import guarani
 from skinnyhmm import START
 from skinnyhmm import UNTRANSLATED
 import util_run_experiment
@@ -118,6 +119,9 @@ def load_bitext(args):
          open(targetfn) as infile_t, \
          open(alignfn) as infile_align:
         for source, target, alignment in zip(infile_s, infile_t, infile_align):
+            ## don't skip at test time. FIXME oh geez this is terrible.
+            #if count in guarani.testset:
+            #    print("SKIP", count)
             out_source.append(source.strip().lower().split())
             out_target.append(target.strip().lower().split())
             out_align.append(alignment.strip().split())
@@ -185,7 +189,7 @@ def main():
     args = parser.parse_args()
     print(args)
     targetlang = args.targetlang
-    assert targetlang in util_run_experiment.all_target_languages
+    assert targetlang in ["es", "gn"]
 
     triple_sentences = load_bitext(args)
     print("training on {0} sentences.".format(len(triple_sentences)))

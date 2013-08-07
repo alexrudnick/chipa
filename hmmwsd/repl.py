@@ -9,6 +9,7 @@ import random
 
 import nltk
 
+import guarani
 import skinnyhmm
 import searches
 import learn
@@ -17,6 +18,7 @@ from util_run_experiment import output_one_best
 from util_run_experiment import output_five_best
 from util_run_experiment import all_target_languages
 from util_run_experiment import all_words
+from util_search import HMMParts
 from constants import BEAMWIDTH
 from constants import UNTRANSLATED
 import stanford
@@ -60,10 +62,13 @@ def repl(model, lm, emissions, cfd):
 
 def randomvalidate(model, lm, emissions, cfd):
     args = Namespace()
-    args.targetlang="es"
-    args.sourcetext="/space/Europarl_Intersection_preprocessed/intersection.en.txt.ascii.taggedlemmas" 
-    args.targettext="/space/Europarl_Intersection_preprocessed/intersection.es.txt.lemmas"
-    args.alignments="/space/output_en_es/training.align"
+    args.targetlang="gn"
+    ## args.sourcetext="/space/Europarl_Intersection_preprocessed/intersection.en.txt.ascii.taggedlemmas" 
+    ## args.targettext="/space/Europarl_Intersection_preprocessed/intersection.es.txt.lemmas"
+    ## args.alignments="/space/output_en_es/training.align"
+    args.sourcetext="/space/es_gn_bibles/bible.es.txt" 
+    args.targettext="/space/es_gn_bibles/bible.gn.txt"
+    args.alignments="/space/output_es_gn/training.align"
     args.fast=False
 
     triple_sentences = learn.load_bitext(args)
@@ -71,11 +76,16 @@ def randomvalidate(model, lm, emissions, cfd):
     sl_sentences = [source for (source,target,align) in triple_sentences]
     sentence_pairs = list(zip(sl_sentences, tl_sentences))
 
+    picklefn = "pickles/gn.sourcepriors.pickle"
+    with open(picklefn, "rb") as infile:
+        sourcepriors = pickle.load(infile)
+    hmmparts = HMMParts(lm, emissions, cfd, sourcepriors)
+
     totalcorrect = 0
     totalwords = 0
 
-    for i in range(1000):
-        (ss, ts) = random.choice(sentence_pairs)
+    for lineid in guarani.testset:
+        (ss, ts) = sentence_pairs[lineid]
         print(" ".join(ss))
         if model == "unigram":
             tagged = skinnyhmm.mfs(cfd, ss)
@@ -83,6 +93,8 @@ def randomvalidate(model, lm, emissions, cfd):
             tagged = skinnyhmm.viterbi(lm, emissions, cfd, ss)
         elif model == "trigram":
             tagged = searches.beam(lm, emissions, cfd, ss, beamwidth=BEAMWIDTH)
+        elif model == "memm":
+            tagged = searches.beam_memm(ss, hmmparts, beamwidth=BEAMWIDTH)
 
         print("ORIGINAL:", list(zip(ss,ts)))
         print("TAGGED:", tagged)
@@ -105,8 +117,9 @@ def randomvalidate(model, lm, emissions, cfd):
 def main():
     parser = get_argparser()
     args = parser.parse_args()
-    assert args.targetlang in all_target_languages
-    assert args.model in ["unigram", "bigram", "trigram"]
+
+    assert args.targetlang in ["es", "gn"]
+    assert args.model in ["unigram", "bigram", "trigram", "memm"]
 
     targetlang = args.targetlang
     tt_home = args.treetaggerhome
@@ -117,7 +130,7 @@ def main():
     lm, emissions = None, None
 
     if model != "unigram":
-        picklefn = "pickles/{0}.lm_{1}.pickle".format(targetlang, model)
+        picklefn = "pickles/{0}.lm_{1}.pickle".format(targetlang, "trigram")
         with open(picklefn, "rb") as infile:
             lm = pickle.load(infile)
 

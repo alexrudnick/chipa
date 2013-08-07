@@ -74,11 +74,12 @@ def beam(lm, emissions, cfd, unlabeled_sequence, beamwidth=5):
                 context = [''] + context
             for newword in vocab[t]:
                 newseq = sequence + [newword]
-                transition_prob = lm.prob(newword, context)
-                transition_penalty = (lm.logprob(newword, context)
-                                      if transition_prob else (1000*1000))
-                ## XXX transition_logprob here too
-                emission_penalty = -emissions[newword].logprob(sourceword)
+                transition_penalty = transition_logprob(lm, newword, context)
+                try:
+                    emission_penalty = -emissions[newword].logprob(sourceword)
+                except:
+                    ## XXX: this should probably have its own function.
+                    emission_penalty = (1000*1000)
                 newpenalty = penalty + transition_penalty + emission_penalty
                 newconfigurations.append(Configuration(newseq, newpenalty))
 

@@ -80,7 +80,7 @@ def main():
     args = parser.parse_args()
     print(args)
     targetlang = args.targetlang
-    assert targetlang in util_run_experiment.all_target_languages
+    assert targetlang in ["es", "gn"]
 
     triple_sentences = learn.load_bitext(args)
     print("training on {0} sentences.".format(len(triple_sentences)))
@@ -101,10 +101,10 @@ def main():
     for word in vocabulary:
         if uses[word].N() > CLASSIFIER_THRESHOLD and uses[word].B() > 1:
             words_to_include.add(word)
-    targetwords = util_run_experiment.all_words
-    targetwords_with_tags = [nltk.tag.tuple2str((w,t))
-                             for (w,t) in itertools.product(targetwords, NOUN)]
-    words_to_include.update(targetwords_with_tags)
+    ##targetwords = util_run_experiment.all_words
+    ##targetwords_with_tags = [nltk.tag.tuple2str((w,t))
+    ##                         for (w,t) in itertools.product(targetwords, NOUN)]
+    ##words_to_include.update(targetwords_with_tags)
 
     print("words we want to train for ", len(words_to_include))
 
