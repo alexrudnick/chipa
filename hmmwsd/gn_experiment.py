@@ -89,6 +89,8 @@ def randomvalidate(model, lm, emissions, cfd):
             tagged = searches.beam(lm, emissions, cfd, ss, beamwidth=BEAMWIDTH)
         elif model == "memm":
             tagged = searches.beam_memm(ss, hmmparts, beamwidth=BEAMWIDTH)
+        elif model == "maxent":
+            tagged = searches.maxent_mfs(ss, cfd)
 
         print("ORIGINAL:", list(zip(ss,ts)))
         print("TAGGED:", tagged)
@@ -113,7 +115,7 @@ def main():
     args = parser.parse_args()
 
     assert args.targetlang in ["es", "gn"]
-    assert args.model in ["unigram", "bigram", "trigram", "memm"]
+    assert args.model in ["unigram", "bigram", "trigram", "memm", "maxent"]
 
     targetlang = args.targetlang
     tt_home = args.treetaggerhome
