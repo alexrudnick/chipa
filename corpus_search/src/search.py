@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import readline
 
 from pymongo import MongoClient
 
