@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<corpus evidentiality="direct">
+<SENTENCE ref="1">
+<CHUNK ref="3" type="grup-verb" si="top" verbform="main">
+<NODE ref="3" slem="tener" smi="VMIP3S0" sform="tiene" UpCase="none" lem="mikhunaya" mi="present" verbmi="VRoot+3.Sg.Subj">
+</NODE>
+<CHUNK ref="2" type="sn" si="suj">
+<NODE ref="2" alloc="" slem="hermano" smi="NCMS000" sform="hermano" UpCase="none" lem="tura" mi="NRoot" sem="[+Masc]">
+<SYN lem="tura" mi="NRoot" sem="[+Masc]"/>
+<SYN lem="wawqi" mi="NRoot"/>
+<NODE ref="1" alloc="" slem="el" smi="DA0MS0" sform="el" UpCase="none"/>
+</NODE>
+</CHUNK>
+<CHUNK ref="4" type="sn" si="cd">
+<NODE ref="4" alloc="" slem="hambre" smi="NCFS000" sform="hambre" UpCase="none" lem="mikhunaya" mi="Verb+Inf"/>
+</CHUNK>
+</CHUNK>
+</SENTENCE>
+</corpus>
