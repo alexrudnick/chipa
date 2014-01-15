@@ -21,6 +21,8 @@ def get_sentences(fn):
                 lastlineblank = True
             fields = line.split('\t')
             token, lemma = fields[1], fields[2]
+            if lemma in ["[", "]"]: continue
+            if lemma.startswith("61,"): continue
             sentence.append((token,lemma))
     if lastlineblank: out.append(sentence)
     return out

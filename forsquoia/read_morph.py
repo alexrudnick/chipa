@@ -16,7 +16,10 @@ def get_sentences(fn):
             line = line.strip()
             if not line: continue
             fields = line.split('\t')
-            token, analyzed = fields[0], fields[1]
+            try:
+                token, analyzed = fields[0], fields[1]
+            except:
+                print("ERROR!", line, file=sys.stderr)
             lemma = analyzed.split('[')[0]
             if token == EOS:
                 out.append(sentence)

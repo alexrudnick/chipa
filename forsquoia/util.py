@@ -1,4 +1,5 @@
 def print_lemmatized_sentences(sentences):
     for sent in sentences:
-        print(" ".join(lemma for (token,lemma) in sent))
-
+        line = " ".join(lemma for (token,lemma) in sent)
+        if line.startswith("-- warning"): continue
+        print(line)
