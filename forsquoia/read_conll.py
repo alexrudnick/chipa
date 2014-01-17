@@ -3,8 +3,6 @@
 import sys
 import util
 
-EOS = "#EOS"
-
 def get_sentences(fn):
     """Return a list of sentences, where each sentence is a list of tuples.
     This looks like: [ [(token,lemma), (token,lemma)...] ...]"""
