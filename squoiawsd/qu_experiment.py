@@ -8,16 +8,10 @@ import random
 
 import nltk
 
-import quechua
-import skinnyhmm
 import searches
 import learn
-import util_run_experiment
-from util_search import HMMParts
-from constants import BEAMWIDTH
-from constants import UNTRANSLATED
 
-def randomvalidate(model, lm, emissions, cfd):
+def randomvalidate(model, cfd):
     totalcorrect = 0
     totalwords = 0
     for lineid in guarani.testset:
@@ -41,10 +35,7 @@ def randomvalidate(model, lm, emissions, cfd):
 
 def get_argparser():
     parser = argparse.ArgumentParser(description='quechua')
-    #parser.add_argument('--model', type=str, required=True)
-    #parser.add_argument('--targetlang', type=str, required=True)
-    parser.add_argument('--treetaggerhome', type=str, required=False,
-                        default="../TreeTagger/cmd")
+    parser.add_argument('--model', type=str, required=True)
     parser.add_argument('--randomvalidate', type=bool, required=False,
                         default=True)
     return parser
@@ -52,14 +43,10 @@ def get_argparser():
 def main():
     parser = get_argparser()
     args = parser.parse_args()
-    assert args.targetlang in ["es", "gn"]
-    assert args.model in ["unigram", "bigram", "trigram", "memm", "maxent"]
+    assert args.model in ["uniform", "mfs", "maxent"]
 
-    targetlang = args.targetlang
-    tt_home = args.treetaggerhome
     model = args.model
-    stanford.taggerhome = "/home/alex/software/stanford-postagger-2012-11-11"
 
-    randomvalidate(model, lm, emissions, cfd)
+    randomvalidate(model, cfd)
 
 if __name__ == "__main__": main()

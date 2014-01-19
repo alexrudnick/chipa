@@ -17,7 +17,6 @@ import memm_features
 import picklestore
 import searches
 import trainingdb
-import util_run_experiment
 from constants import CLASSIFIER_THRESHOLD
 from constants import EIGHT
 from constants import NOUN

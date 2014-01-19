@@ -10,12 +10,8 @@ from nltk.probability import ConditionalProbDist
 from nltk.probability import ELEProbDist
 from nltk.model import NgramModel
 
-import skinnyhmm
-import guarani
-from skinnyhmm import START
-from skinnyhmm import UNTRANSLATED
-import util_run_experiment
-import treetagger
+from constants import START
+from constants import UNTRANSLATED
 
 DEBUG=False
 def pause():
