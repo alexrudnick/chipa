@@ -127,35 +127,6 @@ def load_bitext(args):
     ## NB: input files should already be lemmatized at this point.
     return list(zip(out_source, out_target, out_align))
 
-def batch_lemmatize_sentences(sentences, language, tt_home=None):
-    """For a list of tokenized sentences in the given language, call TreeTagger
-    on them to get a list of lemmas; lowercase them all."""
-    codes_to_names = {"en":"english", "de":"german", "it":"italian",
-                      "es":"spanish", "fr":"french", "nl":"dutch"}
-    tt_lang = codes_to_names[language]
-    if tt_lang == 'english':
-        tt = treetagger.TreeTagger(tt_home=tt_home,
-                                   language=tt_lang,
-                                   encoding='latin-1')
-    else:
-        tt = treetagger.TreeTagger(tt_home=tt_home, language=tt_lang)
-    output = tt.batch_tag(sentences)
-    return [[lemma.lower() for word,tag,lemma in sent] for sent in output]
-
-def maybe_lemmatize(sentences, language, tt_home=None):
-    # print("MAYBE LEMMATIZING {0} sentences".format(len(sentences)))
-    lemmatizeds = batch_lemmatize_sentences(sentences, language, tt_home)
-    out = []
-    for (lemmatized, orig) in zip(lemmatizeds, sentences):
-        this = []
-        for (wl, w) in zip(lemmatized, orig):
-            if wl != "<unknown>":
-                this.append(wl.lower())
-            else:
-                this.append(w.lower())
-        out.append(this)
-    return out
-
 def cpd(cfd):
     """Take a ConditionalFreqDist and turn it into a ConditionalProdDist"""
     return ConditionalProbDist(cfd, ELEProbDist)
@@ -168,36 +139,7 @@ def reverse_cfd(cfd):
             out[sample].inc(condition, cfd[condition][sample])
     return out
 
-def get_argparser():
-    """Build the argument parser for main."""
-    parser = argparse.ArgumentParser(description='hmmwsd')
-    parser.add_argument('--sourcetext', type=str, required=True)
-    parser.add_argument('--targettext', type=str, required=True)
-    parser.add_argument('--targetlang', type=str, required=True)
-    parser.add_argument('--alignments', type=str, required=True)
-    parser.add_argument('--fast', type=bool, default=False, required=False)
-    parser.add_argument('--treetaggerhome', type=str, required=False,
-                        default="../TreeTagger/cmd")
-    return parser
-
 def main():
-    parser = get_argparser()
-    args = parser.parse_args()
-    print(args)
-    targetlang = args.targetlang
-    assert targetlang in ["es", "gn"]
-
-    triple_sentences = load_bitext(args)
-    print("training on {0} sentences.".format(len(triple_sentences)))
-
-    ## NB: this is ridiculous, why are we doing this.
-    print("source priors")
-    source_priors = get_source_priors(triple_sentences)
-    picklefn = "pickles/{0}.sourcepriors.pickle".format(targetlang)
-    with open(picklefn, "wb") as outfile:
-        pickle.dump(source_priors, outfile)
-    del source_priors
-
     print("emissions")
     emissions = get_emissions(triple_sentences)
     picklefn = "pickles/{0}.emit.pickle".format(targetlang)
@@ -206,20 +148,6 @@ def main():
     del emissions
 
     tl_sentences = get_target_language_sentences(triple_sentences)
-
-    print("trigram model")
-    lm_trigram = NgramModel(3, tl_sentences, pad_left=True, pad_right=True)
-    picklefn = "pickles/{0}.lm_trigram.pickle".format(targetlang)
-    with open(picklefn, "wb") as outfile:
-        pickle.dump(lm_trigram, outfile)
-    del lm_trigram
-
-    print("bigram model")
-    lm_bigram = NgramModel(2, tl_sentences, pad_left=True, pad_right=True)
-    picklefn = "pickles/{0}.lm_bigram.pickle".format(targetlang)
-    with open(picklefn, "wb") as outfile:
-        pickle.dump(lm_bigram, outfile)
-    del lm_bigram
 
     print("done.")
 
