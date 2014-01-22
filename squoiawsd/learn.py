@@ -2,7 +2,14 @@
 
 import argparse
 from operator import itemgetter
-import pickle
+import readline
+
+
+from nltk.classify.scikitlearn import SklearnClassifier
+from sklearn.feature_selection import SelectKBest, chi2
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import Pipeline
+
 import nltk
 from nltk.probability import FreqDist
 from nltk.probability import ConditionalFreqDist
@@ -10,6 +17,7 @@ from nltk.probability import ConditionalProbDist
 from nltk.probability import ELEProbDist
 from nltk.model import NgramModel
 
+import features
 from constants import START
 from constants import UNTRANSLATED
 
@@ -67,7 +75,6 @@ def get_emissions(triple_sentences):
             print("source sentence:", " ".join(ss))
             print("target sentence:", " ".join(ts))
             print(tagged)
-        pause()
         nozeros = [(source, target) for (source,target) in tagged if target]
         for (source, target) in nozeros:
             emissions[target].inc(source)
@@ -76,7 +83,6 @@ def get_emissions(triple_sentences):
 def get_source_priors(triple_sentences):
     """Return a probability distribution over the individual words in the source
     sentence, which we're going to use later."""
-
     wordcounts = FreqDist()
     for (ss, ts, alignment) in triple_sentences:
         for sw in ss:
@@ -98,32 +104,24 @@ def get_target_language_sentences(triple_sentences):
         sentences.append(sentence)
     return sentences
 
-def load_bitext(args):
+def load_bitext():
     """Take in three filenames, return a list of (source,target,alignment)
     lists a list of 3-tuples of lists. Lowercase everything."""
     out_source = []
     out_target = []
     out_align = []
-    count = 0
 
-    sourcefn = args.sourcetext
-    targetfn = args.targettext
-    alignfn = args.alignments
-    fast = args.fast
+    sourcefn = "/space/output_es_qu/training.es.txt"
+    targetfn = "/space/output_es_qu/training.qu.txt"
+    alignfn  = "/space/output_es_qu/training.align"
 
     with open(sourcefn) as infile_s, \
          open(targetfn) as infile_t, \
          open(alignfn) as infile_align:
         for source, target, alignment in zip(infile_s, infile_t, infile_align):
-            ## don't skip at test time. FIXME oh geez this is terrible.
-            #if count in guarani.testset:
-            #    print("SKIP", count)
             out_source.append(source.strip().lower().split())
             out_target.append(target.strip().lower().split())
             out_align.append(alignment.strip().split())
-            count += 1
-            if count == (1 * 1000) and fast: break
-
     ## NB: input files should already be lemmatized at this point.
     return list(zip(out_source, out_target, out_align))
 
@@ -139,16 +137,59 @@ def reverse_cfd(cfd):
             out[sample].inc(condition, cfd[condition][sample])
     return out
 
+def build_instance(tagged_sentence, index):
+    feat = features.extract(tagged_sentence, index)
+    label = tagged_sentence[index][1]
+    return (feat, label)
+
+def repl(sl_sentences, tagged_sentences):
+    while True:
+        try:
+            line = input('> ')
+        except: break
+        line = line.strip()
+        sentences = nltk.sent_tokenize(line)
+        s_tokenized = [nltk.word_tokenize(sent) for sent in sentences]
+        tokenized = []
+        for sent in s_tokenized:
+            tokenized.extend(sent)
+        print("tokenized:", tokenized)
+
+        answers = []
+        ## now for every word in tokenized, we need a classifier.
+        classifiers = []
+        for word in tokenized:
+            ## get all the training data:
+            ## need to be doing this from the db rather than linear search
+            training = []
+            for ss,tagged in zip(sl_sentences, tagged_sentences):
+                if word in ss:
+                    index = ss.index(word)
+                    training.append(build_instance(tagged, index))
+            training.append(({'wrong':'wrong'},'wrong'))
+            training.append(({'alsowrong':'alsowrong'},'alsowrong'))
+
+            ## XXX: futz with regularization constant here.
+            classif = SklearnClassifier(LogisticRegression(C=0.1))
+            classif.train(training)
+            classifiers.append(classif)
+
+        for i in range(len(tokenized)):
+            faketagged = [(w,None) for w in tokenized]
+            feat = features.extract(faketagged, i)
+            classif = classifiers[i]
+            ans = classif.classify(feat)
+            answers.append(ans)
+        print(list(zip(tokenized, answers)))
+
 def main():
-    print("emissions")
-    emissions = get_emissions(triple_sentences)
-    picklefn = "pickles/{0}.emit.pickle".format(targetlang)
-    with open(picklefn, "wb") as outfile:
-        pickle.dump(emissions, outfile)
-    del emissions
+    triple_sentences = load_bitext()
+    print("training on {0} sentences.".format(len(triple_sentences)))
 
     tl_sentences = get_target_language_sentences(triple_sentences)
-
-    print("done.")
+    sl_sentences = [s for (s,t,a) in triple_sentences]
+    tagged_sentences = [list(zip(ss, ts))
+                        for ss,ts in zip(sl_sentences, tl_sentences)]
+    repl(sl_sentences, tagged_sentences)
 
 if __name__ == "__main__": main()

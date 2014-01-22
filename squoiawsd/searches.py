@@ -10,7 +10,7 @@ from nltk.probability import DictionaryProbDist
 
 from constants import OOV
 from constants import UNTRANSLATED
-import memm_features
+import features
 
 def maxent_mfs(unlabeled_sequence, cfd):
     """If we have a classifier handy, use that. Otherwise, take the MFS."""
@@ -23,8 +23,8 @@ def maxent_mfs(unlabeled_sequence, cfd):
     for t in range(0, T):
         symbol = unlabeled_sequence[t]
         if classifiers[t]:
-            features = memm_features.extract(out, t)
-            besttag = classifiers[t].classify(features)
+            feat = features.extract(out, t)
+            besttag = classifiers[t].classify(feat)
             # print("predicted with maxent:", (symbol, besttag))
             out.append((symbol, besttag))
         else:
