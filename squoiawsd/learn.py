@@ -4,7 +4,6 @@ import argparse
 from operator import itemgetter
 import readline
 
-
 from nltk.classify.scikitlearn import SklearnClassifier
 from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.linear_model import LogisticRegression
@@ -25,27 +24,6 @@ DEBUG=False
 def pause():
     if DEBUG: input("ENTER TO CONTINUE")
 
-import string
-punctuations = string.punctuation + "«»¡"
-def strip_edge_punctuation(label):
-    """Strip out punctuation along the edges. It's pretty bad if this gets into
-    the training data."""
-
-    if all((c in string.punctuation) for c in label):
-        return label
-    ## XXX: this is terrible.
-    if label == "@card@":
-        return label
-
-    for punc in punctuations:
-        if label.startswith(punc):
-            ## print("STRIPPED", punc, "FROM", label)
-            label = label[1:]
-        if label.endswith(punc):
-            ## print("STRIPPED", punc, "FROM", label)
-            label = label[:1]
-    return label
-
 def target_words_for_each_source_word(ss, ts, alignment):
     """Given a list of tokens in source language, a list of tokens in target
     language, and a list of Berkeley-style alignments of the form target-source,
@@ -56,10 +34,9 @@ def target_words_for_each_source_word(ss, ts, alignment):
     alignment.sort(key=itemgetter(0))
     for (ti,si) in alignment:
         ## make sure we're grabbing contiguous phrases
-        ## TODO strip punctuation
         if (not indices[si]) or (ti == indices[si][-1] + 1):
             indices[si].append(ti)
-            targetword = strip_edge_punctuation(ts[ti])
+            targetword = ts[ti]
             out[si].append(targetword)
     return [" ".join(targetwords) for targetwords in out]
 
@@ -104,25 +81,22 @@ def get_target_language_sentences(triple_sentences):
         sentences.append(sentence)
     return sentences
 
-def load_bitext():
-    """Take in three filenames, return a list of (source,target,alignment)
-    lists a list of 3-tuples of lists. Lowercase everything."""
+def load_bitext(args):
+    """Take in args containing filenames filenames, return a list of
+    (source,target,alignment) tuples. Lowercase everything.
+    NB: input files should already be lemmatized at this point.
+    """
     out_source = []
     out_target = []
     out_align = []
 
-    sourcefn = "/space/output_es_qu/training.es.txt"
-    targetfn = "/space/output_es_qu/training.qu.txt"
-    alignfn  = "/space/output_es_qu/training.align"
-
-    with open(sourcefn) as infile_s, \
-         open(targetfn) as infile_t, \
-         open(alignfn) as infile_align:
+    with open(args.sourcefn) as infile_s, \
+         open(args.targetfn) as infile_t, \
+         open(args.alignfn) as infile_align:
         for source, target, alignment in zip(infile_s, infile_t, infile_align):
             out_source.append(source.strip().lower().split())
             out_target.append(target.strip().lower().split())
             out_align.append(alignment.strip().split())
-    ## NB: input files should already be lemmatized at this point.
     return list(zip(out_source, out_target, out_align))
 
 def cpd(cfd):
@@ -182,8 +156,17 @@ def repl(sl_sentences, tagged_sentences):
             answers.append(ans)
         print(list(zip(tokenized, answers)))
 
+def get_argparser():
+    parser = argparse.ArgumentParser(description='quechua')
+    parser.add_argument('--sourcefn', type=str, required=True)
+    parser.add_argument('--targetfn', type=str, required=True)
+    parser.add_argument('--alignfn', type=str, required=True)
+    return parser
+
 def main():
-    triple_sentences = load_bitext()
+    parser = get_argparser()
+    args = parser.parse_args()
+    triple_sentences = load_bitext(args)
     print("training on {0} sentences.".format(len(triple_sentences)))
 
     tl_sentences = get_target_language_sentences(triple_sentences)
