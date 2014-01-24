@@ -3,6 +3,7 @@
 import argparse
 from operator import itemgetter
 import readline
+import functools
 
 from nltk.classify.scikitlearn import SklearnClassifier
 from sklearn.feature_selection import SelectKBest, chi2
@@ -111,12 +112,48 @@ def reverse_cfd(cfd):
             out[sample].inc(condition, cfd[condition][sample])
     return out
 
+SL_SENTENCES = None
+TAGGED_SENTENCES = None
+def set_examples(sl_sentences, tagged_sentences):
+    global SL_SENTENCES
+    global TAGGED_SENTENCES
+    SL_SENTENCES = sl_sentences
+    TAGGED_SENTENCES = tagged_sentences
+
 def build_instance(tagged_sentence, index):
     feat = features.extract(tagged_sentence, index)
     label = tagged_sentence[index][1]
     return (feat, label)
 
-def repl(sl_sentences, tagged_sentences):
+@functools.lru_cache(maxsize=10000)
+def classifier_for(word):
+    training = []
+    for ss,tagged in zip(SL_SENTENCES, TAGGED_SENTENCES):
+        if word in ss:
+            index = ss.index(word)
+            training.append(build_instance(tagged, index))
+    training.append(({'wrong':'wrong'},'wrong'))
+    training.append(({'alsowrong':'alsowrong'},'alsowrong'))
+
+    ## XXX: futz with regularization constant here.
+    classif = SklearnClassifier(LogisticRegression(C=0.1))
+    classif.train(training)
+    return classif
+
+def disambiguate_words(words):
+    """Given a list of words/lemmas, return a list of disambiguation answers for
+    them."""
+    classifiers = [classifier_for(word) for word in words]
+    answers = []
+    for i in range(len(words)):
+        faketagged = [(w,None) for w in words]
+        feat = features.extract(faketagged, i)
+        classif = classifiers[i]
+        ans = classif.classify(feat)
+        answers.append(ans)
+    return answers
+
+def repl():
     while True:
         try:
             line = input('> ')
@@ -128,32 +165,7 @@ def repl(sl_sentences, tagged_sentences):
         for sent in s_tokenized:
             tokenized.extend(sent)
         print("tokenized:", tokenized)
-
-        answers = []
-        ## now for every word in tokenized, we need a classifier.
-        classifiers = []
-        for word in tokenized:
-            ## get all the training data:
-            ## need to be doing this from the db rather than linear search
-            training = []
-            for ss,tagged in zip(sl_sentences, tagged_sentences):
-                if word in ss:
-                    index = ss.index(word)
-                    training.append(build_instance(tagged, index))
-            training.append(({'wrong':'wrong'},'wrong'))
-            training.append(({'alsowrong':'alsowrong'},'alsowrong'))
-
-            ## XXX: futz with regularization constant here.
-            classif = SklearnClassifier(LogisticRegression(C=0.1))
-            classif.train(training)
-            classifiers.append(classif)
-
-        for i in range(len(tokenized)):
-            faketagged = [(w,None) for w in tokenized]
-            feat = features.extract(faketagged, i)
-            classif = classifiers[i]
-            ans = classif.classify(feat)
-            answers.append(ans)
+        answers = disambiguate_words(tokenized)
         print(list(zip(tokenized, answers)))
 
 def get_argparser():
@@ -173,6 +185,7 @@ def main():
     sl_sentences = [s for (s,t,a) in triple_sentences]
     tagged_sentences = [list(zip(ss, ts))
                         for ss,ts in zip(sl_sentences, tl_sentences)]
-    repl(sl_sentences, tagged_sentences)
+    set_examples(sl_sentences, tagged_sentences)
+    repl()
 
 if __name__ == "__main__": main()
