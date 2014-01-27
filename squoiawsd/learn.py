@@ -125,8 +125,7 @@ def build_instance(tagged_sentence, index):
     label = tagged_sentence[index][1]
     return (feat, label)
 
-@functools.lru_cache(maxsize=10000)
-def classifier_for(word):
+def trainingdata_for(word):
     training = []
     for ss,tagged in zip(SL_SENTENCES, TAGGED_SENTENCES):
         if word in ss:
@@ -134,7 +133,11 @@ def classifier_for(word):
             training.append(build_instance(tagged, index))
     training.append(({'wrong':'wrong'},'wrong'))
     training.append(({'alsowrong':'alsowrong'},'alsowrong'))
+    return training
 
+@functools.lru_cache(maxsize=10000)
+def classifier_for(word):
+    training = trainingdata_for(word)
     ## XXX: futz with regularization constant here.
     classif = SklearnClassifier(LogisticRegression(C=0.1))
     classif.train(training)
@@ -173,6 +176,12 @@ def get_argparser():
     parser.add_argument('--sourcefn', type=str, required=True)
     parser.add_argument('--targetfn', type=str, required=True)
     parser.add_argument('--alignfn', type=str, required=True)
+
+    parser.add_argument('--crossvalidate',dest='crossvalidate',
+                        action='store_true')
+    parser.add_argument('--no-crossvalidate',dest='crossvalidate',
+                        action='store_false')
+    parser.set_defaults(crossvalidate=False)
     return parser
 
 def main():
