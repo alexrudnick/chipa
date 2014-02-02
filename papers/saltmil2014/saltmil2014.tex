@@ -11,9 +11,12 @@
 %%               author1@xxx.yy, author2@zzz.edu, author3@hhh.com\\}
 
 
-\abstract{Each article must include an abstract of 150 to 200 words in Times 9 pt with interlinear spacing of 10 pt.
- The heading Abstract should be centred, font Times 10 bold. This short abstract will also be used for printing a Booklet of Abstracts 
-containing the abstracts of all papers presented at the Conference. \\ \newline \Keywords{keyword A, keyword B, keyword C}}
+\abstract{Each article must include an abstract of 150 to 200 words in Times 9
+  pt with interlinear spacing of 10 pt.
+ The heading Abstract should be centred, font Times 10 bold. This short
+ abstract will also be used for printing a Booklet of Abstracts 
+containing the abstracts of all papers presented at the Conference. \\ \newline
+\Keywords{keyword A, keyword B, keyword C}}
 
 
 
@@ -21,8 +24,7 @@ containing the abstracts of all papers presented at the Conference. \\ \newline 
 
 \maketitleabstract
 
-
-\section{introduction}
+\section{Introduction}
 Here we present initial results from our work on integrating a statistical
 lexical selection system into an existing rule-based machine translation (RBMT)
 system for translating Spanish into Quechua, an indigenous American language
@@ -30,7 +32,8 @@ spoken in the Andes mountains.
 
 
 With very few code changes, we were able to integrate chipa, a statistical WSD
-system, into SQUOIA (cite SQUOIA), an existing transfer-based RBMT system. This
+system, into SQUOIA (cite SQUOIA),
+an existing transfer-based RBMT system. This
 allows SQUOIA to take advantage of any available bitext without significantly
 changing its design, and to improve its word choices as additional bitext
 becomes available. We additionally show how these improved lexical selections
@@ -51,10 +54,35 @@ for each Spanish-language word, as appropriate, on demand. These classifiers
 \section{the SQUOIA machine translation system}
 SQUOIA is described in more detail in (CITATION), but briefly...
 (brief enough? feel free to cut unnecessary information out)
-We have implemented a hybrid MT system in our research project SQUOIA (link) that translates Spanish text to Cuzco Quechua. The core system is still mostly rule-based and relies on a classical transfer approach, where several modules are joined in a processing chain: In a first step, the Spanish source sentence is analyzed (morphological analysis, PoS-tagging, named entity recognition, parsing). We use FreeLing CITE for the morphological analysis, conditional random fields (Wapiti CITE) for tagging and DeSr CITE for parsing. All of these modules rely on statistical models. In the next step, the Spanish verbs have to be disambiguated in order to assign them a Quechua verb form for generation: a rule-based module tries to assign a verb form to each verb chunk based on context information. If the rules fail to do so due to parsing or tagging errors, the verb is marked as ambiguous and passed on to an SVM classifier, that assigns a verb form even if the context information is not complete. This is the most difficult part of the translation process, as the grammatical categories encoded in verbs differ substantially between Spanish and Quechua.
-In the next step, a lexical transfer module inserts all possible translations for every word from a bilingual dictionary, after that, a set of rules disambiguates forms with lexical or morphological ambiguities. However, this rule-based lexical disambiguation is very limited, as it is not feasible to cover all possible contexts for every ambiguous word with rules. INSERT how does your system work?
-The rest is classical transfer procedure: the next module moves syntactic information between the nodes and the chunks in the tree, and finally, the tree is reordered according to the basic word order in the target language. In the last step, the Quechua surface forms are morphologically generated through a finite state transducer.
 
+We have implemented a hybrid MT system in our research project SQUOIA (link)
+that translates Spanish text to Cuzco Quechua. The core system is still mostly
+rule-based and relies on a classical transfer approach, where several modules
+are joined in a processing chain: In a first step, the Spanish source sentence
+is analyzed (morphological analysis, PoS-tagging, named entity recognition,
+parsing). We use FreeLing CITE for the morphological analysis, conditional
+random fields (Wapiti CITE) for tagging and DeSr CITE for parsing. All of these
+modules rely on statistical models. In the next step, the Spanish verbs have to
+be disambiguated in order to assign them a Quechua verb form for generation: a
+rule-based module tries to assign a verb form to each verb chunk based on
+context information. If the rules fail to do so due to parsing or tagging
+errors, the verb is marked as ambiguous and passed on to an SVM classifier,
+that assigns a verb form even if the context information is not complete. This
+is the most difficult part of the translation process, as the grammatical
+categories encoded in verbs differ substantially between Spanish and Quechua.
+In the next step, a lexical transfer module inserts all possible translations
+for every word from a bilingual dictionary, after that, a set of rules
+disambiguates forms with lexical or morphological ambiguities. However, this
+rule-based lexical disambiguation is very limited, as it is not feasible to
+cover all possible contexts for every ambiguous word with rules.
+
+INSERT how does your system work?
+
+The rest is classical transfer procedure: the next module moves syntactic
+information between the nodes and the chunks in the tree, and finally, the tree
+is reordered according to the basic word order in the target language. In the
+last step, the Quechua surface forms are morphologically generated through a
+finite state transducer.
 
 
 
@@ -64,13 +92,14 @@ The rest is classical transfer procedure: the next module moves syntactic inform
 - maybe resolve ambiguities later
 
 
+We have to say: well, here are the options. es1 can translate to qu1 or qu2 or
+qu3. Which one of these do you like the best, chipa?
+What if a qu word is in the lexicon but it's never seen in the training data?
+Just always prefer the words that we've seen?
 
 
-We have to say: well, here are the options. es1 can translate to qu1 or qu2 or qu3. Which one of these do you like the best, chipa?
-What if a qu word is in the lexicon but it's never seen in the training data? Just always prefer the words that we've seen?
-
-
-Open question: how much training data do we need for a word before it helps to do a classifier?
+Open question: how much training data do we need for a word before it helps to
+do a classifier?
 Proposal:
 - if never seen it, just don't disambiguate
 - if seen it a few times, take the MFS
@@ -81,17 +110,22 @@ Then the question is what that cutoff for "many" is.
 
 
 
-
-
-
 \section{Available bitext and data preparation}
-For this work, we use an assortment of es-qu bitexts -- there are not very many available large corpora...
+For this work, we use an assortment of es-qu bitexts -- there are not very many
+available large corpora...
+
+As sentences alignments are not guaranteed to be clean, we use Bob Moore's
+sentence aligner
+\cite{DBLP:conf/amta/Moore02}
+at a threshold of THETHRESHOLD. There were
+THISMANY sentences in the corpora we used, THISMANY of which are included in
+the resulting sentence-aligned bitext.
 
 
-As sentences alignments are not guaranteed to be clean, we use Bob Moore's sentence aligner (cite BOBMOORE) at a threshold of THETHRESHOLD. There were THISMANY sentences in the corpora we used, THISMANY of which are included in the resulting sentence-aligned bitext.
-
-
-We performed word-level alignments on the remaining sentences with the Berkeley aligner, resulting in one-to-many alignments such that one Spanish word may be aligned to many Quechua words. Spanish multiword expressions known to the lexicon were replaced with special tokens to mark that MWE.
+We performed word-level alignments on the remaining sentences with the Berkeley
+aligner, resulting in one-to-many alignments such that one Spanish word may be
+aligned to many Quechua words. Spanish multiword expressions known to the
+lexicon were replaced with special tokens to mark that MWE.
 
 
 \section{the Chipa CL-WSD system}
@@ -112,25 +146,35 @@ Features extracted include ...
 - sequence models?
 
 
-The chipa system holds all of the available bitext in a database, waiting for sentences to translate.
+The chipa system holds all of the available bitext in a database, waiting for
+sentences to translate.
 
 
-Initial versions of the chipa software are described in (Rudnick and Gasser 2013). On demand, chipa either retrieves or trains (then caches) a classifier for each word in a sentence to be translated.
+Initial versions of the chipa software are described in
+\cite{rudnick-gasser:2013:HyTra}
+On demand, chipa either retrieves or trains (then caches) a classifier
+for each word in a sentence to be translated.
 
 
-Classifiers are trained with the scikit-learn machine learning package (CITE SCIKIT-LEARN), and the software uses various utility functions from NLTK (CITE NLTK).
+Classifiers are trained with the scikit-learn machine learning package
+\cite{scikit-learn}, and the software uses various utility functions from NLTK
+\cite{nltkbook}.
 
 
 \section{Using word-sense discrimination features for WSD}
 
-
-We can make use of the many resources available for Spanish in order to make better sense of the input text, which we hypothesize should be useful in making word choices in Quechua, or other under-resourced target languages.
-
-
-One resource available for Spanish is the simple abundance of monolingual text; given large amounts of Spanish-language text, we can use unsupervised methods to discover semantic regularities.
+We can make use of the many resources available for Spanish in order to make
+better sense of the input text, which we hypothesize should be useful in making
+word choices in Quechua, or other under-resourced target languages.
 
 
-The idea here is to use unsupervised methods to learn an annotation scheme by which we can add additional labels to ...
+One resource available for Spanish is the simple abundance of monolingual text;
+given large amounts of Spanish-language text, we can use unsupervised methods
+to discover semantic regularities.
+
+
+The idea here is to use unsupervised methods to learn an annotation scheme by
+which we can add additional labels to ...
 
 
 \subsection{Brown Clusters}
@@ -140,19 +184,24 @@ Brown Clusters, originally
 
 
 \section{Testing the CL-WSD system on its own}
-* consider: how many instances of a word do we need before it helps to train a classifier?
+* consider: how many instances of a word do we need before it helps to train a
+classifier?
 
 
-Describe the results of initial testing on a held-out test set of es-qu CL-WSD tasks.
+Describe the results of initial testing on a held-out test set of es-qu CL-WSD
+tasks.
 
 
 \section{In vivo testing: can we do better on the whole translation pipeline?}
 
 
-We prepared a number of example sentence to be translated, and found that XXXX\% of them had better translations because of better lexical choice.
+We prepared a number of example sentence to be translated, and found that
+XXXX\% of them had better translations because of better lexical choice.
 
 
-Hey, maybe words that are in the Spanish wikipedia article linked to a Quechua wikipedia article are informative features for selecting those Quechua words? ...
+Hey, maybe words that are in the Spanish wikipedia article linked to a Quechua
+wikipedia article are informative features for selecting those Quechua words?
+...
 
 
 \section{better sequence models}
@@ -161,7 +210,8 @@ Hey, maybe words that are in the Spanish wikipedia article linked to a Quechua w
 Last time around, we tried MEMMs that back off to HMMs.
 
 
-But maybe that's not a very good estimate; if we don't have enough data to reliably estimate a MaxEnt classifier, how are we going to estimate an HMM?
+But maybe that's not a very good estimate; if we don't have enough data to
+reliably estimate a MaxEnt classifier, how are we going to estimate an HMM?
 
 
 Maybe the right thing to do is back off to the MFS.
@@ -171,34 +221,23 @@ Maybe the right thing to do is back off to the MFS.
 
 \section{Related Work}
 Francis Tyers. Is his dissertation available anywhere?
+\cite{tyers-dissertation}
 
 
-Annette and Anne: using ML to predict verb forms in 2013.
+Annette and Anne
+using ML to predict verb forms in 2013.
+\cite{riosgonzales-gohring:2013:HyTra}
 
 
 Rudnick and Gasser: CL-WSD for Guarani.
 
 
 \section{Conclusions and Future Work}
-Here we have described the Chipa CL-WSD system and its integration into SQUOIA. While before, most of SQUOIA's lexical choices were simply based on default entries in a dictionary or sometimes on a few hand-written lexical selection rules, now 
+Here we have described the Chipa CL-WSD system and its integration into SQUOIA.
+While before, most of SQUOIA's lexical choices were simply based on default
+entries in a dictionary or sometimes on a few hand-written lexical selection
+rules, now 
 
-
-\section{References in the text}
-
-All references within the text should be placed in parentheses containing the author's surname followed by a comma before the date of publication \cite{Martin-90}. If the sentence already includes the author's name, then it is only necessary to put the date in parentheses: \newcite{Martin-90}. When several authors are cited, those references should be separated with a semicolon: \cite{Martin-90,CastorPollux-92}. When the reference has more than three authors, only cite the name of the first author followed by et al. (e.g. \cite{Superman-Batman-Catwoman-Spiderman-00}).
-
-
-\section{Acknowledgements}
-
-Place all acknowledgements (including those concerning research grants and funding) in a separate section at the end of the article.
-
-\section{References}
-Bibliographical references should be listed in alphabetical order at the end of the article. The title of the section, "References", ``References'', should be a level 1 heading. The first line of each bibliographical reference should be justified to the left of the column, and the rest of the entry should be indented by 0.35 cm.
-
-The following examples (of fictitious references) illustrate the basic format required for articles in conference proceedings, books, journals articles, Ph.D. theses, and chapters of books respectively:
-\cite{Martin-90},  \cite{Chercheur-94},  \cite{CastorPollux-92}  \cite{Zavatta-92},  \cite{Grandchercheur-83}.
-
-%\nocite{*}
 
 \bibliographystyle{lrec2006}
 \bibliography{saltmil2014}
