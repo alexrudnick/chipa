@@ -19,42 +19,41 @@ containing the abstracts of all papers presented at the Conference. \\ \newline
 \Keywords{keyword A, keyword B, keyword C}}
 
 
-
 \begin{document}
 
 \maketitleabstract
 
 \section{Introduction}
-Here we present initial results from our work on integrating a statistical
-lexical selection system into an existing rule-based machine translation (RBMT)
-system for translating Spanish into Quechua, an indigenous American language
-spoken in the Andes mountains.
-
-
+Here we present initial results from our work on integrating statistical
+lexical selection software into an existing rule-based machine translation
+(RBMT) system for translating Spanish into Quechua.
 With very few code changes, we were able to integrate chipa, a statistical WSD
-system, into SQUOIA (cite SQUOIA),
-an existing transfer-based RBMT system. This
-allows SQUOIA to take advantage of any available bitext without significantly
-changing its design, and to improve its word choices as additional bitext
-becomes available. We additionally show how these improved lexical selections
-result in better translations.
+system, into SQUOIA (cite SQUOIA??), an existing transfer-based RBMT system.
 
+This allows SQUOIA to take advantage of any available bitext without
+significantly changing its design, and to improve its word choices as
+additional bitext becomes available. We additionally show how these improved
+lexical selections result in better translations.
 
 In the existing SQUOIA pipeline, lexical choices are produced from a lexicon
 and looked up with the MATXIN system's matxin-lex-xfer command. If there are
 several possible translations for a source-language word, they are passed along
-in the pipeline. There are currently some lexical selection rules, but they
-must be written by hand.
+in the pipeline. While there are some rules for lexical selection, they have
+been written by hand and cover a limited vocabulary in a limited situation.
 
+In this work, we supplement these rules with classifiers learned from
+Spanish-Quechua bitext, on demand. These classifiers automatically make use of
+regularities that might not be obvious to human rule-writers, and are
+automatically discovered in the available bitext, allowing appropriate lexical
+selections for any word type with adequate coverage in our training corpus.
 
-In this work, we supplement these rules with discriminative classifiers learned
-for each Spanish-language word, as appropriate, on demand. These classifiers 
+Quechua is a group of closely related indigenous American languages spoken in
+South America. There are many dialects of Quechua spoken, but in this work we
+focus on Cuzco Quechua, as there are some useful linguistic resources available
+for it, such as (CITE TREEBANK), and this allows us to build on previous work.
 
-
-\section{the SQUOIA machine translation system}
-SQUOIA is described in more detail in (CITATION), but briefly...
-(brief enough? feel free to cut unnecessary information out)
-
+\section{The SQUOIA machine translation system}
+%% XXX: make this less "we" and more impersonal; this is anonymized
 We have implemented a hybrid MT system in our research project SQUOIA (link)
 that translates Spanish text to Cuzco Quechua. The core system is still mostly
 rule-based and relies on a classical transfer approach, where several modules
@@ -76,21 +75,41 @@ disambiguates forms with lexical or morphological ambiguities. However, this
 rule-based lexical disambiguation is very limited, as it is not feasible to
 cover all possible contexts for every ambiguous word with rules.
 
-INSERT how does your system work?
-
 The rest is classical transfer procedure: the next module moves syntactic
 information between the nodes and the chunks in the tree, and finally, the tree
 is reordered according to the basic word order in the target language. In the
 last step, the Quechua surface forms are morphologically generated through a
 finite state transducer.
 
-
-
 - pipeline that builds and then passes along a nested chunk structure, serialized as XML when necessary
 - each stage in the pipeline may modify or add to the data structure, but most stages leave most of the tree alone
 - look up words (or MWEs!?) in the lexicon
 - maybe resolve ambiguities later
+Then the question is what that cutoff for "many" is.
 
+\section{The Chipa CL-WSD system}
+Chipa is a system for cross-language word sense disambiguation (CL-WSD). By
+CL-WSD, we mean the problem of assigning labels to polysemous words in
+source-language text, where each label is a word or phrase type in the target
+language.
+
+This framing of word-sense disambiguation concretely situates CL-WSD as a
+useful part of a machine translation system, avoiding entirely the problems
+associated with choosing a sense inventory, as the sense distinctions that a
+CL-WSD system should learn are exactly those that are lexicalized in the target
+language. CL-WSD as an approach additionally sidesteps the ``knowledge
+acquisition bottleneck" (REFERENCE: Els and whoever she cites) hampering much
+other work in WSD, as it requires bitext, which, while limited in availability,
+is more common than sense-annotated text and is useful on its own for
+corpus-based MT.
+
+Chipa uses discriminative classifiers, trained individually for source-language
+words, in order to distinguish between the senses associated with different
+target-language word types.
+
+In this work, we use a number of features extracted ...
+The chipa system holds all of the available bitext in a database, waiting for
+sentences to translate.
 
 We have to say: well, here are the options. es1 can translate to qu1 or qu2 or
 qu3. Which one of these do you like the best, chipa?
@@ -106,37 +125,6 @@ Proposal:
 - if many times, train a classifier!
 
 
-Then the question is what that cutoff for "many" is.
-
-
-
-\section{Available bitext and data preparation}
-For this work, we use an assortment of es-qu bitexts -- there are not very many
-available large corpora...
-
-As sentences alignments are not guaranteed to be clean, we use Bob Moore's
-sentence aligner
-\cite{DBLP:conf/amta/Moore02}
-at a threshold of THETHRESHOLD. There were
-THISMANY sentences in the corpora we used, THISMANY of which are included in
-the resulting sentence-aligned bitext.
-
-
-We performed word-level alignments on the remaining sentences with the Berkeley
-aligner, resulting in one-to-many alignments such that one Spanish word may be
-aligned to many Quechua words. Spanish multiword expressions known to the
-lexicon were replaced with special tokens to mark that MWE.
-
-
-\section{the Chipa CL-WSD system}
-Here we describe the structure of the chipa CL-WSD system.
-
-
-Chipa is an open source CL-WSD system, available at (REDACTED)
-
-
-In this work, we use a number of features extracted ...
-
 
 Features extracted include ...
 - syntactic features? we should have a parse/chunking handy!
@@ -146,8 +134,6 @@ Features extracted include ...
 - sequence models?
 
 
-The chipa system holds all of the available bitext in a database, waiting for
-sentences to translate.
 
 
 Initial versions of the chipa software are described in
@@ -167,7 +153,6 @@ We can make use of the many resources available for Spanish in order to make
 better sense of the input text, which we hypothesize should be useful in making
 word choices in Quechua, or other under-resourced target languages.
 
-
 One resource available for Spanish is the simple abundance of monolingual text;
 given large amounts of Spanish-language text, we can use unsupervised methods
 to discover semantic regularities.
@@ -178,12 +163,29 @@ which we can add additional labels to ...
 
 
 \subsection{Brown Clusters}
-Brown Clusters, originally 
+Brown Clusters were originally described in \cite{Brown92class-basedn-gram},
+but have since been used in a variety of other NLP tasks, especially text
+classification settings.
+
+
+\section{Available bitext and data preparation}
+For this work, we use an assortment of Spanish-Quechua bitexts.
+While there are not very many available large corpora, there are some.
+
+As sentences alignments are not guaranteed to be clean, we use Robert Moore's
+sentence aligner \cite{DBLP:conf/amta/Moore02}, with the default settings.
+There were THISMANY sentences in the corpora we used, THISMANY of which are
+included in the resulting sentence-aligned bitext.
+
+We performed word-level alignments on the remaining sentences with the Berkeley
+aligner, resulting in one-to-many alignments such that each Spanish word may be
+aligned to zero or more Quechua words. Spanish multi-word expressions known to
+the lexicon were replaced with special tokens to mark that particular
+expression.
 
 
 
-
-\section{Testing the CL-WSD system on its own}
+\section{In-vitro Experiments}
 * consider: how many instances of a word do we need before it helps to train a
 classifier?
 
@@ -205,8 +207,6 @@ wikipedia article are informative features for selecting those Quechua words?
 
 
 \section{better sequence models}
-
-
 Last time around, we tried MEMMs that back off to HMMs.
 
 
@@ -217,20 +217,34 @@ reliably estimate a MaxEnt classifier, how are we going to estimate an HMM?
 Maybe the right thing to do is back off to the MFS.
 
 
-
-
 \section{Related Work}
 Francis Tyers. Is his dissertation available anywhere?
 \cite{tyers-dissertation}
-
 
 Annette and Anne
 using ML to predict verb forms in 2013.
 \cite{riosgonzales-gohring:2013:HyTra}
 
-
 Rudnick and Gasser: CL-WSD for Guarani.
 
+In work on the Parasense system \cite{lefever-hoste-decock:2011:ACL-HLT2011},
+Lefever \emph{et al.} produced top results for CL-WSD translating English nouns
+into five different European languages. The classifiers in this work are
+trained on standard local contextual features surrounding the target word,
+%% XXX: terminology, should we use "target word"?
+in addition to a bag-of-words model of the source language sentence in four
+other foreign languages. At training time, the translations of the sentence are
+extracted from mutually parallel corpora, %% XXX terminology?
+but at training time
+This work has not yet, to our knowledge, been integrated into a machine
+translation system, in part because it relies on an external machine
+translation system as part of its feature extraction procedure.
+
+Rudnick \emph{et al.} \shortcite{rudnick-liu-gasser:2013:SemEval-2013}
+prototyped a system that addresses some of the shortcomings here, requiring
+more modest software infrastructure for feature extraction while still allowing
+CL-WSD systems to make use of several mutually parallel bitexts that share a
+source language.
 
 \section{Conclusions and Future Work}
 Here we have described the Chipa CL-WSD system and its integration into SQUOIA.
