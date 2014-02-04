@@ -27,7 +27,7 @@ def main():
     corpus = ET.fromstringlist(lines)
 
     dprint("!" * 80)
-    lexsel_util.get_tokens(corpus)
+    lexsel_util.get_tuples(corpus)
     dprint(lexsel_util.prettify(corpus))
     dprint("!" * 80)
 

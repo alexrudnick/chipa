@@ -14,9 +14,9 @@ def prettify(elem):
     reparsed = minidom.parseString(rough_string)
     return reparsed.toprettyxml(indent="  ")
 
-def get_tokens(corpus):
+def get_tuples(corpus):
     """Find all the nodes in the tree, return the list of source-language
-    tokens."""
+    tuples."""
     target_nodes = corpus.findall(".//NODE")
     tokens = []
     for node in target_nodes:

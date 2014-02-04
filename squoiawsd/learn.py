@@ -146,6 +146,7 @@ def classifier_for(word):
 def disambiguate_words(words):
     """Given a list of words/lemmas, return a list of disambiguation answers for
     them."""
+    print("got words:", words)
     classifiers = [classifier_for(word) for word in words]
     answers = []
     for i in range(len(words)):
@@ -154,7 +155,10 @@ def disambiguate_words(words):
         classif = classifiers[i]
         ans = classif.classify(feat)
         answers.append(ans)
-    return answers
+
+    ## TODO: add in the MFS here if the classifier came up with a bad answer.
+
+    return [str(ans) for ans in answers]
 
 def repl():
     while True:
