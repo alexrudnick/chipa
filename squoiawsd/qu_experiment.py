@@ -64,18 +64,6 @@ def test_on_testset():
 ## maybe we want to get the n most common words in the Spanish corpus, and
 ## cross-validate our classifiers on each of those?
 
-class MFSClassifier(nltk.classify.ClassifierI):
-    def __init__(self):
-        self.fd = nltk.probability.FreqDist()
-
-    def train(self, labeled_featuresets):
-        for (f,label) in labeled_featuresets:
-            self.fd[label] += 1 
-        print(self.fd.pprint())
-
-    def classify(self, featureset):
-        return self.fd.max()
-
 def cross_validate():
     ## get the 100 most commonly occurring Spanish lemmas.
     #top_words = "tener tierra dar rey".split()
@@ -91,7 +79,7 @@ def cross_validate():
             print("training on {0} instances.".format(len(mytraining)))
             print("testing on {0} instances.".format(len(mytesting)))
 
-            mfs = MFSClassifier()
+            mfs = learn.MFSClassifier()
             mfs.train(mytraining)
 
             classif = SklearnClassifier(LogisticRegression(C=0.1))

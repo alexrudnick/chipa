@@ -11,7 +11,6 @@ def label_sentence(sentence):
     print("LABELING A SENTENCE HANG ON.")
     lemmas = [tup[2] for tup in sentence]
     answers = learn.disambiguate_words(lemmas)
-    #answers = list(enumerate(answers, 1))
     print("sent to client:", answers)
     return answers
 

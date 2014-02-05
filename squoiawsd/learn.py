@@ -18,8 +18,8 @@ from nltk.probability import ELEProbDist
 from nltk.model import NgramModel
 
 import features
-from constants import START
 from constants import UNTRANSLATED
+from constants import OOV
 
 DEBUG=False
 def pause():
@@ -40,32 +40,6 @@ def target_words_for_each_source_word(ss, ts, alignment):
             targetword = ts[ti]
             out[si].append(targetword)
     return [" ".join(targetwords) for targetwords in out]
-
-def get_emissions(triple_sentences):
-    """Return a CFD for the emissions. Note that here we are emitting source
-    language words from target language phrases. """
-    emissions = ConditionalFreqDist()
-    emissions[UNTRANSLATED].inc(UNTRANSLATED)
-    for (ss, ts, alignment) in triple_sentences:
-        tws = target_words_for_each_source_word(ss, ts, alignment)
-        tagged = list(zip(ss, tws))
-        if DEBUG:
-            print("source sentence:", " ".join(ss))
-            print("target sentence:", " ".join(ts))
-            print(tagged)
-        nozeros = [(source, target) for (source,target) in tagged if target]
-        for (source, target) in nozeros:
-            emissions[target].inc(source)
-    return emissions
-
-def get_source_priors(triple_sentences):
-    """Return a probability distribution over the individual words in the source
-    sentence, which we're going to use later."""
-    wordcounts = FreqDist()
-    for (ss, ts, alignment) in triple_sentences:
-        for sw in ss:
-            wordcounts.inc(sw)
-    return ELEProbDist(wordcounts)
 
 def get_target_language_sentences(triple_sentences):
     """Return all of the "sentences" over the target language, used for training
@@ -131,22 +105,69 @@ def trainingdata_for(word):
         if word in ss:
             index = ss.index(word)
             training.append(build_instance(tagged, index))
-    training.append(({'wrong':'wrong'},'wrong'))
-    training.append(({'alsowrong':'alsowrong'},'alsowrong'))
     return training
 
-@functools.lru_cache(maxsize=10000)
+@functools.lru_cache(maxsize=100000)
 def classifier_for(word):
     training = trainingdata_for(word)
-    ## XXX: futz with regularization constant here.
-    classif = SklearnClassifier(LogisticRegression(C=0.1))
+    
+    if not training:
+        return OOVClassifier()
+
+    labels = set(label for fs,label in training)
+
+    if len(labels) == 1:
+        classif = MFSClassifier()
+    else:
+        ## XXX: futz with regularization constant here.
+        classif = SklearnClassifier(LogisticRegression(C=0.1))
     classif.train(training)
     return classif
+
+@functools.lru_cache(maxsize=100000)
+def mfs_for(word):
+    fd = nltk.probability.FreqDist()
+    labeled_featuresets = trainingdata_for(word)
+    for (f,label) in labeled_featuresets:
+        fd[label] += 1 
+    return fd.max()
+
+@functools.lru_cache(maxsize=100000)
+def mfs_translation(word):
+    """Return the MFS for the given word, but require that it's not the
+    untranslated token unless that's all we've seen."""
+    fd = nltk.probability.FreqDist()
+    labeled_featuresets = trainingdata_for(word)
+    for (f,label) in labeled_featuresets:
+        if label == UNTRANSLATED: continue
+        fd[label] += 1 
+    mostcommon = fd.most_common()
+    if not mostcommon:
+        return OOV
+    return mostcommon[0][0]
+
+class MFSClassifier(nltk.classify.ClassifierI):
+    def __init__(self):
+        self.fd = nltk.probability.FreqDist()
+
+    def train(self, labeled_featuresets):
+        for (f,label) in labeled_featuresets:
+            self.fd[label] += 1 
+
+    def classify(self, featureset):
+        return self.fd.max()
+
+class OOVClassifier(nltk.classify.ClassifierI):
+    def __init__(self):
+        pass
+    def train(self, labeled_featuresets):
+        pass
+    def classify(self, featureset):
+        return OOV
 
 def disambiguate_words(words):
     """Given a list of words/lemmas, return a list of disambiguation answers for
     them."""
-    print("got words:", words)
     classifiers = [classifier_for(word) for word in words]
     answers = []
     for i in range(len(words)):
@@ -154,10 +175,10 @@ def disambiguate_words(words):
         feat = features.extract(faketagged, i)
         classif = classifiers[i]
         ans = classif.classify(feat)
+        if ans == UNTRANSLATED:
+            ans = mfs_translation(words[i])
+            print("MFS!!!", words[i], "==>", ans)
         answers.append(ans)
-
-    ## TODO: add in the MFS here if the classifier came up with a bad answer.
-
     return [str(ans) for ans in answers]
 
 def repl():

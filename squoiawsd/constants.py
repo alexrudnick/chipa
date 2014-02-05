@@ -1,14 +1,8 @@
-
 START = ""
 MINCOUNT = 5
 
 UNTRANSLATED = "<untranslated>"
 OOV = "<OOV>"
-
-BEAMWIDTH=50
-
-## how many ways to split
-EIGHT = 8
 
 ## Tunable.
 CLASSIFIER_THRESHOLD = 500

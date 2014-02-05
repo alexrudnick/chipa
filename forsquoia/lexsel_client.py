@@ -14,10 +14,11 @@ def make_decision(node, answers):
     chipa_says = answers[ref - 1]
 
     choice = None
-    for child in node:
-        if child.tag == "SYN" and child.attrib['lem'] == chipa_says:
-            choice = child
 
+    if chipa_says not in ["<OOV>", "<untranslated>"]:
+        for child in node:
+            if child.tag == "SYN" and child.attrib['lem'] == chipa_says:
+                choice = child
     if not choice:
         dprint("CLASSIFIER DIDN'T HELP, BAILING")
         return
