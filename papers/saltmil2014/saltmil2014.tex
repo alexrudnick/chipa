@@ -47,15 +47,17 @@ lexical selection software into an existing rule-based machine translation
 With very few code changes, we were able to integrate Chipa, a statistical WSD
 system, into SQUOIA\footnote{\url{http://code.google.com/p/squoia/}},
 a transfer-based RBMT system based on the architecture of MATXIN
-\cite{matxin,matxin_2005}.
+\cite{matxin_2005,matxin}.
 
-This allows SQUOIA to take advantage of any available bitext without
-significantly changing its design, and to improve its word choices as
-additional bitext becomes available. We additionally show how these improved
-lexical selections result in better translations.
+This integration enables SQUOIA to take advantage of any available bitext
+without significantly changing its design, and to improve its word choices as
+additional bitext becomes available.
+We additionally report on how the addition of Chipa results in improved
+translations over a test set.
 
-In the existing SQUOIA pipeline, lexical choices are produced from a lexicon
-and looked up with the MATXIN system's matxin-lex-xfer command. If there are
+In the existing SQUOIA pipeline, target-language word choices are produced from
+a lexicon and looked up with the MATXIN system's matxin-lex-xfer command.
+If there are
 several possible translations for a source-language word, they are passed along
 in the pipeline. While there are some rules for lexical selection, they have
 been written by hand and cover a limited vocabulary in a limited situation.
@@ -67,14 +69,18 @@ automatically discovered in the available bitext, allowing appropriate lexical
 selections for any word type with adequate coverage in our training corpus.
 
 Quechua is a group of closely related indigenous American languages spoken in
-South America. There are many dialects of Quechua spoken, but in this work we
-focus on Cuzco Quechua, as there are some useful linguistic resources available
-for it, such as (CITE TREEBANK), and this allows us to build on previous work.
+South America. There are many dialects of Quechua spoken, but SQUOIA focuses on
+the Cuzco Quechua dialect, the variety spoken near the Peruvian city of Cuzco.
+This dialect is considered a standard, with its own language academy
+(the \emph{Academia Mayor de la Lengua Quechua}), a large number of speakers,
+and some useful linguistic resources available, such as a small treebank
+\cite{rios2009quechua}, also produced by the SQUOIA team.
 
 \section{The SQUOIA machine translation system}
 %% XXX: make this less "we" and more impersonal; this is anonymized
-We have implemented a hybrid MT system in our research project SQUOIA (link)
-that translates Spanish text to Cuzco Quechua. The core system is still mostly
+We have implemented a hybrid MT system in our research project SQUOIA 
+that translates Spanish text to Cuzco Quechua.
+The core system is still mostly
 rule-based and relies on a classical transfer approach, where several modules
 are joined in a processing chain: In a first step, the Spanish source sentence
 is analyzed (morphological analysis, PoS-tagging, named entity recognition,
