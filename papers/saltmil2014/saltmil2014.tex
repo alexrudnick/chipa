@@ -1,8 +1,13 @@
 \documentclass[10pt, a4paper]{article}
 \usepackage{lrec2006}
 \usepackage{graphicx}
+\usepackage{url}
+\usepackage{latexsym}
+\usepackage{listings}
+\usepackage[utf8]{inputenc}
 
-\title{Integrating CL-WSD into an existing RBMT system for Spanish-Quechua}
+%% XXX: we need a much better title.
+\title{Adding CL-WSD to an Existing Machine Translation System for Better Lexical Selection}
 
 %%\name{Author1, Author2, Author3}
 %%
@@ -10,25 +15,39 @@
 %%               Address1, Address2, Address3 \\
 %%               author1@xxx.yy, author2@zzz.edu, author3@hhh.com\\}
 
-
-\abstract{Each article must include an abstract of 150 to 200 words in Times 9
-  pt with interlinear spacing of 10 pt.
- The heading Abstract should be centred, font Times 10 bold. This short
- abstract will also be used for printing a Booklet of Abstracts 
-containing the abstracts of all papers presented at the Conference. \\ \newline
-\Keywords{keyword A, keyword B, keyword C}}
-
+\abstract{
+Lexical ambiguity is a significant problem facing rule-based machine translation
+systems, as many words have several possible translations in a given target
+language, each of which can be considered a sense of the word from the source
+language.
+These ambiguities present fewer difficulties for statistical machine translation
+systems trained on large bilingual corpora, as large n-gram language models and
+phrase-tables containing common multi-word expressions can keep word choices
+coherent. However, for most language pairs these resources are not currently
+available, and so a more a rule-based approach becomes attractive. Hybrid
+rule-based and machine learning options may be additionally explored.
+In this paper we describe the integration of statistical cross-lingual
+word-sense disambiguation software to SQUOIA, an existing rule-based MT system
+for the Spanish-Quechua language pair, and show how it enables SQUOIA to make
+use of the available bitext to make better lexical choices, with very few code
+changes. We also describe Chipa, the new open source CL-WSD software used for
+these experiments.
+\\ \newline
+\Keywords{under-resourced languages, hybrid machine translation, word-sense
+disambiguation}}
 
 \begin{document}
 
 \maketitleabstract
 
 \section{Introduction}
-Here we present initial results from our work on integrating statistical
+Here we report initial results and our experience on integrating statistical
 lexical selection software into an existing rule-based machine translation
 (RBMT) system for translating Spanish into Quechua.
-With very few code changes, we were able to integrate chipa, a statistical WSD
-system, into SQUOIA (cite SQUOIA??), an existing transfer-based RBMT system.
+With very few code changes, we were able to integrate Chipa, a statistical WSD
+system, into SQUOIA\footnote{\url{http://code.google.com/p/squoia/}},
+a transfer-based RBMT system based on the architecture of MATXIN
+\cite{matxin,matxin_2005}.
 
 This allows SQUOIA to take advantage of any available bitext without
 significantly changing its design, and to improve its word choices as
@@ -98,18 +117,21 @@ useful part of a machine translation system, avoiding entirely the problems
 associated with choosing a sense inventory, as the sense distinctions that a
 CL-WSD system should learn are exactly those that are lexicalized in the target
 language. CL-WSD as an approach additionally sidesteps the ``knowledge
-acquisition bottleneck" (REFERENCE: Els and whoever she cites) hampering much
-other work in WSD, as it requires bitext, which, while limited in availability,
-is more common than sense-annotated text and is useful on its own for
-corpus-based MT.
+acquisition bottleneck"
+\cite{agirre2006word}
+hampering much other work in WSD, as it requires bitext, which, while limited
+in availability, is more common than sense-annotated text and is useful on its
+own for corpus-based MT.
 
 Chipa uses discriminative classifiers, trained individually for source-language
 words, in order to distinguish between the senses associated with different
 target-language word types.
 
 In this work, we use a number of features extracted ...
+
 The chipa system holds all of the available bitext in a database, waiting for
 sentences to translate.
+
 
 We have to say: well, here are the options. es1 can translate to qu1 or qu2 or
 qu3. Which one of these do you like the best, chipa?
@@ -185,7 +207,7 @@ expression.
 
 
 
-\section{In-vitro Experiments}
+\section{In-Vitro Experimental Setup}
 * consider: how many instances of a word do we need before it helps to train a
 classifier?
 
@@ -194,9 +216,12 @@ Describe the results of initial testing on a held-out test set of es-qu CL-WSD
 tasks.
 
 
-\section{In vivo testing: can we do better on the whole translation pipeline?}
+\section{System Integration}
+Given the Chipa WSD software and the pipeline design of the SQUOIA MT system,
+we were
 
 
+\section{In-Vivo Experimental Setup}
 We prepared a number of example sentence to be translated, and found that
 XXXX\% of them had better translations because of better lexical choice.
 
@@ -204,18 +229,6 @@ XXXX\% of them had better translations because of better lexical choice.
 Hey, maybe words that are in the Spanish wikipedia article linked to a Quechua
 wikipedia article are informative features for selecting those Quechua words?
 ...
-
-
-\section{better sequence models}
-Last time around, we tried MEMMs that back off to HMMs.
-
-
-But maybe that's not a very good estimate; if we don't have enough data to
-reliably estimate a MaxEnt classifier, how are we going to estimate an HMM?
-
-
-Maybe the right thing to do is back off to the MFS.
-
 
 \section{Related Work}
 
