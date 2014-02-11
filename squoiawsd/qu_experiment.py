@@ -64,23 +64,24 @@ def test_on_testset():
 ## maybe we want to get the n most common words in the Spanish corpus, and
 ## cross-validate our classifiers on each of those?
 
-def cross_validate():
-    ## get the 100 most commonly occurring Spanish lemmas.
-    #top_words = "tener tierra dar rey".split()
-    top_words = "tener".split()
+def cross_validate(top_words):
+    print("top words:", top_words)
     for w in top_words:
         training = learn.trainingdata_for(w)
+        print("*** {0}: {1} instances.".format(w, len(training)))
+        if len(training) < 10:
+            print("SKIP!")
+            continue
         cv = cross_validation.KFold(len(training), n_folds=10, indices=True,
                                     shuffle=False, random_state=None, k=None)
         for traincv, testcv in cv:
             mytraining = training[traincv[0]:traincv[len(traincv)-1]]
             mytesting  = training[testcv[0]:testcv[len(testcv)-1]]
 
-            print("training on {0} instances.".format(len(mytraining)))
-            print("testing on {0} instances.".format(len(mytesting)))
-
             mfs = learn.MFSClassifier()
             mfs.train(mytraining)
+            themfs = mfs.classify({"wrong":"wrong"})
+            print("mfs is:", themfs)
 
             classif = SklearnClassifier(LogisticRegression(C=0.1))
             classif.train(training)
@@ -89,6 +90,16 @@ def cross_validate():
             print('accuracy:', acc)
             print('mfs accuracy:', mfsacc)
 
+def get_top_words(sl_sentences):
+    """Take a list of sentences (each of which is a list of words), return the
+    top 100 words."""
+    ## TODO: make this just content words. no punctuation, no stopwords
+    fd = nltk.probability.FreqDist()
+    for sent in sl_sentences:
+        for w in sent:
+            fd[w] += 1
+    mostcommon = fd.most_common(100)
+    return [word for (word, count) in mostcommon]
 
 def main():
     parser = learn.get_argparser()
@@ -102,7 +113,8 @@ def main():
     learn.set_examples(sl_sentences,tagged_sentences)
 
     if args.crossvalidate:
-        cross_validate()
+        top_words = get_top_words(sl_sentences)
+        cross_validate(top_words)
     else:
         test_on_testset()
 
