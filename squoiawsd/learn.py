@@ -99,12 +99,15 @@ def build_instance(tagged_sentence, index):
     label = tagged_sentence[index][1]
     return (feat, label)
 
-def trainingdata_for(word):
+def trainingdata_for(word, nonnull=False):
     training = []
     for ss,tagged in zip(SL_SENTENCES, TAGGED_SENTENCES):
         if word in ss:
             index = ss.index(word)
             training.append(build_instance(tagged, index))
+    if nonnull:
+        training = [(feat,label) for (feat,label) in training
+                                 if label != UNTRANSLATED]
     return training
 
 @functools.lru_cache(maxsize=100000)

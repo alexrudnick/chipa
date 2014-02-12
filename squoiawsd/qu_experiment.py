@@ -40,35 +40,17 @@ def test_on_testset():
             answers = learn.disambiguate_words(lemmas)
             for lemma,t in zip(lemmas,answers):
                 print("{0}/{1}".format(lemma,t),end=" ")
-            ## hrm, how do we handle alignments in this case?
 
-            #print(line)
-            #tagged = searches.maxent_mfs(ss, cfd)
-            #print("ORIGINAL:", list(zip(ss,ts)))
-            #print("TAGGED:", tagged)
-            #predicted = [t for (s,t) in tagged]
-            #correct = 0
-            #print(list(zip(ts, predicted)))
-            #for actual, pred in zip(ts, predicted):
-            #    if actual == UNTRANSLATED: continue
-            #    totalwords += 1
-            #    if actual == pred:
-            #        correct += 1
-            #        totalcorrect += 1
-            #print("sentence accuracy:", correct / len(ss))
-            #print("considered words:", len(ss))
-    #accuracy = (totalcorrect / totalwords)
-    #print("accuracy:", accuracy)
-    #print("considered words:", totalwords)
-
-## maybe we want to get the n most common words in the Spanish corpus, and
-## cross-validate our classifiers on each of those?
-
-def cross_validate(top_words):
-    print("top words:", top_words)
+def cross_validate(top_words, nonnull=False):
+    """Given the most common words in the Spanish corpus, cross-validate our
+    classifiers for each of those."""
+    accuracies = []
+    mfsaccuracies = []
+    sizes = []
     for w in top_words:
-        training = learn.trainingdata_for(w)
-        print("*** {0}: {1} instances.".format(w, len(training)))
+        print(w, end=" ")
+        sys.stdout.flush()
+        training = learn.trainingdata_for(w, nonnull=nonnull)
         if len(training) < 10:
             print("SKIP!")
             continue
@@ -80,26 +62,54 @@ def cross_validate(top_words):
 
             mfs = learn.MFSClassifier()
             mfs.train(mytraining)
-            themfs = mfs.classify({"wrong":"wrong"})
-            print("mfs is:", themfs)
 
             classif = SklearnClassifier(LogisticRegression(C=0.1))
-            classif.train(training)
+            classif.train(mytraining)
             acc = nltk.classify.util.accuracy(classif, mytesting)
             mfsacc = nltk.classify.util.accuracy(mfs, mytesting)
-            print('accuracy:', acc)
-            print('mfs accuracy:', mfsacc)
+
+            accuracies.append(acc)
+            mfsaccuracies.append(mfsacc)
+            sizes.append(len(mytesting))
+    print()
+    return accuracies, mfsaccuracies, sizes
+
+def ispunct(word):
+    import string
+    punctuations = string.punctuation + "«»¡¿"
+    return (word in punctuations or
+            all(c in punctuations for c in word))
 
 def get_top_words(sl_sentences):
     """Take a list of sentences (each of which is a list of words), return the
     top 100 words."""
-    ## TODO: make this just content words. no punctuation, no stopwords
     fd = nltk.probability.FreqDist()
     for sent in sl_sentences:
         for w in sent:
             fd[w] += 1
-    mostcommon = fd.most_common(100)
-    return [word for (word, count) in mostcommon]
+    mostcommon = fd.most_common(120)
+    mostcommon = [word for (word, count) in mostcommon
+                  if not ispunct(word)]
+    mostcommon = mostcommon[:100]
+    return mostcommon
+
+def save_crossvalidate_results(fn, accuracies, mfsaccuracies, sizes):
+    with open(fn, "w") as outfile:
+        for a,m,s in zip(accuracies, mfsaccuracies, sizes):
+            print("{0}\t{1}\t{2}".format(s,a,m), file=outfile)
+
+def do_a_case(casename, top_words, nonnull):
+    print(casename)
+    accuracies, mfsaccuracies, sizes = cross_validate(top_words, nonnull=nonnull)
+    save_crossvalidate_results("CROSSVALIDATE-RESULTS-{0}".format(casename),
+        accuracies, mfsaccuracies, sizes)
+    print("WEIGHTED ACCURACIES!!")
+    total_acc = sum(a*s for a,s in zip(accuracies, sizes))
+    total_mfsacc = sum(m*s for m,s in zip(mfsaccuracies, sizes))
+    avg = total_acc / sum(sizes)
+    mfsavg = total_mfsacc / sum(sizes)
+    print("classifiers:", avg)
+    print("mfs:", mfsavg)
 
 def main():
     parser = learn.get_argparser()
@@ -112,10 +122,12 @@ def main():
                         for ss,ts in zip(sl_sentences, tl_sentences)]
     learn.set_examples(sl_sentences,tagged_sentences)
 
-    if args.crossvalidate:
-        top_words = get_top_words(sl_sentences)
-        cross_validate(top_words)
-    else:
+    if not args.crossvalidate:
         test_on_testset()
+        return
+
+    top_words = get_top_words(sl_sentences)
+    do_a_case("REGULAR", top_words, nonnull=False)
+    do_a_case("NONNULL", top_words, nonnull=True)
 
 if __name__ == "__main__": main()
