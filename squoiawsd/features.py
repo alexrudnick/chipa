@@ -7,6 +7,7 @@ return feature dictionaries.
 
 import nltk
 
+import brownclusters
 DEBUG=False
 
 def bagofwords(tagged_sent, index):
@@ -31,6 +32,29 @@ def window(tagged_sent, index):
     out.update(windowfeatures)
     return out
 
+def bagofbrown(tagged_sent, index):
+    """Bag of brown clusters for the whole sentence."""
+    source = nltk.tag.untag(tagged_sent)
+    clusters = brownclusters.clusters_for_sentence(source)
+    return dict([('bb(%s)' % w, True) for w in clusters])
+
+def brownwindow(tagged_sent, index):
+    """Immediate surrounding brown clusters."""
+    source = nltk.tag.untag(tagged_sent)
+    clusters = brownclusters.clusters_for_sentence(source)
+    out = {}
+    ## window of WIDTH before
+    lowerbound = max(0, index-WIDTH)
+    windowfeatures = dict([('bw(%s)' % w, True)
+                          for w in clusters[lowerbound:index]])
+    out.update(windowfeatures)
+    ## and WIDTH after
+    upperbound = index+WIDTH
+    windowfeatures = dict([('bw(%s)' % w, True)
+                          for w in clusters[index+1:upperbound+1]])
+    out.update(windowfeatures)
+    return out
+
 def getlabel(tagged_sent, i):
     if i in range(len(tagged_sent)):
         return tagged_sent[i][1]
@@ -39,24 +63,14 @@ def getlabel(tagged_sent, i):
     else:
         assert False, "don't ask for the future"
 
-def prev_label(tagged_sent, index):
-    out = {}
-    out['prevlabel(%s)' % getlabel(tagged_sent, index-1)] = True
-    return out
-
-def prev_prev_label(tagged_sent, index):
-    out = {}
-    out['prevprevlabel(%s)' % getlabel(tagged_sent, index-2)] = True
-    return out
-
 def extract(tagged_sent, index):
     """Given a WSDProblem, return the features for the sentence."""
     out = {}
     allfeatures = [
         bagofwords,
         window,
-        #prev_label,
-        #prev_prev_label,
+        bagofbrown,
+        brownwindow,
     ]
     for funk in allfeatures:
         extracted = funk(tagged_sent, index)

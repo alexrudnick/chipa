@@ -16,6 +16,7 @@ from sklearn import cross_validation
 
 import searches
 import learn
+import brownclusters
 from preprocess import preprocess
 
 TESTSET="testdata/defensoria1-3_es.txt"
@@ -113,6 +114,7 @@ def do_a_case(casename, top_words, nonnull):
 
 def main():
     parser = learn.get_argparser()
+    brownclusters.set_paths_file("es-bible-lemmatized-c50-p1.paths")
 
     args = parser.parse_args()
     triple_sentences = learn.load_bitext(args)
