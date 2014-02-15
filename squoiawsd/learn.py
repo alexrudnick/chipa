@@ -204,6 +204,7 @@ def get_argparser():
     parser.add_argument('--sourcefn', type=str, required=True)
     parser.add_argument('--targetfn', type=str, required=True)
     parser.add_argument('--alignfn', type=str, required=True)
+    parser.add_argument('--clusterfn', type=str, required=True)
 
     parser.add_argument('--crossvalidate',dest='crossvalidate',
                         action='store_true')

@@ -49,7 +49,6 @@ def cross_validate(top_words, nonnull=False):
     mfsaccuracies = []
     sizes = []
     for w in top_words:
-        print(w, end=" ")
         sys.stdout.flush()
         training = learn.trainingdata_for(w, nonnull=nonnull)
         if len(training) < 10:
@@ -72,7 +71,6 @@ def cross_validate(top_words, nonnull=False):
             accuracies.append(acc)
             mfsaccuracies.append(mfsacc)
             sizes.append(len(mytesting))
-    print()
     return accuracies, mfsaccuracies, sizes
 
 def ispunct(word):
@@ -114,9 +112,9 @@ def do_a_case(casename, top_words, nonnull):
 
 def main():
     parser = learn.get_argparser()
-    brownclusters.set_paths_file("es-bible-lemmatized-c50-p1.paths")
-
     args = parser.parse_args()
+
+    brownclusters.set_paths_file(args.clusterfn)
     triple_sentences = learn.load_bitext(args)
     tl_sentences = learn.get_target_language_sentences(triple_sentences)
     sl_sentences = [s for (s,t,a) in triple_sentences]

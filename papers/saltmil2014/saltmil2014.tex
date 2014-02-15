@@ -180,22 +180,22 @@ Classifiers are trained with the scikit-learn machine learning package
 
 
 \section{Using word-sense discrimination features for WSD}
-We can make use of the many resources available for Spanish in order to make
-better sense of the input text, which we hypothesize should be useful in making
-word choices in Quechua, or other under-resourced target languages.
+While in this work, our target language is under-resourced, we have many
+language resources available for the source language. We would to use these to
+make better sense of the input text, giving our classifiers clearer signals for
+lexical selection in the target language.
 
-One resource available for Spanish is the simple abundance of monolingual text;
-given large amounts of Spanish-language text, we can use unsupervised methods
-to discover semantic regularities.
+One resource for Spanish is the simple abundance of monolingual text. Given
+large amounts of Spanish-language text, we can use unsupervised methods to
+discover semantic regularities. In this work, we apply Brown clustering
+\cite{Brown92class-basedn-gram}, which has been used in a variety of text
+classification tasks and other settings. Here we use a popular open source
+implementation of Brown clustering
+\footnote{\url{https://github.com/percyliang/brown-cluster}}, described in
+\cite{Liang05semi-supervisedlearning}.
 
-
-The idea here is to use unsupervised methods to learn an annotation scheme by
-which we can add additional labels to ...
-
-Brown Clusters were originally described in \cite{Brown92class-basedn-gram},
-but have since been used in a variety of other NLP tasks, especially text
-classification settings.
-
+The Brown clustering method takes as input unannotated text, and produces a
+mapping from 
 
 \section{Available bitext and data preparation}
 For this work, we use an assortment of Spanish-Quechua bitexts.
@@ -220,7 +220,6 @@ classifier?
 
 Describe the results of initial testing on a held-out test set of es-qu CL-WSD
 tasks.
-
 
 \section{System Integration}
 %% XXX

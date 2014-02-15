@@ -5,4 +5,4 @@ python3 qu_experiment.py \
   --targetfn /space/output_es_qu/training.qu.txt \
   --alignfn /space/output_es_qu/training.align \
   --crossvalidate \
-
+  "$@" \
