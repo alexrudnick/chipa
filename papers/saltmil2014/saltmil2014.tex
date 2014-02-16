@@ -6,7 +6,6 @@
 \usepackage{listings}
 \usepackage[utf8]{inputenc}
 
-%% XXX: we need a much better title.
 \title{Enhancing a Rule-Based MT System with Cross-Lingual WSD}
 
 %%\name{Author1, Author2, Author3}
@@ -128,15 +127,72 @@ CL-WSD, we mean the problem of assigning labels to polysemous words in
 source-language text, where each label is a word or phrase type in the target
 language.
 
-This framing of word-sense disambiguation concretely situates CL-WSD as a
-practical part of a machine translation system, avoiding entirely the problems
-associated with choosing a sense inventory. Here the sense distinctions that a
-CL-WSD system should learn are exactly those that are lexicalized in the target
-language. CL-WSD as an approach additionally sidesteps the ``knowledge
+This framing of word-sense disambiguation neatly addresses the problem of
+choosing an appropriate sense inventory, which has historically made practical
+application of WSD systems difficult at best.
+Here the sense distinctions that the CL-WSD system should learn are exactly
+those that are lexicalized in the target language.
+The CL-WSD framing additionally sidesteps the ``knowledge
 acquisition bottleneck" \cite{agirre2006word}
-hampering much other work in WSD, as it requires bitext, which, while limited
-in availability, is more common than sense-annotated text and is useful on its
-own for corpus-based MT.
+hampering other work in WSD. While supervised CL-WSD methods typically require
+bitext for training, this is more readily available than the sense-annotated
+text that would be otherwised required.
+
+The Chipa system 
+The chipa system holds all of the available bitext in a database, waiting for
+sentences to translate.
+On demand, chipa either retrieves or trains (then caches) a classifier
+for each word in a sentence to be translated.
+
+Classifiers are trained with the scikit-learn machine learning package
+\cite{scikit-learn}, and the software uses various utility functions from NLTK
+\cite{nltkbook}.
+
+
+Notably, many instances of a source-language word may be aligned to NULL in the
+bitext; function words especially are likely to simply be dropped in the ...
+
+
+We have to say: well, here are the options. es1 can translate to qu1 or qu2 or
+qu3. Which one of these do you like the best, chipa?
+What if a qu word is in the lexicon but it's never seen in the training data?
+Just always prefer the words that we've seen?
+
+
+Open question: how much training data do we need for a word before it helps to
+do a classifier?
+
+Proposal:
+- if never seen it, just don't disambiguate
+- if seen it a few times, take the MFS
+- if many times, train a classifier!
+
+
+* consider: how many instances of a word do we need before it helps to train a
+classifier?
+
+Describe the results of initial testing on a held-out test set of es-qu CL-WSD
+
+
+
+\subsection{System Integration}
+In order to integrate Chipa into SQUOIA, we added a stage to the SQUOIA
+pipeline that determines which words in the current input sentence had multiple
+possible translations retrieved from the lexicon, and then asks a Chipa
+server for translation suggestions, using XMLRPC.
+
+The suggested translations are returned 
+
+
+according to the system's lexicon, 
+are to be disambiguated 
+
+Given the Chipa WSD software and the pipeline design of the SQUOIA MT system,
+we were
+
+
+
+
 
 Chipa uses discriminative classifiers, trained individually for source-language
 words, in order to distinguish between the senses corresponding to different
@@ -152,52 +208,6 @@ Features extracted include ...
 - sequence models?
 
 a number of features extracted ...
-
-The chipa system holds all of the available bitext in a database, waiting for
-sentences to translate.
-
-
-We have to say: well, here are the options. es1 can translate to qu1 or qu2 or
-qu3. Which one of these do you like the best, chipa?
-What if a qu word is in the lexicon but it's never seen in the training data?
-Just always prefer the words that we've seen?
-
-
-Open question: how much training data do we need for a word before it helps to
-do a classifier?
-Proposal:
-- if never seen it, just don't disambiguate
-- if seen it a few times, take the MFS
-- if many times, train a classifier!
-
-
-
-
-
-* consider: how many instances of a word do we need before it helps to train a
-classifier?
-
-Describe the results of initial testing on a held-out test set of es-qu CL-WSD
-tasks.
-
-
-Initial versions of the chipa software are described in
-\cite{rudnick-gasser:2013:HyTra}
-
-On demand, chipa either retrieves or trains (then caches) a classifier
-for each word in a sentence to be translated.
-
-
-Classifiers are trained with the scikit-learn machine learning package
-\cite{scikit-learn}, and the software uses various utility functions from NLTK
-\cite{nltkbook}.
-
-In order to integrate Chipa into SQUOIA, we added a stage to the SQUOIA
-pipeline
-
-Given the Chipa WSD software and the pipeline design of the SQUOIA MT system,
-we were
-
 
 
 \section{Using word-sense discrimination features for WSD}
