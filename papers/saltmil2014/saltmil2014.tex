@@ -44,66 +44,72 @@ disambiguation}}
 \maketitleabstract
 
 \section{Introduction}
-Here we report on initial results and our experience in integrating statistical
-lexical selection software into an existing rule-based machine translation
-(RBMT) system for translating Spanish into Quechua.
-With very few code changes, we were able to integrate Chipa, a statistical
-cross-lingual WSD system, into
-SQUOIA\footnote{\url{http://code.google.com/p/squoia/}},
-a transfer-based RBMT system based on the architecture of MATXIN
-\cite{matxin_2005,matxin}.
+Here we report on the development of Chipa, a new package for statistical
+lexical selection, and on integrating it into
+SQUOIA\footnote{\url{http://code.google.com/p/squoia/}}, an existing rule-based
+machine translation system for the Spanish-Quechua language pair.  With very
+few code changes to SQUOIA, we were able to make use of the lexical suggestions
+provided by Chipa. SQUOIA is a shallow-transfer RBMT system based on the
+architecture of MATXIN \cite{matxin_2005,matxin}.
 
-This integration enables SQUOIA to take advantage of any available bitext
+The integration enables SQUOIA to take advantage of any available bitext
 without significantly changing its design, and to improve its word choices as
-additional bitext becomes available.
+additional bitext becomes available. Our initial results also suggest that we
+are able to use unsupervised approaches on monolingual Spanish text to further
+improve results.
+
 In this paper, we describe the designs of the Chipa and SQUOIA systems, discuss
 the data sets used, and give results on both how well Chipa is able to learn
 lexical selection classifiers in isolation, and to what extent it is able to
 improve the output of SQUOIA on a full Spanish-to-Quechua translation task.
-%% TODO: quickly summarize results here.
 
-In its current design, SQUOIA gets its word choices purely from a bilingual
-dictionary; the candidate translations for each word and multi-word expression
-are looked up with \texttt{matxin-lex-xfer}. If there are several possible
-translations for a source-language word, passed along to later stages in the
-pipeline. While there are some rules for lexical selection, they have
-been written by hand and only cover a small subset of the vocabulary.
+In its current design, SQUOIA makes word choices based on its bilingual
+lexicon; the possible translations for a given word or multi-word expression
+are retrieved from a dictionary file on demand. If there are several possible
+translations for a lexical item, these are passed along the pipeline in hopes
+that later stages will make a decision, but if no disambiguation decision is
+made, then the first entry retrieved from the lexicon is used. While there are
+some rules for lexical selection, they have been written by hand and only cover
+a small subset of the vocabulary.
 
 In this work, we supplement these rules with classifiers learned from
-Spanish-Quechua bitext. These classifiers automatically make use of
-regularities that might not be obvious to human rule-writers, and are
-automatically discovered in the available bitext, allowing appropriate lexical
-selections for any word type with adequate coverage in the training corpus.
+Spanish-Quechua bitext. These classifiers make use of regularities that may not
+be obvious to human rule-writers, providing improved lexical selections for
+any word type with adequate coverage in the training corpus.
 
 Quechua is a group of closely related indigenous American languages spoken in
-South America. There are many dialects of Quechua, but SQUOIA focuses on
-the Cuzco dialect, spoken around the Peruvian city of Cuzco.
-This dialect is considered a standard, with its own language academy
-(the \emph{Academia Mayor de la Lengua Quechua}), a relatively large number of
-speakers, and some useful linguistic resources available, such as a small
-treebank \cite{rios2009quechua}, also produced by the SQUOIA team.
+South America. There are many dialects of Quechua, but SQUOIA focuses on the
+Cuzco dialect, spoken around the Peruvian city of Cuzco.  Cuzco Quechua has
+several million speakers, and some useful linguistic resources available,
+including a small treebank \cite{rios2009quechua}, also produced by the SQUOIA
+team.
 
 \section{The SQUOIA machine translation system}
-The core SQUOIA system is mostly rule-based and relies on a classical transfer
-approach.
-It uses a pipeline approach; the system contains many modules, each of which
-perform some transformation on their input and pass along their changes to the
-next stage. Many modules leave most of the input unchanged.
-In a first step, the Spanish source sentence
-is analyzed (morphological analysis, PoS-tagging, named entity recognition,
-parsing). In analyzing the Spanish text, SQUOIA uses FreeLing \cite{padro12}
-for morphological analysis, Wapiti \cite{lavergne2010practical} for tagging,
-and DeSr \cite{attardi-EtAl:2007:EMNLP-CoNLL2007} for parsing. All of
-these modules rely on statistical models.
+The core SQUOIA system relies on a classical transfer approach, and is mostly
+rule-based, with a few components based on machine learning.
+It uses a pipeline approach, both in an abstract architectural sense and in
+that its pieces are instantiated as a series of small scripts that communicate
+via UNIX pipes. Each module performs some transformation on its input and
+passes along the updated version to the next stage. Many modules focus on very
+particular parts of the representation, leaving most of their input unchanged.
+
+In a first step, the Spanish source sentence is analyzed with off-the-shelf
+open-source NLP tools. To analyze the input Spanish text,
+SQUOIA uses FreeLing \cite{padro12} for morphological analysis and named-entity
+recognition,
+Wapiti \cite{lavergne2010practical} for tagging,
+and DeSr \cite{attardi-EtAl:2007:EMNLP-CoNLL2007} for parsing.
+All of these modules rely on statistical models.
 
 In the next step, the Spanish verbs must be disambiguated in order to assign
 them a Quechua verb form for generation: a rule-based module tries to assign a
 verb form to each verb chunk based on context information. If the rules fail to
 do so due to parsing or tagging errors, the verb is marked as ambiguous and
-passed on to an SVM classifier, that assigns a verb form even if the context
-information is not complete. This is the most difficult part of the translation
-process, as the grammatical categories encoded in verbs differ substantially
-between Spanish and Quechua.  In the next step, a lexical transfer module
+passed on to an SVM classifier, which assigns a verb form even if the context
+information is not complete. This is among the most difficult parts of the
+translation process, as the grammatical categories encoded in verbs differ
+substantially between Spanish and Quechua. In the next step, a lexical transfer
+module
 inserts all possible translations for every word from a bilingual dictionary,
 after that, a set of rules disambiguates forms with lexical or morphological
 ambiguities. However, this rule-based lexical disambiguation is very limited,
@@ -123,21 +129,29 @@ source-language text, where each label is a word or phrase type in the target
 language.
 
 This framing of word-sense disambiguation concretely situates CL-WSD as a
-useful part of a machine translation system, avoiding entirely the problems
-associated with choosing a sense inventory, as the sense distinctions that a
+practical part of a machine translation system, avoiding entirely the problems
+associated with choosing a sense inventory. Here the sense distinctions that a
 CL-WSD system should learn are exactly those that are lexicalized in the target
 language. CL-WSD as an approach additionally sidesteps the ``knowledge
-acquisition bottleneck"
-\cite{agirre2006word}
+acquisition bottleneck" \cite{agirre2006word}
 hampering much other work in WSD, as it requires bitext, which, while limited
 in availability, is more common than sense-annotated text and is useful on its
 own for corpus-based MT.
 
 Chipa uses discriminative classifiers, trained individually for source-language
-words, in order to distinguish between the senses associated with different
+words, in order to distinguish between the senses corresponding to different
 target-language word types.
 
-In this work, we use a number of features extracted ...
+In this work, we use very simple contextual features extracted from the 
+
+Features extracted include ...
+- syntactic features? we should have a parse/chunking handy!
+- bag of words over the whole input sentence?
+- local context words?
+- foreign-language BOW? Maybe we'll try that later?
+- sequence models?
+
+a number of features extracted ...
 
 The chipa system holds all of the available bitext in a database, waiting for
 sentences to translate.
@@ -158,18 +172,18 @@ Proposal:
 
 
 
-Features extracted include ...
-- syntactic features? we should have a parse/chunking handy!
-- bag of words over the whole input sentence?
-- local context words?
-- foreign-language BOW? Maybe we'll try that later?
-- sequence models?
 
 
+* consider: how many instances of a word do we need before it helps to train a
+classifier?
+
+Describe the results of initial testing on a held-out test set of es-qu CL-WSD
+tasks.
 
 
 Initial versions of the chipa software are described in
 \cite{rudnick-gasser:2013:HyTra}
+
 On demand, chipa either retrieves or trains (then caches) a classifier
 for each word in a sentence to be translated.
 
@@ -177,6 +191,13 @@ for each word in a sentence to be translated.
 Classifiers are trained with the scikit-learn machine learning package
 \cite{scikit-learn}, and the software uses various utility functions from NLTK
 \cite{nltkbook}.
+
+In order to integrate Chipa into SQUOIA, we added a stage to the SQUOIA
+pipeline
+
+Given the Chipa WSD software and the pipeline design of the SQUOIA MT system,
+we were
+
 
 
 \section{Using word-sense discrimination features for WSD}
@@ -212,19 +233,6 @@ aligned to zero or more Quechua words. Spanish multi-word expressions known to
 the lexicon were replaced with special tokens to mark that particular
 expression.
 
-\section{}
-%% XXX
-* consider: how many instances of a word do we need before it helps to train a
-classifier?
-
-
-Describe the results of initial testing on a held-out test set of es-qu CL-WSD
-tasks.
-
-\section{System Integration}
-%% XXX
-Given the Chipa WSD software and the pipeline design of the SQUOIA MT system,
-we were
 
 \section{In-Vivo Experimental Setup}
 %% XXX
@@ -236,42 +244,96 @@ Hey, maybe words that are in the Spanish wikipedia article linked to a Quechua
 wikipedia article are informative features for selecting those Quechua words?
 ...
 
+%%\floatstyle{plain}
+%%\restylefloat{figure}
+%%\begin{figure*}[t!]
+%%  \begin{center}
+%%  \begin{tabular}{|r|l|r|}
+%%    \hline
+%%    system & features & score (precision) \\
+%%    \hline
+%%     MFS (with tag) &                                 & 24.97 \\
+%%     MFS (without tag) &                              & 23.23 \\
+%%    \hline
+%%     HMM1    & current word, previous label           & 21.17 \\
+%%     HMM2    & current word, previous two labels      & 21.23 \\
+%%     MaxEnt  & three-word window                      & 25.64 \\
+%%     MEMM    & three-word window, previous two labels & \textbf{26.49} \\
+%%    \hline
+%%  \end{tabular}
+%%  \end{center}
+%%\caption{Results for the first experiment; SemEval 2013 CL-WSD task.}
+%%\label{fig:theresults}
+%%\end{figure*}
+%%
+%%%%\floatstyle{plain}
+%%%%\restylefloat{figure}
+%%\begin{figure*}[t!]
+%%  \begin{center}
+%%  \begin{tabular}{|r|l|r|}
+%%    \hline
+%%    system & features & score (accuracy \%) \\
+%%    \hline
+%%    MFS      &                                        & 60.39  \\
+%%    \hline
+%%     HMM1    & current word, previous label           & 57.40  \\
+%%     HMM2    & current word, previous two labels      & 43.04  \\
+%%     MEMM    & three-word window, previous two labels & \textbf{66.82}  \\
+%%    \hline
+%%  \end{tabular}
+%%  \end{center}
+%%\caption{Results for the second experiment; all-words lexical selection on the
+%%Guarani Bible}
+%%\label{fig:theresults2}
+%%\end{figure*}
+
 \section{Related Work}
 %% XXX
+Framing the resolution of lexical ambiguities in machine translation
+as an explicit classification
+task has a long history, dating back at least to early SMT work at IBM
+\cite{Brown91word-sensedisambiguation}.  More recently, Carpuat and Wu have
+shown how to use classifiers to improve modern phrase-based SMT systems
+\cite{carpuatpsd}.
+CL-WSD has received enough attention to warrant shared tasks at recent SemEval
+workshops; the most recent running of the task is described in \cite{task10}.
+In this task, participants are asked to translate twenty different polysemous
+English nouns into five different European languages, in a variety of contexts.
 
-There has been some work on CL-WSD for translating into indigenous American
-languages; an earlier system for Spanish-Guarani made use of sequence models to
-jointly predict all of the translations for a sentence at once
-\cite{rudnick-gasser:2013:HyTra}.
-
-Francis Tyers, in his dissertation \cite{tyers-dissertation}, provides an
-overview of lexical selection systems and provides methods for learning lexical
-selection rules that fit within the %% XXX? 
-matxin lexical selection rule framework.
-
-Rios and G\"{o}hring \shortcite{riosgonzales-gohring:2013:HyTra} describe
-similar work on extending the SQUOIA MT system, adding machine learning
-components that can predict the target forms of verbs in cases where the
-present rules are not sufficient 
-
-In work on the Parasense system \cite{lefever-hoste-decock:2011:ACL-HLT2011},
-Lefever \emph{et al.} produced top results for CL-WSD translating English nouns
-into five different European languages. The classifiers in this work are
-trained on standard local contextual features surrounding the target word,
-%% XXX: terminology, should we use "target word"?
-in addition to a bag-of-words model of the source language sentence in four
-other foreign languages. At training time, the translations of the sentence are
-extracted from mutually parallel corpora, %% XXX terminology?
-but at training time
-This work has not yet, to our knowledge, been integrated into a machine
-translation system, in part because it relies on an external machine
-translation system as part of its feature extraction procedure.
+Lefever \emph{et al.}, in work on the ParaSense system
+\shortcite{lefever-hoste-decock:2011:ACL-HLT2011}, produced top results for
+this task with classifiers trained on local contextual features, with the 
+addition of a bag-of-words model of the translation of the complete source
+sentence into other (neither the source nor the target) languages. At training
+time, the translations of the sentence are extracted from available parallel
+corpora, but at training time, the translations must be produced by a
+third-party MT system.
+This work has not yet, to our knowledge, been integrated into to an MT system
+on its own.
 
 Rudnick \emph{et al.} \shortcite{rudnick-liu-gasser:2013:SemEval-2013}
 prototyped a system that addresses some of the shortcomings here, requiring
 more modest software infrastructure for feature extraction while still allowing
 CL-WSD systems to make use of several mutually parallel bitexts that share a
 source language.
+
+There has been some work on CL-WSD for translating into indigenous American
+languages; an earlier system for Spanish-Guarani made use of sequence models to
+jointly predict all of the translations for a sentence at once
+\cite{rudnick-gasser:2013:HyTra}.
+
+Francis Tyers, in his dissertation work \cite{tyers-dissertation}, provides an
+overview of lexical selection systems and describes methods for learning
+lexical selection rules based on available parallel corpora. These rules make
+reference to the lexical items and parts of speech surrounding the word to be
+translated. Once learned, these rules intended to be understandable and
+modifiable by human language experts; for use in the Apertium machine
+translation system, they are compiled to finite-state transducers.
+
+Rios and G\"{o}hring \shortcite{riosgonzales-gohring:2013:HyTra} describe
+earlier work extending the SQUOIA MT system, in which they add machine learning
+components that can predict the target forms of verbs in cases where the
+present rules are not sufficient.
 
 \section{Conclusions and Future Work}
 %% XXX
