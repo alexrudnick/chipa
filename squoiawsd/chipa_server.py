@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import learn
+import brownclusters
 
 from xmlrpc.server import SimpleXMLRPCServer
 from xmlrpc.server import SimpleXMLRPCRequestHandler
@@ -21,6 +22,7 @@ def main():
     parser = learn.get_argparser()
 
     args = parser.parse_args()
+    brownclusters.set_paths_file(args.clusterfn)
     triple_sentences = learn.load_bitext(args)
     tl_sentences = learn.get_target_language_sentences(triple_sentences)
     sl_sentences = [s for (s,t,a) in triple_sentences]

@@ -111,8 +111,8 @@ def trainingdata_for(word, nonnull=False):
     return training
 
 @functools.lru_cache(maxsize=100000)
-def classifier_for(word):
-    training = trainingdata_for(word)
+def classifier_for(word, nonnull=False):
+    training = trainingdata_for(word, nonnull=nonnull)
     
     if not training:
         return OOVClassifier()
@@ -171,7 +171,7 @@ class OOVClassifier(nltk.classify.ClassifierI):
 def disambiguate_words(words):
     """Given a list of words/lemmas, return a list of disambiguation answers for
     them."""
-    classifiers = [classifier_for(word) for word in words]
+    classifiers = [classifier_for(word, nonnull=True) for word in words]
     answers = []
     for i in range(len(words)):
         faketagged = [(w,None) for w in words]
@@ -183,6 +183,14 @@ def disambiguate_words(words):
             print("MFS!!!", words[i], "==>", ans)
         answers.append(ans)
     return [str(ans) for ans in answers]
+
+@functools.lru_cache(maxsize=100000)
+def distribution_for(word):
+    fd = nltk.probability.FreqDist()
+    labeled_featuresets = trainingdata_for(word)
+    for (f,label) in labeled_featuresets:
+        fd[label] += 1 
+    return fd
 
 def repl():
     while True:
@@ -198,6 +206,10 @@ def repl():
         print("tokenized:", tokenized)
         answers = disambiguate_words(tokenized)
         print(list(zip(tokenized, answers)))
+        for w in tokenized:
+            print(w, end=" ")
+            fd = distribution_for(w)
+            print(fd.most_common(10))
 
 def get_argparser():
     parser = argparse.ArgumentParser(description='quechua')
