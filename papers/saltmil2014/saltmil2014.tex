@@ -43,13 +43,12 @@ disambiguation}}
 \maketitleabstract
 
 \section{Introduction}
-Here we report on the development of Chipa, a new package for statistical
+Here we report on the development of Chipa, a package for statistical
 lexical selection, and on integrating it into
-SQUOIA\footnote{\url{http://code.google.com/p/squoia/}}, an existing rule-based
+SQUOIA\footnote{\url{http://code.google.com/p/squoia/}}, a rule-based
 machine translation system for the Spanish-Quechua language pair.  With very
 few code changes to SQUOIA, we were able to make use of the lexical suggestions
-provided by Chipa. SQUOIA is a shallow-transfer RBMT system based on the
-architecture of MATXIN \cite{matxin_2005,matxin}.
+provided by Chipa.
 
 The integration enables SQUOIA to take advantage of any available bitext
 without significantly changing its design, and to improve its word choices as
@@ -83,16 +82,18 @@ several million speakers, and some useful linguistic resources available,
 including a small treebank \cite{rios2009quechua}, also produced by the SQUOIA
 team.
 
-\section{The SQUOIA machine translation system}
-The core SQUOIA system relies on a classical transfer approach, and is mostly
+\section{SQUOIA}
+SQUOIA is a shallow-transfer RBMT system based on the
+architecture of MATXIN \cite{matxin_2005,matxin}.
+The core system relies on a classical transfer approach, and is mostly
 rule-based, with a few components based on machine learning.
-It uses a pipeline approach, both in an abstract architectural sense and in
-that its pieces are instantiated as a series of small scripts that communicate
+SQUOIA uses a pipeline approach, both in an abstract architectural sense and in
+that its pieces are instantiated as a series of scripts that communicate
 via UNIX pipes. Each module performs some transformation on its input and
 passes along the updated version to the next stage. Many modules focus on very
 particular parts of the representation, leaving most of their input unchanged.
 
-In a first step, the Spanish source sentence is analyzed with off-the-shelf
+In the first stages, Spanish source sentences are analyzed with off-the-shelf
 open-source NLP tools. To analyze the input Spanish text,
 SQUOIA uses FreeLing \cite{padro12} for morphological analysis and named-entity
 recognition,
@@ -105,12 +106,12 @@ them a Quechua verb form for generation: a rule-based module tries to assign a
 verb form to each verb chunk based on context information. If the rules fail to
 do so due to parsing or tagging errors, the verb is marked as ambiguous and
 passed on to an SVM classifier, which assigns a verb form even if the context
-information is not complete. This is among the most difficult parts of the
+of that verb does not unambiguously select a target form. This is among the
+most difficult parts of the
 translation process, as the grammatical categories encoded in verbs differ
 substantially between Spanish and Quechua. In the next step, a lexical transfer
-module
-inserts all possible translations for every word from a bilingual dictionary,
-after that, a set of rules disambiguates forms with lexical or morphological
+module inserts all possible translations for every word from a bilingual dictionary.
+Then a set of rules disambiguates the forms with lexical or morphological
 ambiguities. However, this rule-based lexical disambiguation is very limited,
 as it is not feasible to cover all possible contexts for every ambiguous word
 with rules.
@@ -121,24 +122,33 @@ finally, the tree is reordered according to the basic word order in the target
 language. In the last step, the Quechua surface forms are morphologically
 generated through a finite state transducer.
 
-\section{The Chipa CL-WSD system}
-Chipa is a system for cross-language word sense disambiguation (CL-WSD). By
+\section{CL-WSD with Chipa}
+Chipa is a system for cross-language word sense disambiguation (CL-WSD)
+\footnote{Chipa the software is named for chipa the snack food, popular in many
+parts of South America. It is a cheesy bread made from cassava flour, and
+often served in a bagel-like shape in Paraguay. Its Portuguese name,
+\emph{p\~{a}o de queijo}, may be familiar to readers.}. By
 CL-WSD, we mean the problem of assigning labels to polysemous words in
 source-language text, where each label is a word or phrase type in the target
 language.
 
 This framing of word-sense disambiguation neatly addresses the problem of
-choosing an appropriate sense inventory, which has historically made practical
-application of WSD systems difficult at best.
+choosing an appropriate sense inventory for WSD, which has historically been a
+difficult problem for the practical application of WSD systems.
 Here the sense distinctions that the CL-WSD system should learn are exactly
 those that are lexicalized in the target language.
-The CL-WSD framing additionally sidesteps the ``knowledge
+The CL-WSD framing also sidesteps the ``knowledge
 acquisition bottleneck" \cite{agirre2006word}
 hampering other work in WSD. While supervised CL-WSD methods typically require
 bitext for training, this is more readily available than the sense-annotated
 text that would be otherwised required.
 
 The Chipa system 
+We have to say: well, here are the options. es1 can translate to qu1 or qu2 or
+qu3. Which one of these do you like the best, chipa?
+What if a qu word is in the lexicon but it's never seen in the training data?
+Just always prefer the words that we've seen?
+
 The chipa system holds all of the available bitext in a database, waiting for
 sentences to translate.
 On demand, chipa either retrieves or trains (then caches) a classifier
@@ -153,10 +163,6 @@ Notably, many instances of a source-language word may be aligned to NULL in the
 bitext; function words especially are likely to simply be dropped in the ...
 
 
-We have to say: well, here are the options. es1 can translate to qu1 or qu2 or
-qu3. Which one of these do you like the best, chipa?
-What if a qu word is in the lexicon but it's never seen in the training data?
-Just always prefer the words that we've seen?
 
 
 Open question: how much training data do we need for a word before it helps to
@@ -210,24 +216,6 @@ Features extracted include ...
 a number of features extracted ...
 
 
-\section{Using word-sense discrimination features for WSD}
-While in this work, our target language is under-resourced, we have many
-language resources available for the source language. We would to use these to
-make better sense of the input text, giving our classifiers clearer signals for
-lexical selection in the target language.
-
-One resource for Spanish is the simple abundance of monolingual text. Given
-large amounts of Spanish-language text, we can use unsupervised methods to
-discover semantic regularities. In this work, we apply Brown clustering
-\cite{Brown92class-basedn-gram}, which has been used in a variety of text
-classification tasks and other settings. Here we use a popular open source
-implementation of Brown clustering
-\footnote{\url{https://github.com/percyliang/brown-cluster}}, described in
-\cite{Liang05semi-supervisedlearning}.
-
-The Brown clustering method takes as input unannotated text, and produces a
-mapping from 
-
 \section{Available bitext and data preparation}
 For this work, we use an assortment of Spanish-Quechua bitexts.
 While there are not very many available large corpora, there are some.
@@ -243,12 +231,33 @@ aligned to zero or more Quechua words. Spanish multi-word expressions known to
 the lexicon were replaced with special tokens to mark that particular
 expression.
 
+\section{Learning From Monolingual Data}
+While in this work, our target language is under-resourced, we have many
+language resources available for the source language. We would to use these to
+make better sense of the input text, giving our classifiers clearer signals for
+lexical selection in the target language.
 
-\section{In-Vivo Experimental Setup}
+One resource for Spanish is the simple abundance of monolingual text. Given
+large amounts of Spanish-language text, we can use unsupervised methods to
+discover semantic regularities. In order to learn from this text, we apply
+Brown clustering \cite{Brown92class-basedn-gram}, which has been used in a
+variety of text classification tasks \cite{turian-ratinov-bengio:2010:ACL}.
+
+The Brown clustering algorithm takes as input unannotated text and maps each
+word type in the text to a cluster, such that words in the same cluster have
+similar usage patterns according to bigram statistics. We can then use this
+mapping from words to clusters in our classifiers, adding an additional
+annotation for each word that allow the classifiers to find slightly
+higher-level abstractions than surface-level words or particular lemmas.
+We use a popular open source implementation of Brown clustering
+\footnote{\url{https://github.com/percyliang/brown-cluster}}, described in
+\cite{Liang05semi-supervisedlearning}, running on both the Spanish side of our
+bitext corpus and on the Europarl corpus for Spanish.
+
+\section{Experiments}
 %% XXX
 We prepared a number of example sentence to be translated, and found that
 XXXX\% of them had better translations because of better lexical choice.
-
 
 Hey, maybe words that are in the Spanish wikipedia article linked to a Quechua
 wikipedia article are informative features for selecting those Quechua words?
@@ -278,27 +287,44 @@ wikipedia article are informative features for selecting those Quechua words?
 %%
 %%%%\floatstyle{plain}
 %%%%\restylefloat{figure}
-%%\begin{figure*}[t!]
-%%  \begin{center}
-%%  \begin{tabular}{|r|l|r|}
-%%    \hline
-%%    system & features & score (accuracy \%) \\
-%%    \hline
-%%    MFS      &                                        & 60.39  \\
-%%    \hline
-%%     HMM1    & current word, previous label           & 57.40  \\
-%%     HMM2    & current word, previous two labels      & 43.04  \\
-%%     MEMM    & three-word window, previous two labels & \textbf{66.82}  \\
-%%    \hline
-%%  \end{tabular}
-%%  \end{center}
-%%\caption{Results for the second experiment; all-words lexical selection on the
-%%Guarani Bible}
-%%\label{fig:theresults2}
-%%\end{figure*}
+
+\begin{figure*}[t!]
+  \begin{center}
+  \begin{tabular}{|r|r|r|r|r|r|}
+    \hline
+    corpus          & $C=100$ & $C=200$ & $C=500$ & $C=1000$ & $C=2000$ \\
+    \hline
+    no brown clusters &    & & & &  \\
+    training bitext &                            &         &         &          &          \\
+    europarl        &                            &         &         &          &          \\
+    \hline
+  \end{tabular}
+  \end{center}
+\caption{Results for the \emph{in-vitro} experiment; classification accuracies
+over tenfold cross-validation including null-aligned words, as percentages. }
+\label{fig:theresults1}
+\end{figure*}
+
+
+\begin{figure*}[t!]
+  \begin{center}
+  \begin{tabular}{|r|r|r|r|r|r|}
+    \hline
+    corpus          & $C=100$ & $C=200$ & $C=500$ & $C=1000$ & $C=2000$ \\
+    \hline
+    no brown clusters &    & & & &  \\
+    training bitext &                            &         &         &          &          \\
+    europarl        &                            &         &         &          &          \\
+    \hline
+  \end{tabular}
+  \end{center}
+\caption{Classification accuracies over tenfold cross-validation, excluding
+null-aligned words.}
+\label{fig:theresults2}
+\end{figure*}
+
 
 \section{Related Work}
-%% XXX
 Framing the resolution of lexical ambiguities in machine translation
 as an explicit classification
 task has a long history, dating back at least to early SMT work at IBM
