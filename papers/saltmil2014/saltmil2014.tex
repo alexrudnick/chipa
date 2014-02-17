@@ -8,11 +8,11 @@
 
 \title{Enhancing a Rule-Based MT System with Cross-Lingual WSD}
 
-%%\name{Author1, Author2, Author3}
-%%
-%%\address{ Affiliation1, Affiliation2, Affiliation3 \\
-%%               Address1, Address2, Address3 \\
-%%               author1@xxx.yy, author2@zzz.edu, author3@hhh.com\\}
+\name{Author1, Author2, Author3}
+
+\address{ Affiliation1, Affiliation2, Affiliation3 \\
+               Address1, Address2, Address3 \\
+               author1@xxx.yy, author2@zzz.edu, author3@hhh.com\\}
 
 \abstract{
 Lexical ambiguity is a significant problem facing rule-based machine
@@ -215,23 +215,7 @@ Features extracted include ...
 
 a number of features extracted ...
 
-
-\section{Available bitext and data preparation}
-For this work, we use an assortment of Spanish-Quechua bitexts.
-While there are not very many available large corpora, there are some.
-
-As sentences alignments are not guaranteed to be clean, we use Robert Moore's
-sentence aligner \cite{DBLP:conf/amta/Moore02}, with the default settings.
-There were THISMANY sentences in the corpora we used, THISMANY of which are
-included in the resulting sentence-aligned bitext.
-
-We performed word-level alignments on the remaining sentences with the Berkeley
-aligner, resulting in one-to-many alignments such that each Spanish word may be
-aligned to zero or more Quechua words. Spanish multi-word expressions known to
-the lexicon were replaced with special tokens to mark that particular
-expression.
-
-\section{Learning From Monolingual Data}
+\subsection{Learning From Monolingual Data}
 While in this work, our target language is under-resourced, we have many
 language resources available for the source language. We would to use these to
 make better sense of the input text, giving our classifiers clearer signals for
@@ -254,7 +238,66 @@ We use a popular open source implementation of Brown clustering
 \cite{Liang05semi-supervisedlearning}, running on both the Spanish side of our
 bitext corpus and on the Europarl corpus for Spanish.
 
+\begin{figure*}[t!]
+  \begin{tabular}{|l|p{15cm}|}
+    \hline
+    category  & top twenty word types by frequency \\
+    \hline
+    countries & francia irlanda alemania grecia italia españa rumanía portugal polonia suecia bulgaria austria finlandia hungría bélgica japón gran\_bretaña dinamarca luxemburgo bosnia \\
+    \hline
+    more places & kosovo internet bruselas áfrica iraq lisboa chipre afganistán estrasburgo oriente\_próximo copenhague asia chechenia gaza oriente\_medio birmania londres irlanda\_del\_norte berlín barcelona \\
+    \hline
+    mostly people & hombre periodista jefes\_de\_estado individuo profesor soldado abogado delincuente demócrata dictador iglesia alumno adolescente perro chico economista gato jurista caballero bebé \\
+    \hline
+    infrastructure & infraestructura vehículo buque servicio\_público cultivo edificio barco negocio motor avión monopolio planta ruta coche libro aparato tren billete actividad\_económica camión \\
+    \hline
+    common verbs & pagar comprar vender explotar practicar soportar exportar comer consumir suministrar sacrificar fabricar gobernar comercializar cultivar fumar capturar almacenar curar beber \\
+    \hline
+  \end{tabular}
+\caption{Some illustrative clusters found by the Brown clustering algorithm on
+the Spanish Europarl data. These are five out of $C=1000$ clusters, and
+were picked and labeled arbitrarily by the authors. The words listed are the
+top twenty terms from that cluster, by frequency.}
+\label{fig:clusters}
+\end{figure*}
+
+
+Examining the output of the clustering algorithm, we see some intuitively
+satisfying results, such that the names of many countries were mapped to the
+same cluster. See Figure \ref{fig:clusters} for some illustrative
+examples.
+
 \section{Experiments}
+Here we report on two basic experimental setups, including an \emph{in-vitro}
+evaluation of the CL-WSD classifiers themselves and an \emph{in-vivo}
+experiment in which we evaluate the translations produced by the SQUOIA system
+with the integrated CL-WSD system.
+
+To evaluate the classifiers in isolation, we produced a small aligned 
+Spanish-Quechua bitext corpus. 
+
+For this work, we use an assortment of Spanish-Quechua bitexts.
+While there are not very many available large corpora, there are some.
+
+As sentences alignments are not guaranteed to be clean, we use Robert Moore's
+sentence aligner \cite{DBLP:conf/amta/Moore02}, with the default settings.
+There were THISMANY sentences in the corpora we used, THISMANY of which are
+included in the resulting sentence-aligned bitext.
+
+We performed word-level alignments on the remaining sentences with the Berkeley
+aligner, resulting in one-to-many alignments such that each Spanish word may be
+aligned to zero or more Quechua words. Spanish multi-word expressions known to
+the lexicon were replaced with special tokens to mark that particular
+expression.
+
+
+
+For summarized results of these first two settings, please see Figures
+\ref{fig:theresults1} and \ref{fig:theresults2}.
+
+These are significant at the XXX level, computed with a simple binomial test
+\cite{salzberg1997comparing}.
+
 %% XXX
 We prepared a number of example sentence to be translated, and found that
 XXXX\% of them had better translations because of better lexical choice.
@@ -263,63 +306,49 @@ Hey, maybe words that are in the Spanish wikipedia article linked to a Quechua
 wikipedia article are informative features for selecting those Quechua words?
 ...
 
-%%\floatstyle{plain}
-%%\restylefloat{figure}
-%%\begin{figure*}[t!]
-%%  \begin{center}
-%%  \begin{tabular}{|r|l|r|}
-%%    \hline
-%%    system & features & score (precision) \\
-%%    \hline
-%%     MFS (with tag) &                                 & 24.97 \\
-%%     MFS (without tag) &                              & 23.23 \\
-%%    \hline
-%%     HMM1    & current word, previous label           & 21.17 \\
-%%     HMM2    & current word, previous two labels      & 21.23 \\
-%%     MaxEnt  & three-word window                      & 25.64 \\
-%%     MEMM    & three-word window, previous two labels & \textbf{26.49} \\
-%%    \hline
-%%  \end{tabular}
-%%  \end{center}
-%%\caption{Results for the first experiment; SemEval 2013 CL-WSD task.}
-%%\label{fig:theresults}
-%%\end{figure*}
-%%
-%%%%\floatstyle{plain}
-%%%%\restylefloat{figure}
-
 \begin{figure*}[t!]
   \begin{center}
-  \begin{tabular}{|r|r|r|r|r|r|}
+  \begin{tabular}{|r|c|c|c|c|c|}
     \hline
-    corpus          & $C=100$ & $C=200$ & $C=500$ & $C=1000$ & $C=2000$ \\
+    system                    & \multicolumn{5}{|l|}{accuracy} \\
     \hline
-    no brown clusters &    & & & &  \\
-    training bitext &                            &         &         &          &          \\
-    europarl        &                            &         &         &          &          \\
+    MFS baseline              &  \multicolumn{5}{|l|}{54.54} \\
+    chipa, only word features &  \multicolumn{5}{|l|}{65.43} \\
+    \hline
+           & $C=100$ & $C=200$ & $C=500$ & $C=1000$ & $C=2000$ \\
+    \hline
+    chipa, +clusters from training bitext &
+    66.71 & 67.43 & 68.41 &       &       \\
+    chipa, +clusters from europarl        &
+    66.60 & 67.18 & 67.83 & 68.25 & 68.58 \\
     \hline
   \end{tabular}
   \end{center}
 \caption{Results for the \emph{in-vitro} experiment; classification accuracies
-over tenfold cross-validation including null-aligned words, as percentages. }
+over tenfold cross-validation including null-aligned tokens, as percentages. }
 \label{fig:theresults1}
 \end{figure*}
 
-
 \begin{figure*}[t!]
   \begin{center}
-  \begin{tabular}{|r|r|r|r|r|r|}
+  \begin{tabular}{|r|c|c|c|c|c|}
     \hline
-    corpus          & $C=100$ & $C=200$ & $C=500$ & $C=1000$ & $C=2000$ \\
+    system                    & \multicolumn{5}{|l|}{accuracy} \\
     \hline
-    no brown clusters &    & & & &  \\
-    training bitext &                            &         &         &          &          \\
-    europarl        &                            &         &         &          &          \\
+    MFS baseline              &  \multicolumn{5}{|l|}{53.94} \\
+    chipa, only word features &  \multicolumn{5}{|l|}{68.99} \\
+    \hline
+           & $C=100$ & $C=200$ & $C=500$ & $C=1000$ & $C=2000$ \\
+    \hline
+    chipa, +clusters from training bitext &
+    71.53 & 72.62 & 73.88 &       &       \\
+    chipa, +clusters from europarl        &
+    71.27 & 72.08 & 73.04 & 73.52 & 73.83 \\
     \hline
   \end{tabular}
   \end{center}
 \caption{Classification accuracies over tenfold cross-validation, excluding
-null-aligned words.}
+null-aligned tokens.}
 \label{fig:theresults2}
 \end{figure*}
 
