@@ -11,7 +11,7 @@ def make_decision(node):
     """Make a potentially-terrible decision."""
     options = [child for child in node if child.tag == 'SYN']
     choice = random.choice(options)
-    ##print("options:", " ".join(opt.attrib['lem'] for opt in options))
+    dprint("[OPTIONS]", " ".join(opt.attrib['lem'] for opt in options))
     ##print("I have randomly chosen:", choice.attrib['lem'])
     for k,v in choice.attrib.items():
         node.attrib[k] = v
