@@ -143,7 +143,28 @@ hampering other work in WSD. While supervised CL-WSD methods typically require
 bitext for training, this is more readily available than the sense-annotated
 text that would be otherwised required.
 
-The Chipa system 
+To appreciate the word-sense disambiguation problem embedded in machine
+translation, consider for a moment of the different senses of ``have" in
+English. In \emph{have a sandwich}, \emph{have a bath}, \emph{have an
+argument}, and even \emph{have a good argument}, the meaning of the verb ``to
+have" is quite different. It would be surprising if our target language,
+especially if it is not closely related, used a light verb that could appear in
+all of these contexts.
+
+Concretely considering the Spanish-Quechua translation case, the verb
+\emph{tener} (often a translation of \emph{to have}) can often translate into
+Quechua as \emph{kay}. But with many objects, such as \emph{tener habre} or
+\emph{tener miedo} (\emph{to be hungry}, \emph{to be afraid}), we see a single
+verb in Quechua, \emph{yarqachikuy} or \emph{manchakuy}, respectively.  Outside
+of light verbs, different languages simply make different distinctions about
+the world. The Spanish \emph{hermano}, \emph{hijo} and \emph{hija}
+(\emph{brother}, \emph{son}, \emph{daughter}) all translate to different
+Quechua terms based on the person related to the referent; a daughter in terms
+of her father is \emph{ususi}, but when described relative to her mother,
+\emph{warmi wawa} \cite{academiamayor}.
+
+Chipa is trained
+
 We have to say: well, here are the options. es1 can translate to qu1 or qu2 or
 qu3. Which one of these do you like the best, chipa?
 What if a qu word is in the lexicon but it's never seen in the training data?
@@ -179,7 +200,15 @@ classifier?
 
 Describe the results of initial testing on a held-out test set of es-qu CL-WSD
 
-
+\begin{figure}[t!]
+  \begin{itemize}
+    \item lemmas in a context window
+    \item bag of lemmas 
+    \item more coming
+  \end{itemize}
+\caption{features yo}
+\label{fig:features}
+\end{figure}
 
 \subsection{System Integration}
 In order to integrate Chipa into SQUOIA, we added a stage to the SQUOIA
@@ -290,8 +319,6 @@ aligned to zero or more Quechua words. Spanish multi-word expressions known to
 the lexicon were replaced with special tokens to mark that particular
 expression.
 
-
-
 For summarized results of these first two settings, please see Figures
 \ref{fig:theresults1} and \ref{fig:theresults2}.
 
@@ -318,7 +345,7 @@ wikipedia article are informative features for selecting those Quechua words?
            & $C=100$ & $C=200$ & $C=500$ & $C=1000$ & $C=2000$ \\
     \hline
     chipa, +clusters from training bitext &
-    66.71 & 67.43 & 68.41 &       &       \\
+    66.71 & 67.43 & 68.41 & 69.00 & 69.43 \\
     chipa, +clusters from europarl        &
     66.60 & 67.18 & 67.83 & 68.25 & 68.58 \\
     \hline
@@ -341,7 +368,7 @@ over tenfold cross-validation including null-aligned tokens, as percentages. }
            & $C=100$ & $C=200$ & $C=500$ & $C=1000$ & $C=2000$ \\
     \hline
     chipa, +clusters from training bitext &
-    71.53 & 72.62 & 73.88 &       &       \\
+    71.53 & 72.62 & 73.88 & 74.29 & 74.78 \\
     chipa, +clusters from europarl        &
     71.27 & 72.08 & 73.04 & 73.52 & 73.83 \\
     \hline
@@ -351,6 +378,44 @@ over tenfold cross-validation including null-aligned tokens, as percentages. }
 null-aligned tokens.}
 \label{fig:theresults2}
 \end{figure*}
+
+In order to evaluate the effect of Chipa on lexical selection in a live
+translation task, we used SQUOIA to translate two Spanish passages for which we
+had reference Quechua translations. The first is simply a thousand sentences
+from the Bible; the second is adapted from the Peruvian government's public
+advocacy website \footnote{\emph{Defensoría del Pueblo},
+\url{http://www.defensoria.gob.pe/quechua.php}}, which is bilingual.
+We prepared sentence-aligned and segmented bitexts for this evaluation, and
+then translate the Spanish side with SQUOIA, with various CL-WSD settings, to
+produce Quechua text. In comparing the output Quechua with the reference
+translations, BLEU scores are quite low -- sometimes 4-grams are not
+matched at all, resulting in a geometric mean of 0 -- so here we report on the
+unigram-BLEU scores, which reflect some small improvements in lexical choice.
+See Figure \ref{fig:translatioresults} for the numerical results.
+
+\begin{figure*}[t!]
+  \begin{center}
+  \begin{tabular}{|r|c|c|}
+    \hline
+    system                           & web test set & bible test set  \\
+    \hline
+    squoia without CL-WSD            & 28.1         & 24.2            \\
+    squoia+chipa, only word features & 28.1         & 24.5            \\
+    squoia+chipa, +europarl clusters & 28.1         & 24.5            \\
+    squoia+chipa, +bible    clusters & 28.1         & 24.5            \\
+    \hline
+  \end{tabular}
+  \end{center}
+  \caption{BLEU-1 scores (modified unigram precision) for the various CL-WSD
+  settings of SQUOIA on the two different Spanish-Quechua test sets.}
+\label{fig:translatioresults}
+\end{figure*}
+
+We were initially concerned that the 736 of the thousand 
+
+BLEU 
+we prepared two small Spanish-Quechua bitexts on which we
+could 
 
 
 \section{Related Work}
@@ -387,12 +452,12 @@ languages; an earlier system for Spanish-Guarani made use of sequence models to
 jointly predict all of the translations for a sentence at once
 \cite{rudnick-gasser:2013:HyTra}.
 
-Francis Tyers, in his dissertation work \cite{tyers-dissertation}, provides an
-overview of lexical selection systems and describes methods for learning
-lexical selection rules based on available parallel corpora. These rules make
-reference to the lexical items and parts of speech surrounding the word to be
-translated. Once learned, these rules intended to be understandable and
-modifiable by human language experts; for use in the Apertium machine
+Francis Tyers, in his dissertation work \shortcite{tyers-dissertation},
+provides an overview of lexical selection systems and describes methods for
+learning lexical selection rules based on available parallel corpora. These
+rules make reference to the lexical items and parts of speech surrounding the
+word to be translated. Once learned, these rules intended to be understandable
+and modifiable by human language experts; for use in the Apertium machine
 translation system, they are compiled to finite-state transducers.
 
 Rios and G\"{o}hring \shortcite{riosgonzales-gohring:2013:HyTra} describe
@@ -405,8 +470,23 @@ present rules are not sufficient.
 Here we have described the Chipa CL-WSD system and its integration into SQUOIA.
 While before, most of SQUOIA's lexical choices were simply based on default
 entries in a dictionary or sometimes on a few hand-written lexical selection
-rules, now 
+rules, now the system can make use of available training data, both bilingual
+and monolingual, to make better word choices.
 
+It is encouraging that the unsupervised clustering approach provides a useful
+signal to the CL-WSD classifiers, even when the clusters are induced from
+out-of-domain data. We had hoped that the clusters learned from the Europarl
+corpus, coming from a larger data source, would prove more useful to the
+classifiers, but  ... 
+
+In future work, we plan to apply the Chipa system to other machine translation
+systems and other language pairs, especially Spanish-Guarani, another important
+language pair for South America. We would also like to make better use of the
+large amount of monolingual Spanish text available; while the Europarl corpus
+is nontrivial, there are much larger sources of Spanish text, such as
+the Spanish-language edition of Wikipedia. We plan to apply clustering
+approaches and other word-sense discrimination techniques to these resources,
+which will hopefully further improve CL-WSD across broader domains.
 
 \bibliographystyle{lrec2006}
 \bibliography{saltmil2014}
