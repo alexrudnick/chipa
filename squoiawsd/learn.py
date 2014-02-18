@@ -152,13 +152,13 @@ def mfs_translation(word):
 class MFSClassifier(nltk.classify.ClassifierI):
     def __init__(self):
         self.fd = nltk.probability.FreqDist()
-
     def train(self, labeled_featuresets):
         for (f,label) in labeled_featuresets:
             self.fd[label] += 1 
-
     def classify(self, featureset):
         return self.fd.max()
+    def prob_classify(self, featureset):
+        return nltk.probability.DictionaryProbDist({self.fd.max(): 1.0})
 
 class OOVClassifier(nltk.classify.ClassifierI):
     def __init__(self):
@@ -167,6 +167,8 @@ class OOVClassifier(nltk.classify.ClassifierI):
         pass
     def classify(self, featureset):
         return OOV
+    def prob_classify(self, featureset):
+        return nltk.probability.DictionaryProbDist({OOV: 1.0})
 
 def disambiguate_words(words):
     """Given a list of words/lemmas, return a list of disambiguation answers for
@@ -183,6 +185,27 @@ def disambiguate_words(words):
             print("MFS!!!", words[i], "==>", ans)
         answers.append(ans)
     return [str(ans) for ans in answers]
+
+def prob_disambiguate_words(words):
+    """Given a list of words/lemmas, return a list of disambiguation answers for
+    them -- return a list of lists, where each sublist is ordered in decreasing
+    probability."""
+    classifiers = [classifier_for(word, nonnull=True) for word in words]
+    answers = []
+    for i in range(len(words)):
+        faketagged = [(w,None) for w in words]
+        feat = features.extract(faketagged, i)
+        classif = classifiers[i]
+
+        ## get all possible options, sorted in wrong order
+        dist = classif.prob_classify(feat)
+        options = [(dist.prob(samp), samp) for samp in dist.samples()]
+        options.sort(reverse=True)
+        myanswers = [str(lex) for (prob, lex) in options
+                              if prob > 0.01 ]
+        print(myanswers)
+        answers.append(myanswers)
+    return answers
 
 @functools.lru_cache(maxsize=100000)
 def distribution_for(word):

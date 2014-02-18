@@ -21,11 +21,15 @@ def get_tuples(corpus):
     tokens = []
     for node in target_nodes:
         ref = node.attrib['ref']
+        try:
+            theref = int(ref)
+        except:
+            dprint("REFISNOTINT:", ref)
+            theref = int(float(ref))
         sform = node.attrib['sform']
         slem = node.attrib['slem']
-        tokens.append((ref, sform, slem))
+        tokens.append((theref, sform, slem))
     tokens.sort()
-    dprint(tokens)
     return tokens
 
 if __name__ == "__main__": main()

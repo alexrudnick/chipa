@@ -11,12 +11,20 @@ def label_sentence(sentence):
     might be the <untranslated> token."""
     print("LABELING A SENTENCE HANG ON.")
     lemmas = [tup[2] for tup in sentence]
-    answers = learn.disambiguate_words(lemmas)
+    answers = learn.prob_disambiguate_words(lemmas)
     print("sent to client:", answers)
     return answers
 
 class RequestHandler(SimpleXMLRPCRequestHandler):
     rpc_paths = ('/RPC2',)
+
+    def _dispatch(self, method, params):
+        try: 
+            return self.server.funcs[method](*params)
+        except:
+            import traceback
+            traceback.print_exc()
+            raise
 
 def main():
     parser = learn.get_argparser()
