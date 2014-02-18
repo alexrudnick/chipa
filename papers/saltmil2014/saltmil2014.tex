@@ -45,16 +45,16 @@ disambiguation}}
 \section{Introduction}
 Here we report on the development of Chipa, a package for statistical
 lexical selection, and on integrating it into
-SQUOIA\footnote{\url{http://code.google.com/p/squoia/}}, a rule-based
+SQUOIA\footnote{\url{http://code.google.com/p/squoia/}}, a primarily rule-based
 machine translation system for the Spanish-Quechua language pair.  With very
 few code changes to SQUOIA, we were able to make use of the lexical suggestions
 provided by Chipa.
 
 The integration enables SQUOIA to take advantage of any available bitext
 without significantly changing its design, and to improve its word choices as
-additional bitext becomes available. Our initial results also suggest that we
-are able to use unsupervised approaches on monolingual Spanish text to further
-improve results.
+additional bitext becomes available. Our initial experiments also suggest that
+we are able to use unsupervised approaches on monolingual Spanish text to
+further improve results.
 
 In this paper, we describe the designs of the Chipa and SQUOIA systems, discuss
 the data sets used, and give results on both how well Chipa is able to learn
@@ -63,12 +63,12 @@ improve the output of SQUOIA on a full Spanish-to-Quechua translation task.
 
 In its current design, SQUOIA makes word choices based on its bilingual
 lexicon; the possible translations for a given word or multi-word expression
-are retrieved from a dictionary file on demand. If there are several possible
+are retrieved from a dictionary on demand. If there are several possible
 translations for a lexical item, these are passed along the pipeline in hopes
 that later stages will make a decision, but if no disambiguation decision is
 made, then the first entry retrieved from the lexicon is used. While there are
 some rules for lexical selection, they have been written by hand and only cover
-a small subset of the vocabulary.
+a small subset of the vocabulary, in a limited number of contexts.
 
 In this work, we supplement these rules with classifiers learned from
 Spanish-Quechua bitext. These classifiers make use of regularities that may not
@@ -127,7 +127,8 @@ Chipa is a system for cross-language word sense disambiguation (CL-WSD)
 \footnote{Chipa the software is named for chipa the snack food, popular in many
 parts of South America. It is a cheesy bread made from cassava flour, and
 often served in a bagel-like shape in Paraguay. Its Portuguese name,
-\emph{p\~{a}o de queijo}, may be familiar to readers.}. By
+\emph{p\~{a}o de queijo}, may be familiar to readers. The software is available
+at \url{http://redacted}, under the GPL.}. By
 CL-WSD, we mean the problem of assigning labels to polysemous words in
 source-language text, where each label is a word or phrase type in the target
 language.
@@ -163,86 +164,65 @@ Quechua terms based on the person related to the referent; a daughter in terms
 of her father is \emph{ususi}, but when described relative to her mother,
 \emph{warmi wawa} \cite{academiamayor}.
 
-Chipa is trained
+Chipa, then, must learn to make these distinctions automatically, learning from
+examples in available word-aligned bitext corpora. Given such a corpus, we can
+discover the different possible translations for each source-language word, and
+with supervised learning, how to discriminate between them.  Since instances of
+a source-language word may be NULL-aligned, both in the training data and in
+actual translations, we allow users to request classifiers that consider NULL
+as a valid label for classification, or not, as appropriate for the
+application.
 
-We have to say: well, here are the options. es1 can translate to qu1 or qu2 or
-qu3. Which one of these do you like the best, chipa?
-What if a qu word is in the lexicon but it's never seen in the training data?
-Just always prefer the words that we've seen?
+The software holds all of the available bitext in a database, retrieving the
+relevant training sentences and learning classifiers on demand.
+If a source word has been seen with multiple different translations, then a
+classifier will be trained for it. If it has been seen aligned to only one
+target-language type, then this is simply noted, and if the source word is not
+present in the training data, then that word is marked out-of-vocabulary.
+Memory permitting, these classifiers and annotations are kept cached for later
+usage. Chipa can be run as a server, providing an interface whereby client
+programs can request CL-WSD decisions over RPC.
 
-The chipa system holds all of the available bitext in a database, waiting for
-sentences to translate.
-On demand, chipa either retrieves or trains (then caches) a classifier
-for each word in a sentence to be translated.
+Here classifiers are trained with the scikit-learn machine learning package
+\cite{scikit-learn}, using logistic regression (also known as ``maximum
+entropy") with the default settings and the regularization constant set to
+$C=0.1$. We also use various utility functions from NLTK \cite{nltkbook}. 
 
-Classifiers are trained with the scikit-learn machine learning package
-\cite{scikit-learn}, and the software uses various utility functions from NLTK
-\cite{nltkbook}.
-
-
-Notably, many instances of a source-language word may be aligned to NULL in the
-bitext; function words especially are likely to simply be dropped in the ...
-
-
-
-
-Open question: how much training data do we need for a word before it helps to
-do a classifier?
-
-Proposal:
-- if never seen it, just don't disambiguate
-- if seen it a few times, take the MFS
-- if many times, train a classifier!
-
-
-* consider: how many instances of a word do we need before it helps to train a
-classifier?
-
-Describe the results of initial testing on a held-out test set of es-qu CL-WSD
+For this work, use familiar features for text classification: the
+surrounding lemmas for the current token (three on either side), and the
+bag-of-words features for the entire current sentence. We additionally include,
+optionally, the Brown cluster labels, both for the immediate surrounding context
+and the entire sentence.
+We suspect that more feature engineering, particularly making use of syntactic
+information and surface word forms, will be helpful in the future.
 
 \begin{figure}[t!]
   \begin{itemize}
-    \item lemmas in a context window
-    \item bag of lemmas 
-    \item more coming
+    \item lemmas from surrounding context (three tokens on either side)
+    \item bag of lemmas from the entire sentence
+    \item Brown cluster labels from surrounding context
+    \item bag of Brown cluster labels from the entire sentence
   \end{itemize}
-\caption{features yo}
+\caption{Features used in classification}
 \label{fig:features}
 \end{figure}
 
 \subsection{System Integration}
-In order to integrate Chipa into SQUOIA, we added a stage to the SQUOIA
-pipeline that determines which words in the current input sentence had multiple
-possible translations retrieved from the lexicon, and then asks a Chipa
-server for translation suggestions, using XMLRPC.
+In order to integrate Chipa into SQUOIA, we added an additional lexical
+selection stage to the SQUOIA pipeline, occurring after the rule-based
+disambiguation modules. This new module connects to the Chipa server to request
+translation suggestions -- possibly several per word, ranked by their
+probability estimates -- then looks for words that SQUOIA currently has marked
+as ambiguous.
 
-The suggested translations are returned 
-
-
-according to the system's lexicon, 
-are to be disambiguated 
-
-Given the Chipa WSD software and the pipeline design of the SQUOIA MT system,
-we were
-
-
-
-
-
-Chipa uses discriminative classifiers, trained individually for source-language
-words, in order to distinguish between the senses corresponding to different
-target-language word types.
-
-In this work, we use very simple contextual features extracted from the 
-
-Features extracted include ...
-- syntactic features? we should have a parse/chunking handy!
-- bag of words over the whole input sentence?
-- local context words?
-- foreign-language BOW? Maybe we'll try that later?
-- sequence models?
-
-a number of features extracted ...
+For each word with multiple translation possibilities, we consider each of the
+translations known to SQUOIA and take the one ranked most highly in the
+results from the classifiers. If there are no such overlapping translations, we
+take the default entry suggested by SQUOIA's dictionary.
+Notably, since Chipa and SQUOIA do not share the same lexicon, translations
+observed in the bitext may be unknown to the SQUOIA system (due to noisy
+alignments or simply a non-exhaustive dictionary), and lexical entries in the
+dictionary may not be attested in the training data.
 
 \subsection{Learning From Monolingual Data}
 While in this work, our target language is under-resourced, we have many
@@ -252,16 +232,19 @@ lexical selection in the target language.
 
 One resource for Spanish is the simple abundance of monolingual text. Given
 large amounts of Spanish-language text, we can use unsupervised methods to
-discover semantic regularities. In order to learn from this text, we apply
-Brown clustering \cite{Brown92class-basedn-gram}, which has been used in a
-variety of text classification tasks \cite{turian-ratinov-bengio:2010:ACL}.
+discover semantic regularities. In this work we apply Brown clustering
+\cite{Brown92class-basedn-gram}, which has been used in a variety of text
+classification tasks \cite{turian-ratinov-bengio:2010:ACL} and provides a
+straightforward way to add classification features.
 
-The Brown clustering algorithm takes as input unannotated text and maps each
-word type in the text to a cluster, such that words in the same cluster have
-similar usage patterns according to bigram statistics. We can then use this
-mapping from words to clusters in our classifiers, adding an additional
-annotation for each word that allow the classifiers to find slightly
+The Brown clustering algorithm takes as input unannotated text and produces a
+mapping from word types in that text to clusters, such that words in the same
+cluster have similar usage patterns according the corpus's bigram statistics.
+We can then use this mapping from words to clusters in our classifiers, adding
+an additional annotation for each word that allow the classifiers to find
 higher-level abstractions than surface-level words or particular lemmas.
+The desired number of clusters must be set ahead of time, but is a tunable
+parameter.
 We use a popular open source implementation of Brown clustering
 \footnote{\url{https://github.com/percyliang/brown-cluster}}, described in
 \cite{Liang05semi-supervisedlearning}, running on both the Spanish side of our
@@ -290,11 +273,12 @@ top twenty terms from that cluster, by frequency.}
 \label{fig:clusters}
 \end{figure*}
 
-
-Examining the output of the clustering algorithm, we see some intuitively
-satisfying results, such that the names of many countries were mapped to the
-same cluster. See Figure \ref{fig:clusters} for some illustrative
-examples.
+See Figure \ref{fig:clusters} for some illustrative examples of clusters that
+we found in the Spanish Europarl corpus.  Examining the output of the
+clustering algorithm, we see some intuitively satisfying results; here we see
+clusters corresponding to the names of many countries, some nouns referring to
+people, and common verbs. Note that the clustering is unsupervised, and the
+labels given are not produced by the algorithm.
 
 \section{Experiments}
 Here we report on two basic experimental setups, including an \emph{in-vitro}
@@ -302,36 +286,15 @@ evaluation of the CL-WSD classifiers themselves and an \emph{in-vivo}
 experiment in which we evaluate the translations produced by the SQUOIA system
 with the integrated CL-WSD system.
 
-To evaluate the classifiers in isolation, we produced a small aligned 
-Spanish-Quechua bitext corpus. 
-
-For this work, we use an assortment of Spanish-Quechua bitexts.
-While there are not very many available large corpora, there are some.
-
-As sentences alignments are not guaranteed to be clean, we use Robert Moore's
-sentence aligner \cite{DBLP:conf/amta/Moore02}, with the default settings.
-There were THISMANY sentences in the corpora we used, THISMANY of which are
-included in the resulting sentence-aligned bitext.
-
-We performed word-level alignments on the remaining sentences with the Berkeley
-aligner, resulting in one-to-many alignments such that each Spanish word may be
-aligned to zero or more Quechua words. Spanish multi-word expressions known to
-the lexicon were replaced with special tokens to mark that particular
-expression.
-
-For summarized results of these first two settings, please see Figures
-\ref{fig:theresults1} and \ref{fig:theresults2}.
-
-These are significant at the XXX level, computed with a simple binomial test
-\cite{salzberg1997comparing}.
-
-%% XXX
-We prepared a number of example sentence to be translated, and found that
-XXXX\% of them had better translations because of better lexical choice.
-
-Hey, maybe words that are in the Spanish wikipedia article linked to a Quechua
-wikipedia article are informative features for selecting those Quechua words?
-...
+\subsection{Classification Evaluation}
+To evaluate the classifiers in isolation, we produced a small Spanish-Quechua
+bitext corpus from a variety of sources, including the Bible, some government
+documents such as the constitution of Peru and several short folktales and
+works of fiction. The great majority of this text was the Bible.
+We used Robert Moore's sentence aligner \cite{DBLP:conf/amta/Moore02}, with the
+default settings to get sentence-aligned text.
+Initially there were just over 50 thousand sentences; 28,549 were included
+after sentence alignemnt.
 
 \begin{figure*}[t!]
   \begin{center}
@@ -379,18 +342,69 @@ null-aligned tokens.}
 \label{fig:theresults2}
 \end{figure*}
 
+During preprocessing, Spanish multi-word expressions identifiable with FreeLing
+were replaced with special tokens to mark that particular expression, and both
+the Spanish and Quechua text were lemmatized. We then performed word-level
+alignments on the remaining sentences with the Berkeley aligner
+\cite{denero-klein:2007:ACLMain}, resulting in one-to-many alignments such that
+each Spanish word is aligned to zero or more Quechua words, resulting in a
+label for every Spanish token.
+
+With this word-aligned bitext, we can then train and evaluate classifiers.
+We evaluate here classifiers for the 100 most common Spanish lemmas appearing
+in the aligned corpus. For this test, we performed 10-fold cross validation for
+each lemma, retrieving all of the instances of that lemma in the corpus,
+extracting the appropriate features, training classifiers, then testing on
+that held-out fold.
+
+We report on two different scenarios for the \emph{in-vitro} setting; in one
+case, we consider classification problems in which the word in question may be
+aligned to NULL, and in the other setting, we exclude NULL alignments. While
+the former case will be relevant for other translation systems, in the
+architecture of SQUOIA, lexical selection modules may not make the decision to
+drop a word. In both cases, we show the average classification accuracy across
+all words and folds, weighted by the size of each test set.
+
+Here we compare the trained classifiers against the ``most-frequent sense"
+(MFS) baseline, which in this setting is the most common translation for a
+given lemma, as observed in the training data.
+
+We additionally show the effects on classification accuracy of adding features
+derived from Brown clusters, with clusters extracted from both the Europarl
+corpus and the Spanish side of our training data. We tried several different
+settings for the number of clusters, ranging from $C=100$ to $C=2000$;
+finer-grained distinctions through more clusters seem to lead to consistant
+improvements in accuracy.  The training algorithm takes time quadratic in the
+number of clusters, which becomes prohibitive fairly quickly. On a modern Linux
+workstation, clustering Europarl into 2000 clusters took roughly a day.
+
+The classifiers using clusters extracted from the Spanish side of our bitext
+consistently outperformed those learned from the Brown corpus. We had an
+intuition that the much larger corpus (nearly two million sentences) would
+help, but the clusters learned in-domain, largely from the Bible, reflect
+usage distinctions in that domain. Here we are in fact cheating slightly, as
+information from the complete corpus is used to classify parts of that corpus.
+
+For summarized results of these first two experiments, please see Figures
+\ref{fig:theresults1} and \ref{fig:theresults2}.
+
+\subsection{Translation Evaluation}
 In order to evaluate the effect of Chipa on lexical selection in a live
 translation task, we used SQUOIA to translate two Spanish passages for which we
 had reference Quechua translations. The first is simply a thousand sentences
 from the Bible; the second is adapted from the Peruvian government's public
 advocacy website \footnote{\emph{Defensoría del Pueblo},
-\url{http://www.defensoria.gob.pe/quechua.php}}, which is bilingual.
-We prepared sentence-aligned and segmented bitexts for this evaluation, and
-then translate the Spanish side with SQUOIA, with various CL-WSD settings, to
-produce Quechua text. In comparing the output Quechua with the reference
-translations, BLEU scores are quite low -- sometimes 4-grams are not
-matched at all, resulting in a geometric mean of 0 -- so here we report on the
-unigram-BLEU scores, which reflect some small improvements in lexical choice.
+\url{http://www.defensoria.gob.pe/quechua.php}}, which is bilingual and
+presumably of contains native-quality Quechua. We collected and hand-aligned
+thirty-five sentences from this site.
+
+Having prepared sentence-aligned and segmented bitexts for the evaluation,
+we then translated the Spanish side with SQUOIA, with various CL-WSD settings
+to produce Quechua text. In comparing the output Quechua with the reference
+translations, BLEU scores were quite low. The output often contained no 4-grams
+that matched with the reference translations, resulting in a geometric mean of
+0. So here we report on the unigram-BLEU scores, which reflect some small
+improvements in lexical choice.
 See Figure \ref{fig:translatioresults} for the numerical results.
 
 \begin{figure*}[t!]
@@ -411,12 +425,17 @@ See Figure \ref{fig:translatioresults} for the numerical results.
 \label{fig:translatioresults}
 \end{figure*}
 
-We were initially concerned that the 736 of the thousand 
+On the web test set, unfortunately very few of the Spanish words used were both
+considered ambiguous by SQUOIA's lexicon and attested our training corpus.
+Enabling Chipa during translation, classifiers are only called on six of the
+thirty-five sentences, and then the classifiers only disagree with the default
+entry from the lexicon in one case.
 
-BLEU 
-we prepared two small Spanish-Quechua bitexts on which we
-could 
-
+We do see a slight improvement in lexical selection when enabling Chipa on the
+Bible test set; the three feature settings listed actually all produce
+different translation output, but they are of equal quality. Here the in-domain
+training data allowed the classifiers to be used more often; 736 of the
+thousand sentences were influenced by the classifiers in this test set.
 
 \section{Related Work}
 Framing the resolution of lexical ambiguities in machine translation
@@ -442,7 +461,7 @@ This work has not yet, to our knowledge, been integrated into to an MT system
 on its own.
 
 Rudnick \emph{et al.} \shortcite{rudnick-liu-gasser:2013:SemEval-2013}
-prototyped a system that addresses some of the shortcomings here, requiring
+prototyped a system that addresses some of the issues with ParaSense, requiring
 more modest software infrastructure for feature extraction while still allowing
 CL-WSD systems to make use of several mutually parallel bitexts that share a
 source language.
@@ -456,37 +475,51 @@ Francis Tyers, in his dissertation work \shortcite{tyers-dissertation},
 provides an overview of lexical selection systems and describes methods for
 learning lexical selection rules based on available parallel corpora. These
 rules make reference to the lexical items and parts of speech surrounding the
-word to be translated. Once learned, these rules intended to be understandable
-and modifiable by human language experts; for use in the Apertium machine
-translation system, they are compiled to finite-state transducers.
+word to be translated. Once learned, these rules are intended to be
+understandable and modifiable by human language experts. For practical use in
+the Apertium machine translation system, they are compiled to finite-state
+transducers.
 
 Rios and G\"{o}hring \shortcite{riosgonzales-gohring:2013:HyTra} describe
-earlier work extending the SQUOIA MT system, in which they add machine learning
-components that can predict the target forms of verbs in cases where the
-present rules are not sufficient.
+earlier work on extending the SQUOIA MT system with machine learning modules.
+They used classifiers to predict the target forms of verbs in cases where the
+system's hand-crafted rules cannot make a decision based on the current
+context.
 
 \section{Conclusions and Future Work}
-%% XXX
-Here we have described the Chipa CL-WSD system and its integration into SQUOIA.
-While before, most of SQUOIA's lexical choices were simply based on default
-entries in a dictionary or sometimes on a few hand-written lexical selection
-rules, now the system can make use of available training data, both bilingual
-and monolingual, to make better word choices.
+Here we have described the Chipa CL-WSD system and its integration into SQUOIA,
+a machine translation system for Spanish-Quechua.
+Until this work, SQUOIA's lexical choices were based on a small number of
+hand-written lexical selection rules, or the default entries in a bilingual
+dictionary. 
 
-It is encouraging that the unsupervised clustering approach provides a useful
-signal to the CL-WSD classifiers, even when the clusters are induced from
-out-of-domain data. We had hoped that the clusters learned from the Europarl
-corpus, coming from a larger data source, would prove more useful to the
-classifiers, but  ... 
+We have provided a means by which the the system can make some use of
+the available training data, both bilingual and monolingual, with very few
+changes to SQUOIA itself. We have also shown how Brown clusters, either when
+learned from a large out-of-domain corpus or from a smaller in-domain corpus,
+provide useful features for a CL-WSD task.
 
-In future work, we plan to apply the Chipa system to other machine translation
-systems and other language pairs, especially Spanish-Guarani, another important
-language pair for South America. We would also like to make better use of the
-large amount of monolingual Spanish text available; while the Europarl corpus
-is nontrivial, there are much larger sources of Spanish text, such as
-the Spanish-language edition of Wikipedia. We plan to apply clustering
-approaches and other word-sense discrimination techniques to these resources,
-which will hopefully further improve CL-WSD across broader domains.
+In order make better use of the suggestions from the CL-WSD module, we may
+need to expand the lexicon used by the translation system, so that mismatches
+between the vocabulary of the available bitext, the translation system itself,
+and the input source text do not hamper our efforts at improved lexical
+selection. Finding more and larger sources of bitext for this language pair
+would of course help immensely.
+
+We would like to learn from the large amount of monolingual Spanish text
+available; while the Europarl corpus is nontrivial, there are much larger
+sources of Spanish text, such as the Spanish-language Wikipedia.  We plan
+to apply more clustering approaches and other word-sense discrimination
+techniques to these resources, which will hopefully further improve CL-WSD
+across broader domains.
+
+Better feature engineering outside of unsupervised clusters may also be useful.
+In the future we we will extract features from the already-available POS tags
+and the syntactic structure of the input sentence.
+
+We also plan to apply the Chipa system to other machine translation systems and
+other language pairs, especially Spanish-Guarani, another important language
+pair for South America.
 
 \bibliographystyle{lrec2006}
 \bibliography{saltmil2014}
