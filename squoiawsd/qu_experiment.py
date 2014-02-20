@@ -14,7 +14,6 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn import cross_validation
 
-import searches
 import learn
 import brownclusters
 from preprocess import preprocess
