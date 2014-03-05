@@ -8,11 +8,11 @@
 
 \title{Enhancing a Rule-Based MT System with Cross-Lingual WSD}
 
-\name{Author1, Author2, Author3}
+\name{Alex Rudnick$^1$, Annette Rios$^2$, Michael Gasser$^1$}
 
-\address{ Affiliation1, Affiliation2, Affiliation3 \\
-               Address1, Address2, Address3 \\
-               author1@xxx.yy, author2@zzz.edu, author3@hhh.com\\}
+\address{$^1$ School of Informatics and Computing, Indiana University \\
+         $^2$ Institute of Computational Linguistics, University of Zurich \\
+         \texttt{\{alexr,gasser\}@indiana.edu}, \texttt{arios@ifi.uzh.ch} \\}
 
 \abstract{
 Lexical ambiguity is a significant problem facing rule-based machine
@@ -188,7 +188,7 @@ Here classifiers are trained with the scikit-learn machine learning package
 entropy") with the default settings and the regularization constant set to
 $C=0.1$. We also use various utility functions from NLTK \cite{nltkbook}. 
 
-For this work, use familiar features for text classification: the
+For this work, we use familiar features for text classification: the
 surrounding lemmas for the current token (three on either side), and the
 bag-of-words features for the entire current sentence. We additionally include,
 optionally, the Brown cluster labels, both for the immediate surrounding context
@@ -395,7 +395,7 @@ had reference Quechua translations. The first is simply a thousand sentences
 from the Bible; the second is adapted from the Peruvian government's public
 advocacy website \footnote{\emph{Defensoría del Pueblo},
 \url{http://www.defensoria.gob.pe/quechua.php}}, which is bilingual and
-presumably of contains native-quality Quechua. We collected and hand-aligned
+presumably contains native-quality Quechua. We collected and hand-aligned
 thirty-five sentences from this site.
 
 Having prepared sentence-aligned and segmented bitexts for the evaluation,
