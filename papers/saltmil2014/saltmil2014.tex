@@ -76,7 +76,7 @@ be obvious to human rule-writers, providing improved lexical selections for
 any word type with adequate coverage in the training corpus.
 
 Quechua is a group of closely related indigenous American languages spoken in
-South America. There are many dialects of Quechua, but SQUOIA focuses on the
+South America. There are many dialects of Quechua; SQUOIA focuses on the
 Cuzco dialect, spoken around the Peruvian city of Cuzco.  Cuzco Quechua has
 several million speakers, and some useful linguistic resources available,
 including a small treebank \cite{rios2009quechua}, also produced by the SQUOIA
@@ -85,10 +85,10 @@ team.
 \section{SQUOIA}
 SQUOIA is a shallow-transfer RBMT system based on the
 architecture of MATXIN \cite{matxin_2005,matxin}.
-The core system relies on a classical transfer approach, and is mostly
+The core system relies on a classical transfer approach and is mostly
 rule-based, with a few components based on machine learning.
 SQUOIA uses a pipeline approach, both in an abstract architectural sense and in
-that its pieces are instantiated as a series of scripts that communicate
+the sense that its pieces are instantiated as a series of scripts that communicate
 via UNIX pipes. Each module performs some transformation on its input and
 passes along the updated version to the next stage. Many modules focus on very
 particular parts of the representation, leaving most of their input unchanged.
@@ -103,7 +103,7 @@ All of these modules rely on statistical models.
 
 In the next step, the Spanish verbs must be disambiguated in order to assign
 them a Quechua verb form for generation: a rule-based module tries to assign a
-verb form to each verb chunk based on context information. If the rules fail to
+verb form to each verb chunk based on contextual information. If the rules fail to
 do so due to parsing or tagging errors, the verb is marked as ambiguous and
 passed on to an SVM classifier, which assigns a verb form even if the context
 of that verb does not unambiguously select a target form. This is among the
@@ -116,7 +116,7 @@ ambiguities. However, this rule-based lexical disambiguation is very limited,
 as it is not feasible to cover all possible contexts for every ambiguous word
 with rules.
 
-The rest of the system is a classical transfer procedure. A following module
+The rest of the system makes use of a classical transfer procedure. A following module
 moves syntactic information between the nodes and the chunks in the tree, and
 finally, the tree is reordered according to the basic word order in the target
 language. In the last step, the Quechua surface forms are morphologically
@@ -134,7 +134,7 @@ source-language text, where each label is a word or phrase type in the target
 language.
 
 This framing of word-sense disambiguation neatly addresses the problem of
-choosing an appropriate sense inventory for WSD, which has historically been a
+choosing an appropriate sense inventory, which has historically been a
 difficult problem for the practical application of WSD systems.
 Here the sense distinctions that the CL-WSD system should learn are exactly
 those that are lexicalized in the target language.
@@ -142,7 +142,7 @@ The CL-WSD framing also sidesteps the ``knowledge
 acquisition bottleneck" \cite{agirre2006word}
 hampering other work in WSD. While supervised CL-WSD methods typically require
 bitext for training, this is more readily available than the sense-annotated
-text that would be otherwise required.
+text that would otherwise be required.
 
 To appreciate the word-sense disambiguation problem embedded in machine
 translation, consider for a moment of the different senses of ``have" in
@@ -153,15 +153,15 @@ especially if it is not closely related, used a light verb that could appear in
 all of these contexts.
 
 Concretely considering the Spanish-Quechua translation case, the verb
-\emph{tener} (often a translation of \emph{to have}) can often translate into
-Quechua as \emph{kay}. But with many objects, such as \emph{tener habre} or
+\emph{tener} (a common translation of \emph{to have}) can often translate into
+Quechua as \emph{kay}. But with many objects, such as in \emph{tener hambre} or
 \emph{tener miedo} (\emph{to be hungry}, \emph{to be afraid}), we see a single
 verb in Quechua, \emph{yarqachikuy} or \emph{manchakuy}, respectively.  Outside
 of light verbs, different languages simply make different distinctions about
 the world. The Spanish \emph{hermano}, \emph{hijo} and \emph{hija}
 (\emph{brother}, \emph{son}, \emph{daughter}) all translate to different
-Quechua terms based on the person related to the referent; a daughter in terms
-of her father is \emph{ususi}, but when described relative to her mother,
+Quechua terms based on the person related to the referent; a daughter relative to
+her father is \emph{ususi}, but when described relative to her mother,
 \emph{warmi wawa} \cite{academiamayor}.
 
 Chipa, then, must learn to make these distinctions automatically, learning from
@@ -189,10 +189,10 @@ entropy") with the default settings and the regularization constant set to
 $C=0.1$. We also use various utility functions from NLTK \cite{nltkbook}. 
 
 For this work, we use familiar features for text classification: the
-surrounding lemmas for the current token (three on either side), and the
+surrounding lemmas for the current token (three on either side) and the
 bag-of-words features for the entire current sentence. We additionally include,
-optionally, the Brown cluster labels, both for the immediate surrounding context
-and the entire sentence.
+optionally, the Brown cluster labels (see below for an explanation),
+both for the immediate surrounding context and the entire sentence.
 We suspect that more feature engineering, particularly making use of syntactic
 information and surface word forms, will be helpful in the future.
 
@@ -219,14 +219,14 @@ For each word with multiple translation possibilities, we consider each of the
 translations known to SQUOIA and take the one ranked most highly in the
 results from the classifiers. If there are no such overlapping translations, we
 take the default entry suggested by SQUOIA's dictionary.
-Notably, since Chipa and SQUOIA do not share the same lexicon, translations
-observed in the bitext may be unknown to the SQUOIA system (due to noisy
-alignments or simply a non-exhaustive dictionary), and lexical entries in the
-dictionary may not be attested in the training data.
+Notably, since Chipa and SQUOIA do not share the same lexicon and bitext alignments
+may be noisy, translations
+observed in the bitext may be unknown to the SQUOIA system, and lexical entries in the
+SQUOIA dictionary may not be attested in the training data.
 
 \subsection{Learning From Monolingual Data}
 While in this work, our target language is under-resourced, we have many
-language resources available for the source language. We would to use these to
+language resources available for the source language. We would like to use these to
 make better sense of the input text, giving our classifiers clearer signals for
 lexical selection in the target language.
 
@@ -352,7 +352,7 @@ label for every Spanish token.
 
 With this word-aligned bitext, we can then train and evaluate classifiers.
 We evaluate here classifiers for the 100 most common Spanish lemmas appearing
-in the aligned corpus. For this test, we performed 10-fold cross validation for
+in the aligned corpus. For this test, we performed 10-fold cross-validation for
 each lemma, retrieving all of the instances of that lemma in the corpus,
 extracting the appropriate features, training classifiers, then testing on
 that held-out fold.
@@ -426,7 +426,7 @@ See Figure \ref{fig:translatioresults} for the numerical results.
 \end{figure*}
 
 On the web test set, unfortunately very few of the Spanish words used were both
-considered ambiguous by SQUOIA's lexicon and attested our training corpus.
+considered ambiguous by SQUOIA's lexicon and attested in our training corpus.
 Enabling Chipa during translation, classifiers are only called on six of the
 thirty-five sentences, and then the classifiers only disagree with the default
 entry from the lexicon in one case.
@@ -457,7 +457,7 @@ sentence into other (neither the source nor the target) languages. At training
 time, the translations of the sentence are extracted from available parallel
 corpora, but at training time, the translations must be produced by a
 third-party MT system.
-This work has not yet, to our knowledge, been integrated into to an MT system
+This work has not yet, to our knowledge, been integrated into an MT system
 on its own.
 
 Rudnick \emph{et al.} \shortcite{rudnick-liu-gasser:2013:SemEval-2013}
@@ -487,13 +487,13 @@ system's hand-crafted rules cannot make a decision based on the current
 context.
 
 \section{Conclusions and Future Work}
-Here we have described the Chipa CL-WSD system and its integration into SQUOIA,
+We have described the Chipa CL-WSD system and its integration into SQUOIA,
 a machine translation system for Spanish-Quechua.
 Until this work, SQUOIA's lexical choices were based on a small number of
 hand-written lexical selection rules, or the default entries in a bilingual
 dictionary. 
 
-We have provided a means by which the the system can make some use of
+We have provided a means by which the system can make some use of
 the available training data, both bilingual and monolingual, with very few
 changes to SQUOIA itself. We have also shown how Brown clusters, either when
 learned from a large out-of-domain corpus or from a smaller in-domain corpus,
