@@ -260,9 +260,9 @@ lexical selection in the target language.
 One resource for Spanish is its abundant monolingual text. Given
 large amounts of Spanish-language text, we can use unsupervised methods to
 discover semantic regularities. In this work we apply Brown clustering
-\cite{Brown92class-basedn-gram}, which has been used in a variety of text
-classification tasks \cite{turian-ratinov-bengio:2010:ACL} and provides a
-straightforward way to add classification features.
+\cite{Brown92class-basedn-gram}, which has been used successfully in a variety
+of text classification tasks \cite{turian-ratinov-bengio:2010:ACL} and provides
+a straightforward mechanism to add features learned from monolingual text.
 
 The Brown clustering algorithm takes as input unannotated text and produces a
 mapping from word types in that text to clusters, such that words in the same
@@ -273,9 +273,10 @@ higher-level abstractions than surface-level words or particular lemmas.
 The desired number of clusters must be set ahead of time, but is a tunable
 parameter.
 We use a popular open source implementation of Brown clustering,
-\footnote{\url{https://github.com/percyliang/brown-cluster}} described in
-\cite{Liang05semi-supervisedlearning}, running on both the Spanish side of our
-bitext corpus and on the Europarl corpus \cite{europarl} for Spanish.
+\footnote{\url{https://github.com/percyliang/brown-cluster}} described by
+Liang \shortcite{Liang05semi-supervisedlearning}, running on both the Spanish
+side of our bitext corpus and on the Europarl corpus \cite{europarl} for
+Spanish.
 
 \begin{figure*}[t!]
   \begin{tabular}{|l|p{15cm}|}
@@ -300,12 +301,12 @@ top twenty terms from that cluster, by frequency.}
 \label{fig:clusters}
 \end{figure*}
 
-See Figure \ref{fig:clusters} for some illustrative examples of clusters that
+Figure \ref{fig:clusters} shows some illustrative examples of clusters that
 we found in the Spanish Europarl corpus.  Examining the output of the
-clustering algorithm, we see some intuitively satisfying results; here we see
+clustering algorithm, we see some intuitively satisfying results; there are
 clusters corresponding to the names of many countries, some nouns referring to
-people, and common verbs. Note that the clustering is unsupervised, and the
-labels given are not produced by the algorithm.
+people, and common transitive verbs. Note that the clustering is unsupervised,
+and the labels given are not produced by the algorithm.
 
 \section{Experiments}
 Here we report on two basic experimental setups, including an \emph{in-vitro}
@@ -398,12 +399,18 @@ given lemma, as observed in the training data.
 
 We additionally show the effects on classification accuracy of adding features
 derived from Brown clusters, with clusters extracted from both the Europarl
-corpus and the Spanish side of our training data. We tried several different
-settings for the number of clusters, ranging from $C=100$ to $C=2000$;
-finer-grained distinctions through more clusters seem to lead to consistent
-improvements in accuracy.  The training algorithm takes time quadratic in the
-number of clusters, which becomes prohibitive fairly quickly. On a modern Linux
-workstation, clustering Europarl into 2000 clusters took roughly a day.
+corpus and the Spanish side of our training data.
+We tried several different
+settings for the number of clusters, ranging from $C=100$ to $C=2000$.
+In all of our experimental settings, the addition of Brown cluster features
+substantially improved classification accuracy. We note a consistent upward
+trend in performance as we increase the number of clusters, allowing the
+clustering algorithm to learn finer-grained distinctions.
+The training algorithm takes time quadratic in the number of clusters,
+which becomes prohibitive fairly quickly, so even finer-grained distinctions
+may be helpful, but will be left to future work. On a modern Linux
+workstation, clustering Europarl (~2M sentences) into 2000 clusters took
+roughly a day.
 
 The classifiers using clusters extracted from the Spanish side of our bitext
 consistently outperformed those learned from the Europarl corpus. We had an
@@ -412,8 +419,8 @@ help, but the clusters learned in-domain, largely from the Bible, reflect
 usage distinctions in that domain. Here we are in fact cheating slightly, as
 information from the complete corpus is used to classify parts of that corpus.
 
-For summarized results of these first two experiments, please see Figures
-\ref{fig:theresults1} and \ref{fig:theresults2}.
+Figures \ref{fig:theresults1} and \ref{fig:theresults2} show 
+summarized results of these first two experiments.
 
 \subsection{Translation Evaluation}
 In order to evaluate the effect of Chipa on lexical selection in a live
@@ -472,7 +479,8 @@ task has a long history, dating back at least to early SMT work at IBM
 shown how to use classifiers to improve modern phrase-based SMT systems
 \cite{carpuatpsd}.
 CL-WSD has received enough attention to warrant shared tasks at recent SemEval
-workshops; the most recent running of the task is described in \cite{task10}.
+workshops; the most recent running of the task is described by Lefever and
+Hoste \shortcite{task10}.
 In this task, participants are asked to translate twenty different polysemous
 English nouns into five different European languages, in a variety of contexts.
 
@@ -487,16 +495,15 @@ estimated with a third-party MT system, as they are not known a priori.
 This work has not yet, to our knowledge, been integrated into an MT system
 on its own.
 
-Rudnick \emph{et al.} \shortcite{rudnick-liu-gasser:2013:SemEval-2013}
-prototyped a system that addresses some of the issues with ParaSense, requiring
-more modest software infrastructure for feature extraction while still allowing
-CL-WSD systems to make use of several mutually parallel bitexts that share a
-source language.
-
-There has been some work on CL-WSD for translating into indigenous American
-languages; an earlier system for Spanish-Guarani made use of sequence models to
-jointly predict all of the translations for a sentence at once
-\cite{rudnick-gasser:2013:HyTra}.
+In our earlier work, we prototyped a system that addresses some of the issues
+with ParaSense, requiring more modest software infrastructure for feature
+extraction while still allowing CL-WSD systems to make use of several mutually
+parallel bitexts that share a source language
+\cite{rudnick-liu-gasser:2013:SemEval-2013}.
+We have also done some previous work on CL-WSD for translating into indigenous
+American languages; an earlier version of Chipa, for Spanish-Guarani, made use
+of sequence models to jointly predict all of the translations for a sentence at
+once \cite{rudnick-gasser:2013:HyTra}.
 
 Francis Tyers, in his dissertation work \shortcite{tyers-dissertation},
 provides an overview of lexical selection systems and describes methods for
@@ -536,7 +543,7 @@ would of course help immensely.
 
 We would like to learn from the large amount of monolingual Spanish text
 available; while the Europarl corpus is nontrivial, there are much larger
-sources of Spanish text, such as the Spanish-language Wikipedia.  We plan
+sources of Spanish text, such as the Spanish-language Wikipedia. We plan
 to apply more clustering approaches and other word-sense discrimination
 techniques to these resources, which will hopefully further improve CL-WSD
 across broader domains.
@@ -548,11 +555,6 @@ and the syntactic structure of the input sentence.
 We also plan to apply the Chipa system to other machine translation systems and
 other language pairs, especially Spanish-Guarani, another important language
 pair for South America.
-
-\section*{Acknowledgements}
-We would like to thank the anonymous reviewers for their helpful comments,
-Francis Tyers for his encouragement and interesting discussions on lexical
-selection, and ...
 
 \bibliographystyle{lrec2006}
 \bibliography{saltmil2014}
