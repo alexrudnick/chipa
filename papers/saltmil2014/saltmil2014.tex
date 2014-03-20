@@ -64,16 +64,16 @@ improve the output of SQUOIA on a full Spanish-to-Quechua translation task.
 In its current design, SQUOIA makes word choices based on its bilingual
 lexicon; the possible translations for a given word or multi-word expression
 are retrieved from a dictionary on demand. If there are several possible
-translations for a lexical item, these are passed along the pipeline in hopes
-that later stages will make a decision, but if no disambiguation decision is
-made, then the first entry retrieved from the lexicon is used. While there are
+translations for a lexical item, these are passed along the pipeline so
+that later stages can make a decision, but if the ambiguity persists,
+then the first entry retrieved from the lexicon is selected. While there are
 some rules for lexical selection, they have been written by hand and only cover
-a small subset of the vocabulary, in a limited number of contexts.
+a small subset of the vocabulary in a limited number of contexts.
 
 In this work, we supplement these rules with classifiers learned from
 Spanish-Quechua bitext. These classifiers make use of regularities that may not
-be obvious to human rule-writers, providing improved lexical selections for
-any word type with adequate coverage in the training corpus.
+be obvious to human rule-writers, providing improved lexical selection for
+any word type that has adequate coverage in the training corpus.
 
 Quechua is a group of closely related indigenous American languages spoken in
 South America. There are many dialects of Quechua; SQUOIA focuses on the
