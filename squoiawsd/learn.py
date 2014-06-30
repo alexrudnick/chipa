@@ -15,7 +15,6 @@ from nltk.probability import FreqDist
 from nltk.probability import ConditionalFreqDist
 from nltk.probability import ConditionalProbDist
 from nltk.probability import ELEProbDist
-from nltk.model import NgramModel
 
 import features
 from constants import UNTRANSLATED

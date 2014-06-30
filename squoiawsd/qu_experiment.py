@@ -16,7 +16,7 @@ from sklearn import cross_validation
 
 import learn
 import brownclusters
-from preprocess import preprocess
+# from preprocess import preprocess
 
 TESTSET="testdata/defensoria1-3_es.txt"
 

@@ -16,7 +16,7 @@ from sklearn import cross_validation
 
 import learn
 import brownclusters
-from preprocess import preprocess
+#from preprocess import preprocess
 
 TESTSET="testdata/defensoria1-3_es.txt"
 
@@ -113,7 +113,9 @@ def main():
     parser = learn.get_argparser()
     args = parser.parse_args()
 
-    brownclusters.set_paths_file(args.clusterfn)
+    if args.clusterfn:
+        brownclusters.set_paths_file(args.clusterfn)
+
     triple_sentences = learn.load_bitext(args)
     tl_sentences = learn.get_target_language_sentences(triple_sentences)
     sl_sentences = [s for (s,t,a) in triple_sentences]

@@ -69,8 +69,8 @@ def extract(tagged_sent, index):
     allfeatures = [
         bagofwords,
         window,
-        bagofbrown,
-        brownwindow,
+        #bagofbrown,
+        #brownwindow,
     ]
     for funk in allfeatures:
         extracted = funk(tagged_sent, index)

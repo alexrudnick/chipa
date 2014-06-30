@@ -15,7 +15,6 @@ from nltk.probability import FreqDist
 from nltk.probability import ConditionalFreqDist
 from nltk.probability import ConditionalProbDist
 from nltk.probability import ELEProbDist
-from nltk.model import NgramModel
 
 import features
 from constants import UNTRANSLATED
@@ -239,7 +238,7 @@ def get_argparser():
     parser.add_argument('--sourcefn', type=str, required=True)
     parser.add_argument('--targetfn', type=str, required=True)
     parser.add_argument('--alignfn', type=str, required=True)
-    parser.add_argument('--clusterfn', type=str, required=True)
+    parser.add_argument('--clusterfn', type=str, required=False)
 
     parser.add_argument('--crossvalidate',dest='crossvalidate',
                         action='store_true')
