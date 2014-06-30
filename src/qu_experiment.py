@@ -50,9 +50,15 @@ def cross_validate(top_words, nonnull=False):
     for w in top_words:
         sys.stdout.flush()
         training = learn.trainingdata_for(w, nonnull=nonnull)
+
         if len(training) < 10:
-            print("SKIP!")
+            print("SKIP:", w)
             continue
+        labels = set(label for (feat,label) in training)
+        if len(labels) < 2:
+            print("ONLY ONE SENSE:", w)
+            continue
+
         cv = cross_validation.KFold(len(training), n_folds=10, indices=True,
                                     shuffle=False, random_state=None, k=None)
         for traincv, testcv in cv:
