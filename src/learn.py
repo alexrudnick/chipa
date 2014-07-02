@@ -26,18 +26,27 @@ def pause():
 
 def target_words_for_each_source_word(ss, ts, alignment):
     """Given a list of tokens in source language, a list of tokens in target
-    language, and a list of Berkeley-style alignments of the form target-source,
-    for each source word, return the list of corresponding target words."""
+    language, and a list of cdec-style alignments of the form source-target,
+    for each source word, return the string of corresponding target words."""
     alignment = [tuple(map(int, pair.split('-'))) for pair in alignment]
     out = [list() for i in range(len(ss))]
     indices = [list() for i in range(len(ss))]
-    alignment.sort(key=itemgetter(0))
-    for (ti,si) in alignment:
+
+    ## We want to get the target words in target order.
+    alignment.sort(key=itemgetter(0,1))
+    for (si,ti) in alignment:
         ## make sure we're grabbing contiguous phrases
         if (not indices[si]) or (ti == indices[si][-1] + 1):
             indices[si].append(ti)
             targetword = ts[ti]
             out[si].append(targetword)
+        else:
+            pass
+            ## XXX: this is actually a pretty serious concern. What do?
+            ## You could imagine just going like word1 <GAP> word2 ... that's
+            ## what it might look like in a Hiero phrase table.
+            ## This happens a lot in the bible text apparently.
+            # print("warning: non-contiguous target phrase")
     return [" ".join(targetwords) for targetwords in out]
 
 def get_target_language_sentences(triple_sentences):
@@ -55,18 +64,36 @@ def get_target_language_sentences(triple_sentences):
         sentences.append(sentence)
     return sentences
 
-def load_bitext(args):
-    """Take in args containing filenames filenames, return a list of
-    (source,target,alignment) tuples. Lowercase everything.
-    NB: input files should already be lemmatized at this point.
+def load_bitext_twofiles(bitextfn, alignfn):
+    """Take in bitext filename and then alignment filename.
+    Return a list of (source,target,alignment) tuples. Lowercase everything.
+    NB: input files should already be tokenized and lemmatized at this point.
     """
     out_source = []
     out_target = []
     out_align = []
 
-    with open(args.sourcefn) as infile_s, \
-         open(args.targetfn) as infile_t, \
-         open(args.alignfn) as infile_align:
+    with open(bitextfn) as infile_bitext, \
+         open(alignfn) as infile_align:
+        for bitext, alignment in zip(infile_bitext, infile_align):
+            source, target = bitext.split("|||")
+            out_source.append(source.strip().lower().split())
+            out_target.append(target.strip().lower().split())
+            out_align.append(alignment.strip().split())
+    return list(zip(out_source, out_target, out_align))
+
+def load_bitext_threefiles(sfn, tfn, afn):
+    """Take in source filename, target filename, alignment filename, return a
+    list of (source,target,alignment) tuples. Lowercase everything.
+    NB: input files should already be tokenized and lemmatized at this point.
+    """
+    out_source = []
+    out_target = []
+    out_align = []
+
+    with open(sfn) as infile_s, \
+         open(tfn) as infile_t, \
+         open(afn) as infile_align:
         for source, target, alignment in zip(infile_s, infile_t, infile_align):
             out_source.append(source.strip().lower().split())
             out_target.append(target.strip().lower().split())

@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+"""
+Main script for running in-vitro CL-WSD experiments with cross-validation, given
+some aligned bitext.
+"""
+
 import sys
 import argparse
 from argparse import Namespace
@@ -16,30 +21,6 @@ from sklearn import cross_validation
 
 import learn
 import brownclusters
-#from preprocess import preprocess
-
-TESTSET="testdata/defensoria1-3_es.txt"
-
-def test_on_testset():
-    totalcorrect = 0
-    totalwords = 0
-    with open(TESTSET) as infile:
-        for line in infile:
-            ## preprocess that line
-            sents = preprocess(line)
-            words = []
-            if len(sents) > 1:
-                print("THIS LINE HAS MULTIPLE SENTENCES.")
-            for sent in sents: words.extend(sent.get_words())
-            lemmas = [w.get_lemma() for w in words]
-            for w,l in zip(words,lemmas):
-                print("{0}/{1}".format(w.get_form(),l),end=" ")
-            print()
-
-            ## run classifiers over all the lemmas...
-            answers = learn.disambiguate_words(lemmas)
-            for lemma,t in zip(lemmas,answers):
-                print("{0}/{1}".format(lemma,t),end=" ")
 
 def cross_validate(top_words, nonnull=False):
     """Given the most common words in the Spanish corpus, cross-validate our
@@ -80,7 +61,7 @@ def cross_validate(top_words, nonnull=False):
 
 def ispunct(word):
     import string
-    punctuations = string.punctuation + "«»¡¿"
+    punctuations = string.punctuation + "«»¡¿—"
     return (word in punctuations or
             all(c in punctuations for c in word))
 
@@ -115,25 +96,29 @@ def do_a_case(casename, top_words, nonnull):
     print("classifiers:", avg)
     print("mfs:", mfsavg)
 
+def get_argparser():
+    parser = argparse.ArgumentParser(description='clwsd_experiment')
+    parser.add_argument('--bitextfn', type=str, required=True)
+    parser.add_argument('--alignfn', type=str, required=True)
+    parser.add_argument('--clusterfn', type=str, required=False)
+    return parser
+
 def main():
-    parser = learn.get_argparser()
+    parser = get_argparser()
     args = parser.parse_args()
 
     if args.clusterfn:
         brownclusters.set_paths_file(args.clusterfn)
 
-    triple_sentences = learn.load_bitext(args)
+    triple_sentences = learn.load_bitext_twofiles(args.bitextfn, args.alignfn)
     tl_sentences = learn.get_target_language_sentences(triple_sentences)
     sl_sentences = [s for (s,t,a) in triple_sentences]
     tagged_sentences = [list(zip(ss, ts))
                         for ss,ts in zip(sl_sentences, tl_sentences)]
     learn.set_examples(sl_sentences,tagged_sentences)
 
-    if not args.crossvalidate:
-        test_on_testset()
-        return
-
     top_words = get_top_words(sl_sentences)
+    print("TOP WORDS IN SPANISH", top_words)
     do_a_case("REGULAR", top_words, nonnull=False)
     do_a_case("NONNULL", top_words, nonnull=True)
 
