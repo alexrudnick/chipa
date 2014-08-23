@@ -40,8 +40,8 @@ def cross_validate(top_words, nonnull=False):
             print("ONLY ONE SENSE:", w)
             continue
 
-        cv = cross_validation.KFold(len(training), n_folds=10, indices=True,
-                                    shuffle=False, random_state=None, k=None)
+        cv = cross_validation.KFold(len(training), n_folds=10,
+                                    shuffle=False, random_state=None)
         for traincv, testcv in cv:
             mytraining = training[traincv[0]:traincv[len(traincv)-1]]
             mytesting  = training[testcv[0]:testcv[len(testcv)-1]]
