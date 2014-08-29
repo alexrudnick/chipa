@@ -82,24 +82,6 @@ def load_bitext_twofiles(bitextfn, alignfn):
             out_align.append(alignment.strip().split())
     return list(zip(out_source, out_target, out_align))
 
-def load_bitext_threefiles(sfn, tfn, afn):
-    """Take in source filename, target filename, alignment filename, return a
-    list of (source,target,alignment) tuples. Lowercase everything.
-    NB: input files should already be tokenized and lemmatized at this point.
-    """
-    out_source = []
-    out_target = []
-    out_align = []
-
-    with open(sfn) as infile_s, \
-         open(tfn) as infile_t, \
-         open(afn) as infile_align:
-        for source, target, alignment in zip(infile_s, infile_t, infile_align):
-            out_source.append(source.strip().lower().split())
-            out_target.append(target.strip().lower().split())
-            out_align.append(alignment.strip().split())
-    return list(zip(out_source, out_target, out_align))
-
 def cpd(cfd):
     """Take a ConditionalFreqDist and turn it into a ConditionalProdDist"""
     return ConditionalProbDist(cfd, ELEProbDist)

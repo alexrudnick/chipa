@@ -22,6 +22,8 @@ from sklearn import cross_validation
 import learn
 import brownclusters
 
+STOPWORDS = None
+
 def cross_validate(top_words, nonnull=False):
     """Given the most common words in the Spanish corpus, cross-validate our
     classifiers for each of those."""
@@ -32,10 +34,13 @@ def cross_validate(top_words, nonnull=False):
         sys.stdout.flush()
         training = learn.trainingdata_for(w, nonnull=nonnull)
 
+        print('doing word "{0}" with {1} instances'.format(w, len(training)))
+
         if len(training) < 10:
             print("SKIP:", w)
             continue
         labels = set(label for (feat,label) in training)
+        print("possible labels:", labels)
         if len(labels) < 2:
             print("ONLY ONE SENSE:", w)
             continue
@@ -67,12 +72,18 @@ def ispunct(word):
 
 def get_top_words(sl_sentences):
     """Take a list of sentences (each of which is a list of words), return the
-    top 100 words."""
+    top 100 words, ignoring punctuation and stopwords."""
+
     fd = nltk.probability.FreqDist()
     for sent in sl_sentences:
         for w in sent:
             fd[w] += 1
-    mostcommon = fd.most_common(120)
+    mostcommon = fd.most_common(200)
+
+    ## NB: Dropping stopwords here. Good idea? ...
+    mostcommon = [(word, count) for (word, count) in mostcommon
+                  if word not in STOPWORDS]
+
     mostcommon = [word for (word, count) in mostcommon
                   if not ispunct(word)]
     mostcommon = mostcommon[:100]
@@ -96,6 +107,17 @@ def do_a_case(casename, top_words, nonnull):
     print("classifiers:", avg)
     print("mfs:", mfsavg)
 
+def load_stopwords(bitextfn):
+    """Determine source language from the input filename."""
+    langs = bitextfn.split(".")[1]
+    sl = langs.split("-")[0]
+    assert sl in ["en", "es"]
+    sl = "english" if sl == "en" else "spanish"
+
+    wordtext = nltk.load("corpora/stopwords/{0}".format(sl), format="text")
+    wordlist = wordtext.split()
+    return set(wordlist)
+
 def get_argparser():
     parser = argparse.ArgumentParser(description='clwsd_experiment')
     parser.add_argument('--bitextfn', type=str, required=True)
@@ -104,11 +126,14 @@ def get_argparser():
     return parser
 
 def main():
+    global STOPWORDS
     parser = get_argparser()
     args = parser.parse_args()
 
     if args.clusterfn:
         brownclusters.set_paths_file(args.clusterfn)
+
+    STOPWORDS = load_stopwords(args.bitextfn)
 
     triple_sentences = learn.load_bitext_twofiles(args.bitextfn, args.alignfn)
     tl_sentences = learn.get_target_language_sentences(triple_sentences)
@@ -118,7 +143,7 @@ def main():
     learn.set_examples(sl_sentences,tagged_sentences)
 
     top_words = get_top_words(sl_sentences)
-    print("TOP WORDS IN SPANISH", top_words)
+    print("TOP WORDS IN SOURCE LANGUAGE", top_words)
     do_a_case("REGULAR", top_words, nonnull=False)
     do_a_case("NONNULL", top_words, nonnull=True)
 
