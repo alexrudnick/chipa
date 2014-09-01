@@ -64,24 +64,6 @@ def get_target_language_sentences(triple_sentences):
         sentences.append(sentence)
     return sentences
 
-def load_bitext_twofiles(bitextfn, alignfn):
-    """Take in bitext filename and then alignment filename.
-    Return a list of (source,target,alignment) tuples. Lowercase everything.
-    NB: input files should already be tokenized and lemmatized at this point.
-    """
-    out_source = []
-    out_target = []
-    out_align = []
-
-    with open(bitextfn) as infile_bitext, \
-         open(alignfn) as infile_align:
-        for bitext, alignment in zip(infile_bitext, infile_align):
-            source, target = bitext.split("|||")
-            out_source.append(source.strip().lower().split())
-            out_target.append(target.strip().lower().split())
-            out_align.append(alignment.strip().split())
-    return list(zip(out_source, out_target, out_align))
-
 def cpd(cfd):
     """Take a ConditionalFreqDist and turn it into a ConditionalProdDist"""
     return ConditionalProbDist(cfd, ELEProbDist)
@@ -94,33 +76,10 @@ def reverse_cfd(cfd):
             out[sample].inc(condition, cfd[condition][sample])
     return out
 
-SL_SENTENCES = None
-TAGGED_SENTENCES = None
-def set_examples(sl_sentences, tagged_sentences):
-    global SL_SENTENCES
-    global TAGGED_SENTENCES
-    SL_SENTENCES = sl_sentences
-    TAGGED_SENTENCES = tagged_sentences
-
-def build_instance(tagged_sentence, index):
-    feat = features.extract(tagged_sentence, index)
-    label = tagged_sentence[index][1]
-    return (feat, label)
-
-def trainingdata_for(word, nonnull=False):
-    training = []
-    for ss,tagged in zip(SL_SENTENCES, TAGGED_SENTENCES):
-        if word in ss:
-            index = ss.index(word)
-            training.append(build_instance(tagged, index))
-    if nonnull:
-        training = [(feat,label) for (feat,label) in training
-                                 if label != UNTRANSLATED]
-    return training
 
 @functools.lru_cache(maxsize=100000)
 def classifier_for(word, nonnull=False):
-    training = trainingdata_for(word, nonnull=nonnull)
+    training = trainingdata.trainingdata_for(word, nonnull=nonnull)
     
     if not training:
         return OOVClassifier()
@@ -241,32 +200,3 @@ def repl():
             print(w, end=" ")
             fd = distribution_for(w)
             print(fd.most_common(10))
-
-def get_argparser():
-    parser = argparse.ArgumentParser(description='quechua')
-    parser.add_argument('--sourcefn', type=str, required=True)
-    parser.add_argument('--targetfn', type=str, required=True)
-    parser.add_argument('--alignfn', type=str, required=True)
-    parser.add_argument('--clusterfn', type=str, required=False)
-
-    parser.add_argument('--crossvalidate',dest='crossvalidate',
-                        action='store_true')
-    parser.add_argument('--no-crossvalidate',dest='crossvalidate',
-                        action='store_false')
-    parser.set_defaults(crossvalidate=False)
-    return parser
-
-def main():
-    parser = get_argparser()
-    args = parser.parse_args()
-    triple_sentences = load_bitext(args)
-    print("training on {0} sentences.".format(len(triple_sentences)))
-
-    tl_sentences = get_target_language_sentences(triple_sentences)
-    sl_sentences = [s for (s,t,a) in triple_sentences]
-    tagged_sentences = [list(zip(ss, ts))
-                        for ss,ts in zip(sl_sentences, tl_sentences)]
-    set_examples(sl_sentences, tagged_sentences)
-    repl()
-
-if __name__ == "__main__": main()

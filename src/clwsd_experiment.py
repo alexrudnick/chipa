@@ -20,6 +20,7 @@ from sklearn.pipeline import Pipeline
 from sklearn import cross_validation
 
 import learn
+import trainingdata
 import brownclusters
 
 STOPWORDS = None
@@ -32,15 +33,15 @@ def cross_validate(top_words, nonnull=False):
     sizes = []
     for w in top_words:
         sys.stdout.flush()
-        training = learn.trainingdata_for(w, nonnull=nonnull)
+        training = trainingdata.trainingdata_for(w, nonnull=nonnull)
 
-        print('doing word "{0}" with {1} instances'.format(w, len(training)))
+        # print('doing word "{0}" with {1} instances'.format(w, len(training)))
 
         if len(training) < 10:
             print("SKIP:", w)
             continue
         labels = set(label for (feat,label) in training)
-        print("possible labels:", labels)
+        # print("possible labels:", labels)
         if len(labels) < 2:
             print("ONLY ONE SENSE:", w)
             continue
@@ -55,6 +56,8 @@ def cross_validate(top_words, nonnull=False):
             mfs.train(mytraining)
 
             classif = SklearnClassifier(LogisticRegression(C=0.1))
+            mytraining = mytraining + [({"absolutelynotafeature}":True},
+                                        "absolutelynotalabel")]
             classif.train(mytraining)
             acc = nltk.classify.util.accuracy(classif, mytesting)
             mfsacc = nltk.classify.util.accuracy(mfs, mytesting)
@@ -74,20 +77,21 @@ def get_top_words(sl_sentences):
     """Take a list of sentences (each of which is a list of words), return the
     top 100 words, ignoring punctuation and stopwords."""
 
+    ## What if we just take all the words that occur at least 50 times?
     fd = nltk.probability.FreqDist()
     for sent in sl_sentences:
         for w in sent:
             fd[w] += 1
-    mostcommon = fd.most_common(200)
+    mostcommon = fd.most_common()
 
-    ## NB: Dropping stopwords here. Good idea? ...
-    mostcommon = [(word, count) for (word, count) in mostcommon
-                  if word not in STOPWORDS]
-
-    mostcommon = [word for (word, count) in mostcommon
-                  if not ispunct(word)]
-    mostcommon = mostcommon[:100]
-    return mostcommon
+    out = []
+    for (word, count) in mostcommon:
+        if word not in STOPWORDS and not ispunct(word):
+            if count > 50:
+                out.append(word)
+            else:
+                break
+    return out
 
 def save_crossvalidate_results(fn, accuracies, mfsaccuracies, sizes):
     with open(fn, "w") as outfile:
@@ -111,7 +115,7 @@ def load_stopwords(bitextfn):
     """Determine source language from the input filename."""
     langs = bitextfn.split(".")[1]
     sl = langs.split("-")[0]
-    assert sl in ["en", "es"]
+    assert sl in ["en", "es"], "wrong sl {0}".format(sl)
     sl = "english" if sl == "en" else "spanish"
 
     wordtext = nltk.load("corpora/stopwords/{0}".format(sl), format="text")
@@ -122,6 +126,7 @@ def get_argparser():
     parser = argparse.ArgumentParser(description='clwsd_experiment')
     parser.add_argument('--bitextfn', type=str, required=True)
     parser.add_argument('--alignfn', type=str, required=True)
+    parser.add_argument('--surfacefn', type=str, required=True)
     parser.add_argument('--clusterfn', type=str, required=False)
     return parser
 
@@ -135,12 +140,17 @@ def main():
 
     STOPWORDS = load_stopwords(args.bitextfn)
 
-    triple_sentences = learn.load_bitext_twofiles(args.bitextfn, args.alignfn)
+    triple_sentences = trainingdata.load_bitext_twofiles(args.bitextfn,
+                                                         args.alignfn)
     tl_sentences = learn.get_target_language_sentences(triple_sentences)
     sl_sentences = [s for (s,t,a) in triple_sentences]
     tagged_sentences = [list(zip(ss, ts))
                         for ss,ts in zip(sl_sentences, tl_sentences)]
-    learn.set_examples(sl_sentences,tagged_sentences)
+    trainingdata.set_examples(sl_sentences,tagged_sentences)
+
+    ## Now we require the surface forms too.
+    surface_sentences = trainingdata.load_surface_file(args.surfacefn)
+    trainingdata.set_sl_surface_sentences(surface_sentences)
 
     top_words = get_top_words(sl_sentences)
     print("TOP WORDS IN SOURCE LANGUAGE", top_words)

@@ -10,13 +10,13 @@ import nltk
 import brownclusters
 DEBUG=False
 
-def bagofwords(tagged_sent, index):
+def bagofwords(tagged_sent, surface, index):
     """Bag of words features."""
     source = nltk.tag.untag(tagged_sent)
     return dict([('cw(%s)' % w, True) for w in source])
 
 WIDTH=3
-def window(tagged_sent, index):
+def window(tagged_sent, surface, index):
     """Immediate surrounding context features."""
     source = nltk.tag.untag(tagged_sent)
     out = {}
@@ -32,13 +32,32 @@ def window(tagged_sent, index):
     out.update(windowfeatures)
     return out
 
-def bagofbrown(tagged_sent, index):
+def bagofbrown(tagged_sent, surface, index):
     """Bag of brown clusters for the whole sentence."""
     source = nltk.tag.untag(tagged_sent)
     clusters = brownclusters.clusters_for_sentence(source)
     return dict([('bb(%s)' % w, True) for w in clusters])
 
-def brownwindow(tagged_sent, index):
+def bagofsurface(tagged_sent, surface, index):
+    """Bag of words features."""
+    return dict([('bs(%s)' % w, True) for w in surface])
+
+def surfacewindow(tagged_sent, surface, index):
+    """Immediate surrounding context features from the surface forms."""
+    out = {}
+    ## window of WIDTH before
+    lowerbound = max(0, index-WIDTH)
+    windowfeatures = dict([('sw(%s)' % w, True)
+                          for w in surface[lowerbound:index]])
+    out.update(windowfeatures)
+    ## and WIDTH after
+    upperbound = index+WIDTH
+    windowfeatures = dict([('sw(%s)' % w, True)
+                          for w in surface[index+1:upperbound+1]])
+    out.update(windowfeatures)
+    return out
+
+def brownwindow(tagged_sent, surface, index):
     """Immediate surrounding brown clusters."""
     source = nltk.tag.untag(tagged_sent)
     clusters = brownclusters.clusters_for_sentence(source)
@@ -63,17 +82,19 @@ def getlabel(tagged_sent, i):
     else:
         assert False, "don't ask for the future"
 
-def extract(tagged_sent, index):
+def extract(tagged_sent, surface, index):
     """Given a WSDProblem, return the features for the sentence."""
     out = {}
     allfeatures = [
         bagofwords,
         window,
+        bagofsurface,
+        surfacewindow,
         #bagofbrown,
         #brownwindow,
     ]
     for funk in allfeatures:
-        extracted = funk(tagged_sent, index)
+        extracted = funk(tagged_sent, surface, index)
         if DEBUG: print(funk.__doc__.strip()); print(extracted)
         out.update(extracted)
     return out
