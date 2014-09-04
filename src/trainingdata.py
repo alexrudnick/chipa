@@ -36,8 +36,9 @@ def trainingdata_for(word, nonnull=False):
         training = [(feat,label) for (feat,label) in training
                                  if label != UNTRANSLATED]
 
-    ## XXX: just take the first 100 instances
-    return training[:100]
+    return training
+    ## XXX: just take the first 50 instances
+    ## return training[:50]
 
 def load_bitext_twofiles(bitextfn, alignfn):
     """Take in bitext filename and then alignment filename.

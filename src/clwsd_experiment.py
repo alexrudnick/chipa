@@ -8,8 +8,8 @@ some aligned bitext.
 import sys
 import argparse
 from argparse import Namespace
-import pickle
-import random
+from operator import itemgetter
+from collections import defaultdict
 
 import nltk
 
@@ -28,24 +28,18 @@ STOPWORDS = None
 def cross_validate(top_words, nonnull=False):
     """Given the most common words in the Spanish corpus, cross-validate our
     classifiers for each of those."""
-    accuracies = []
-    mfsaccuracies = []
-    sizes = []
+
+    ## return a map from word to [(accuracy, mfsaccuracy, size)]
+    out = defaultdict(list)
     for w in top_words:
         sys.stdout.flush()
         training = trainingdata.trainingdata_for(w, nonnull=nonnull)
-
         # print('doing word "{0}" with {1} instances'.format(w, len(training)))
-
-        if len(training) < 10:
-            print("SKIP:", w)
-            continue
         labels = set(label for (feat,label) in training)
         # print("possible labels:", labels)
         if len(labels) < 2:
             print("ONLY ONE SENSE:", w)
             continue
-
         cv = cross_validation.KFold(len(training), n_folds=10,
                                     shuffle=False, random_state=None)
         for traincv, testcv in cv:
@@ -62,14 +56,12 @@ def cross_validate(top_words, nonnull=False):
             acc = nltk.classify.util.accuracy(classif, mytesting)
             mfsacc = nltk.classify.util.accuracy(mfs, mytesting)
 
-            accuracies.append(acc)
-            mfsaccuracies.append(mfsacc)
-            sizes.append(len(mytesting))
-    return accuracies, mfsaccuracies, sizes
+            out[w].append((acc,mfsacc,len(mytesting)))
+    return out
 
 def ispunct(word):
     import string
-    punctuations = string.punctuation + "«»¡¿—"
+    punctuations = string.punctuation + "«»¡¿—”“’‘"
     return (word in punctuations or
             all(c in punctuations for c in word))
 
@@ -87,29 +79,50 @@ def get_top_words(sl_sentences):
     out = []
     for (word, count) in mostcommon:
         if word not in STOPWORDS and not ispunct(word):
-            if count > 50:
-                out.append(word)
+            if count >= 50:
+                out.append((word, count))
             else:
                 break
     return out
 
-def save_crossvalidate_results(fn, accuracies, mfsaccuracies, sizes):
-    with open(fn, "w") as outfile:
-        for a,m,s in zip(accuracies, mfsaccuracies, sizes):
-            print("{0}\t{1}\t{2}".format(s,a,m), file=outfile)
-
 def do_a_case(casename, top_words, nonnull):
     print(casename)
-    accuracies, mfsaccuracies, sizes = cross_validate(top_words, nonnull=nonnull)
-    save_crossvalidate_results("CROSSVALIDATE-RESULTS-{0}".format(casename),
-        accuracies, mfsaccuracies, sizes)
+    results_table = cross_validate(top_words, nonnull=nonnull)
+    ##save_crossvalidate_results("CROSSVALIDATE-RESULTS-{0}".format(casename),
+    ##    results_table)
     print("WEIGHTED ACCURACIES!!")
-    total_acc = sum(a*s for a,s in zip(accuracies, sizes))
-    total_mfsacc = sum(m*s for m,s in zip(mfsaccuracies, sizes))
+
+    ## one entry into these per word
+    accuracies = []
+    mfsaccuracies = []
+    sizes = []
+    for w, resultslist in results_table.items():
+        totalacc = sum(acc * size for acc,mfsacc,size in resultslist)
+        totalmfsacc = sum(mfsacc * size for acc,mfsacc,size in resultslist)
+        totalsize = sum(size for acc,mfsacc,size in resultslist)
+
+        ## for this word
+        acc = totalacc / totalsize
+        mfsacc = totalmfsacc / totalsize
+        accuracies.append(acc)
+        mfsaccuracies.append(mfsacc)
+        sizes.append(totalsize)
+
+    total_acc = sum(accuracies)
+    total_mfsacc = sum(mfsaccuracies)
     avg = total_acc / sum(sizes)
     mfsavg = total_mfsacc / sum(sizes)
+
     print("classifiers:", avg)
     print("mfs:", mfsavg)
+
+    ## get the words with the biggest classifier vs mfs differences
+    ## words_with_differences = [(word, acc - mfsacc)
+    ##                           for (word, acc, mfsacc)
+    ##                           in zip(top_words, accuracies, mfsaccuracies)]
+    ## words_with_differences.sort(key=itemgetter(1), reverse=True)
+    ## for word, diff in words_with_differences:
+    ##     print("{0}\t{1}".format(word,diff))
 
 def load_stopwords(bitextfn):
     """Determine source language from the input filename."""
@@ -153,7 +166,6 @@ def main():
     trainingdata.set_sl_surface_sentences(surface_sentences)
 
     top_words = get_top_words(sl_sentences)
-    print("TOP WORDS IN SOURCE LANGUAGE", top_words)
     do_a_case("REGULAR", top_words, nonnull=False)
     do_a_case("NONNULL", top_words, nonnull=True)
 
