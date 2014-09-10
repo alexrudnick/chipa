@@ -9,6 +9,7 @@ import argparse
 from argparse import Namespace
 from operator import itemgetter
 from collections import defaultdict
+from collections import Counter
 
 import nltk
 
@@ -45,6 +46,18 @@ def main():
     with open("topwords.txt", "w") as topwordsout:
         for (i, (word, count)) in enumerate(top_words):
             print("{0} & {1} & {2} \\\\".format(1+i, word, count),
+                  file=topwordsout)
+
+    with open("topwords-translations.txt", "w") as topwordsout:
+        for (i, (word, count)) in enumerate(top_words):
+            training = trainingdata.trainingdata_for(word, nonnull=False)
+            labels = [label for (feat,label) in training]
+            counts = Counter(labels)
+            translations_l = []
+            for label, count in counts.most_common(5):
+                translations_l.append("{0} ({1})".format(label, count))
+            translations = ", ".join(translations_l)
+            print("{0} & {1} & {2} \\\\".format(1+i, word, translations),
                   file=topwordsout)
 
 if __name__ == "__main__": main()
