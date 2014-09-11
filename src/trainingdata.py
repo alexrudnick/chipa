@@ -1,11 +1,15 @@
 from operator import itemgetter
 
+import nltk
+
 import features
 from constants import UNTRANSLATED
 
 SL_SENTENCES = None
 TAGGED_SENTENCES = None
 SL_SENTENCES_SURFACE = None
+
+STOPWORDS = None
 
 def set_examples(sl_sentences, tagged_sentences):
     global SL_SENTENCES
@@ -74,7 +78,7 @@ def target_words_for_each_source_word(ss, ts, alignment):
     language, and a list of cdec-style alignments of the form source-target,
     for each source word, return the string of corresponding target words."""
     alignment = [tuple(map(int, pair.split('-'))) for pair in alignment]
-    out = [list() for i in range(len(ss))]
+    outlist = [list() for i in range(len(ss))]
     indices = [list() for i in range(len(ss))]
 
     ## We want to get the target words in target order.
@@ -84,7 +88,7 @@ def target_words_for_each_source_word(ss, ts, alignment):
         if (not indices[si]) or (ti == indices[si][-1] + 1):
             indices[si].append(ti)
             targetword = ts[ti]
-            out[si].append(targetword)
+            outlist[si].append(targetword)
         else:
             pass
             ## XXX: this is actually a pretty serious concern. What do?
@@ -92,7 +96,20 @@ def target_words_for_each_source_word(ss, ts, alignment):
             ## what it might look like in a Hiero phrase table.
             ## This happens a lot in the bible text apparently.
             # print("warning: non-contiguous target phrase")
-    return [" ".join(targetwords) for targetwords in out]
+    # return [" ".join(targetwords) for targetwords in outlist]
+
+    ## be a little aggressive about stripping punctuation
+    out = []
+    for targetlist in outlist:
+        new_tws = []
+        for tw in targetlist:
+            if not ispunct(tw):
+                new_tws.append(tw)
+        if not new_tws:
+            new_tws = [UNTRANSLATED]
+        out.append(" ".join(new_tws))
+    assert len(out) == len(ss)
+    return out
 
 def get_target_language_sentences(triple_sentences):
     """Return all of the "sentences" over the target language, used for training
@@ -108,3 +125,44 @@ def get_target_language_sentences(triple_sentences):
                 sentence.append(UNTRANSLATED)
         sentences.append(sentence)
     return sentences
+
+def ispunct(word):
+    import string
+    punctuations = string.punctuation + "«»¡¿—”“’‘"
+    return (word in punctuations or
+            all(c in punctuations for c in word))
+
+def get_top_words(sl_sentences):
+    """Take a list of sentences (each of which is a list of words), return the
+    words appearing over a certain threshold, ignoring punctuation and
+    stopwords."""
+
+    ## What if we just take all the words that occur at least 50 times?
+    fd = nltk.probability.FreqDist()
+    for sent in sl_sentences:
+        for w in sent:
+            fd[w] += 1
+    mostcommon = fd.most_common()
+    out = []
+    for (word, count) in mostcommon:
+        if word not in STOPWORDS and not ispunct(word):
+            if count >= 50:
+                out.append((word, count))
+            else:
+                break
+    return out
+
+def load_stopwords(bitextfn):
+    """Determine source language from the input filename."""
+    langs = bitextfn.split(".")[1]
+    sl = langs.split("-")[0]
+    assert sl in ["en", "es"], "wrong sl {0}".format(sl)
+    sl = "english" if sl == "en" else "spanish"
+
+    wordtext = nltk.load("corpora/stopwords/{0}".format(sl), format="text")
+    wordlist = wordtext.split()
+
+    out = set(wordlist)
+    ## XXX: remove estar from the set.
+    out.difference_update({"estar"})
+    return out

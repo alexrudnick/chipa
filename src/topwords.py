@@ -15,6 +15,7 @@ import nltk
 
 import trainingdata
 import clwsd_experiment
+from constants import UNTRANSLATED
 
 def get_argparser():
     parser = argparse.ArgumentParser(description='topwords')
@@ -27,7 +28,7 @@ def main():
     parser = get_argparser()
     args = parser.parse_args()
 
-    clwsd_experiment.STOPWORDS = clwsd_experiment.load_stopwords(args.bitextfn)
+    trainingdata.STOPWORDS = trainingdata.load_stopwords(args.bitextfn)
 
     triple_sentences = trainingdata.load_bitext_twofiles(args.bitextfn,
                                                          args.alignfn)
@@ -41,7 +42,7 @@ def main():
     surface_sentences = trainingdata.load_surface_file(args.surfacefn)
     trainingdata.set_sl_surface_sentences(surface_sentences)
 
-    top_words = clwsd_experiment.get_top_words(sl_sentences)
+    top_words = trainingdata.get_top_words(sl_sentences)
     with open("topwords.txt", "w") as topwordsout:
         for (i, (word, count)) in enumerate(top_words):
             print("{0} & {1} & {2} \\\\".format(1+i, word, count),
@@ -54,7 +55,9 @@ def main():
             counts = Counter(labels)
             translations_l = []
             for label, count in counts.most_common(5):
-                translations_l.append("{0} ({1})".format(label, count))
+                if label == UNTRANSLATED:
+                    label = "NULL"
+                translations_l.append("{0}".format(label))
             translations = ", ".join(translations_l)
             print("{0} & {1}".format(word, translations), file=topwordsout)
 
