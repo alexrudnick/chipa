@@ -155,7 +155,7 @@ def main():
 
     triple_sentences = trainingdata.load_bitext_twofiles(args.bitextfn,
                                                          args.alignfn)
-    tl_sentences = learn.get_target_language_sentences(triple_sentences)
+    tl_sentences = trainingdata.get_target_language_sentences(triple_sentences)
     sl_sentences = [s for (s,t,a) in triple_sentences]
     tagged_sentences = [list(zip(ss, ts))
                         for ss,ts in zip(sl_sentences, tl_sentences)]

@@ -15,7 +15,6 @@ import nltk
 
 import trainingdata
 import clwsd_experiment
-import learn
 
 def get_argparser():
     parser = argparse.ArgumentParser(description='topwords')
@@ -32,7 +31,7 @@ def main():
 
     triple_sentences = trainingdata.load_bitext_twofiles(args.bitextfn,
                                                          args.alignfn)
-    tl_sentences = learn.get_target_language_sentences(triple_sentences)
+    tl_sentences = trainingdata.get_target_language_sentences(triple_sentences)
     sl_sentences = [s for (s,t,a) in triple_sentences]
     tagged_sentences = [list(zip(ss, ts))
                         for ss,ts in zip(sl_sentences, tl_sentences)]
@@ -57,7 +56,6 @@ def main():
             for label, count in counts.most_common(5):
                 translations_l.append("{0} ({1})".format(label, count))
             translations = ", ".join(translations_l)
-            print("{0} & {1} & {2} \\\\".format(1+i, word, translations),
-                  file=topwordsout)
+            print("{0} & {1}".format(word, translations), file=topwordsout)
 
 if __name__ == "__main__": main()

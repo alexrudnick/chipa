@@ -1,5 +1,6 @@
-import features
+from operator import itemgetter
 
+import features
 from constants import UNTRANSLATED
 
 SL_SENTENCES = None
@@ -67,3 +68,43 @@ def load_surface_file(surfacebitextfn):
             source, target = bitext.split("|||")
             out_source.append(source.strip().lower().split())
     return out_source
+
+def target_words_for_each_source_word(ss, ts, alignment):
+    """Given a list of tokens in source language, a list of tokens in target
+    language, and a list of cdec-style alignments of the form source-target,
+    for each source word, return the string of corresponding target words."""
+    alignment = [tuple(map(int, pair.split('-'))) for pair in alignment]
+    out = [list() for i in range(len(ss))]
+    indices = [list() for i in range(len(ss))]
+
+    ## We want to get the target words in target order.
+    alignment.sort(key=itemgetter(0,1))
+    for (si,ti) in alignment:
+        ## make sure we're grabbing contiguous phrases
+        if (not indices[si]) or (ti == indices[si][-1] + 1):
+            indices[si].append(ti)
+            targetword = ts[ti]
+            out[si].append(targetword)
+        else:
+            pass
+            ## XXX: this is actually a pretty serious concern. What do?
+            ## You could imagine just going like word1 <GAP> word2 ... that's
+            ## what it might look like in a Hiero phrase table.
+            ## This happens a lot in the bible text apparently.
+            # print("warning: non-contiguous target phrase")
+    return [" ".join(targetwords) for targetwords in out]
+
+def get_target_language_sentences(triple_sentences):
+    """Return all of the "sentences" over the target language, used for training
+    the Source-Order language model."""
+    sentences = []
+    for (ss, ts, alignment) in triple_sentences:
+        tws = target_words_for_each_source_word(ss, ts, alignment)
+        sentence = []
+        for label in tws:
+            if label:
+                sentence.append(label)
+            else:
+                sentence.append(UNTRANSLATED)
+        sentences.append(sentence)
+    return sentences
