@@ -163,6 +163,9 @@ def load_stopwords(bitextfn):
     wordlist = wordtext.split()
 
     out = set(wordlist)
-    ## XXX: remove estar from the set.
+    ## XXX: remove some common verbs from the set.
     out.difference_update({"estar"})
+    out.difference_update({"have"})
+    out.difference_update({"be"})
+    out.difference_update({"do"})
     return out

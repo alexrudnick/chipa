@@ -47,8 +47,9 @@ def cross_validate(top_words, nonnull=False):
             mfs = learn.MFSClassifier()
             mfs.train(mytraining)
 
+            ## XXX: try l1 regularization and different values of C!
             classif = SklearnClassifier(LogisticRegression(C=0.1))
-            mytraining = mytraining + [({"absolutelynotafeature}":True},
+            mytraining = mytraining + [({"absolutelynotafeature":True},
                                         "absolutelynotalabel")]
             classif.train(mytraining)
             acc = nltk.classify.util.accuracy(classif, mytesting)

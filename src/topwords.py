@@ -16,6 +16,7 @@ import nltk
 import trainingdata
 import clwsd_experiment
 from constants import UNTRANSLATED
+from entropy import entropy
 
 def get_argparser():
     parser = argparse.ArgumentParser(description='topwords')
@@ -48,7 +49,8 @@ def main():
             print("{0} & {1} & {2} \\\\".format(1+i, word, count),
                   file=topwordsout)
 
-    with open("topwords-translations.txt", "w") as topwordsout:
+    with open("topwords-translations.txt", "w") as topwordsout, \
+         open("topwords-entropy.txt", "w") as entropyout:
         for (i, (word, count)) in enumerate(top_words):
             training = trainingdata.trainingdata_for(word, nonnull=False)
             labels = [label for (feat,label) in training]
@@ -60,5 +62,8 @@ def main():
                 translations_l.append("{0}".format(label))
             translations = ", ".join(translations_l)
             print("{0} & {1}".format(word, translations), file=topwordsout)
+
+            bits = entropy(labels)
+            print("{0} & {1}".format(word, "%.2f" % bits), file=entropyout)
 
 if __name__ == "__main__": main()
