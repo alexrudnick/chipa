@@ -30,6 +30,7 @@ def build_instance(tagged_sentence, surface, index):
     return (feat, label)
 
 def trainingdata_for(word, nonnull=False):
+    assert type(word) is str
     training = []
     for (sent_index, (ss,tagged)) in enumerate(zip(SL_SENTENCES, TAGGED_SENTENCES)):
         ## XXX: what if the word is in the source sentence more than once?
@@ -134,8 +135,8 @@ def ispunct(word):
 
 def get_top_words(sl_sentences):
     """Take a list of sentences (each of which is a list of words), return the
-    words appearing over a certain threshold, ignoring punctuation and
-    stopwords."""
+    (word,count) pairs for the words appearing over a certain threshold number
+    of times, ignoring punctuation and stopwords."""
 
     ## What if we just take all the words that occur at least 50 times?
     fd = nltk.probability.FreqDist()

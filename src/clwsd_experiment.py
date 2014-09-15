@@ -29,14 +29,14 @@ def cross_validate(top_words, nonnull=False):
 
     ## return a map from word to [(accuracy, mfsaccuracy, size)]
     out = defaultdict(list)
-    for w in top_words:
+    for (w,count) in top_words:
         sys.stdout.flush()
         training = trainingdata.trainingdata_for(w, nonnull=nonnull)
         # print('doing word "{0}" with {1} instances'.format(w, len(training)))
         labels = set(label for (feat,label) in training)
         # print("possible labels:", labels)
         if len(labels) < 2:
-            print("ONLY ONE SENSE:", w)
+            print("ONLY ONE SENSE:", w, labels)
             continue
         cv = cross_validation.KFold(len(training), n_folds=10,
                                     shuffle=False, random_state=None)
@@ -48,7 +48,7 @@ def cross_validate(top_words, nonnull=False):
             mfs.train(mytraining)
 
             ## XXX: try l1 regularization and different values of C!
-            classif = SklearnClassifier(LogisticRegression(C=0.1))
+            classif = SklearnClassifier(LogisticRegression(C=1.0, penalty='l1'))
             mytraining = mytraining + [({"absolutelynotafeature":True},
                                         "absolutelynotalabel")]
             classif.train(mytraining)
