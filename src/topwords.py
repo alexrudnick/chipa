@@ -25,6 +25,8 @@ def get_argparser():
     parser.add_argument('--surfacefn', type=str, required=True)
     return parser
 
+paperwords = "ser haber decir dios estar hacer tierra ir/ser pueblo pues si así padre señor poner mujer volver poder ir salir judá mismo llevar dicho cielo ojo llegar entrar llamar subir obra hija dejar".split()
+
 def main():
     parser = get_argparser()
     args = parser.parse_args()
@@ -51,7 +53,8 @@ def main():
 
     with open("topwords-translations.txt", "w") as topwordsout, \
          open("topwords-entropy.txt", "w") as entropyout:
-        for (i, (word, count)) in enumerate(top_words):
+        ## for (i, (word, count)) in enumerate(top_words):
+        for (i, word) in enumerate(paperwords):
             training = trainingdata.trainingdata_for(word, nonnull=False)
             labels = [label for (feat,label) in training]
             counts = Counter(labels)
@@ -64,6 +67,8 @@ def main():
             print("{0} & {1}".format(word, translations), file=topwordsout)
 
             bits = entropy(labels)
-            print("{0} & {1}".format(word, "%.2f" % bits), file=entropyout)
+            if word in paperwords:
+                print("%30s%30.2f" % (word, bits), file=entropyout)
+            ## print("{0} & {1}".format(word, "%.2f" % bits), 
 
 if __name__ == "__main__": main()
