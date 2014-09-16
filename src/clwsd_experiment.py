@@ -56,20 +56,33 @@ def cross_validate(top_words, nonnull=False):
             mfs.train(mytraining)
 
             ## XXX: try l1 regularization and different values of C!
-            classif = SklearnClassifier(LogisticRegression(C=0.1, penalty='l2'))
+            classif = SklearnClassifier(LogisticRegression(C=1.0, penalty='l2'))
             mytraining = mytraining + [({"absolutelynotafeature":True},
                                         "absolutelynotalabel")]
             classif.train(mytraining)
             ncorrect = count_correct(classif, mytesting)
-            ncorrectmfs = count_correct(classif, mytesting)
+            ncorrectmfs = count_correct(mfs, mytesting)
             out[w].append((ncorrect,ncorrectmfs,len(mytesting)))
     return out
+
+def words_with_differences(results_table):
+    """get the words with the biggest classifier vs mfs differences"""
+    ## these are going to be the proportion of the cases that classifiers win
+    ## over mfs.
+    word_diff_pairs = []
+    for w, resultslist in results_table.items():
+        totalcorrect = sum(correct for (correct,y,z) in resultslist)
+        totalmfscorrect = sum(correct for (x,mfscorrect,z) in resultslist)
+        totalsize = sum(correct for (x,z,size) in resultslist)
+        word_diff_pairs.append((word,
+                               (totalcorrect - totalmfscorrect) / totalsize))
+    words_with_differences.sort(key=itemgetter(1), reverse=True)
+    for word, diff in words_with_differences:
+        print("{0}\t{1}".format(word,diff))
 
 def do_a_case(casename, top_words, nonnull):
     print(casename)
     results_table = cross_validate(top_words, nonnull=nonnull)
-    ##save_crossvalidate_results("CROSSVALIDATE-RESULTS-{0}".format(casename),
-    ##    results_table)
     print("WEIGHTED ACCURACIES!!")
 
     ## one entry into these per word
@@ -85,14 +98,7 @@ def do_a_case(casename, top_words, nonnull):
     mfsavg = sum(mfscorrects) / sum(sizes)
     print("classifiers:", avg)
     print("mfs:", mfsavg)
-
-    ## get the words with the biggest classifier vs mfs differences
-    ## words_with_differences = [(word, acc - mfsacc)
-    ##                           for (word, acc, mfsacc)
-    ##                           in zip(top_words, accuracies, mfsaccuracies)]
-    ## words_with_differences.sort(key=itemgetter(1), reverse=True)
-    ## for word, diff in words_with_differences:
-    ##     print("{0}\t{1}".format(word,diff))
+    # words_with_differences(results_table)
 
 def get_argparser():
     parser = argparse.ArgumentParser(description='clwsd_experiment')
