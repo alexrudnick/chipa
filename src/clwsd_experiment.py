@@ -23,13 +23,21 @@ import learn
 import trainingdata
 import brownclusters
 
+def count_correct(classifier, testdata):
+    """Given an NLTK-style classifier and some test data, count how many of the
+    test instances this classifier gets correct."""
+    ## results = classifier.batch_classify([fs for (fs,l) in testdata])
+    results = [classifier.classify(fs) for (fs,l) in testdata]
+    correct = [l==r for ((fs,l), r) in zip(testdata, results)]
+    return correct.count(True)
+
 def cross_validate(top_words, nonnull=False):
     """Given the most common words in the Spanish corpus, cross-validate our
     classifiers for each of those."""
 
     ## return a map from word to [(accuracy, mfsaccuracy, size)]
     out = defaultdict(list)
-    for (w,count) in top_words:
+    for w in top_words:
         sys.stdout.flush()
         training = trainingdata.trainingdata_for(w, nonnull=nonnull)
         # print('doing word "{0}" with {1} instances'.format(w, len(training)))
@@ -48,14 +56,13 @@ def cross_validate(top_words, nonnull=False):
             mfs.train(mytraining)
 
             ## XXX: try l1 regularization and different values of C!
-            classif = SklearnClassifier(LogisticRegression(C=1.0, penalty='l1'))
+            classif = SklearnClassifier(LogisticRegression(C=0.1, penalty='l2'))
             mytraining = mytraining + [({"absolutelynotafeature":True},
                                         "absolutelynotalabel")]
             classif.train(mytraining)
-            acc = nltk.classify.util.accuracy(classif, mytesting)
-            mfsacc = nltk.classify.util.accuracy(mfs, mytesting)
-
-            out[w].append((acc,mfsacc,len(mytesting)))
+            ncorrect = count_correct(classif, mytesting)
+            ncorrectmfs = count_correct(classif, mytesting)
+            out[w].append((ncorrect,ncorrectmfs,len(mytesting)))
     return out
 
 def do_a_case(casename, top_words, nonnull):
@@ -66,26 +73,16 @@ def do_a_case(casename, top_words, nonnull):
     print("WEIGHTED ACCURACIES!!")
 
     ## one entry into these per word
-    accuracies = []
-    mfsaccuracies = []
+    corrects = []
+    mfscorrects = []
     sizes = []
     for w, resultslist in results_table.items():
-        totalacc = sum(acc * size for acc,mfsacc,size in resultslist)
-        totalmfsacc = sum(mfsacc * size for acc,mfsacc,size in resultslist)
-        totalsize = sum(size for acc,mfsacc,size in resultslist)
-
-        ## for this word
-        acc = totalacc / totalsize
-        mfsacc = totalmfsacc / totalsize
-        accuracies.append(acc)
-        mfsaccuracies.append(mfsacc)
-        sizes.append(totalsize)
-
-    total_acc = sum(accuracies)
-    total_mfsacc = sum(mfsaccuracies)
-    avg = total_acc / sum(sizes)
-    mfsavg = total_mfsacc / sum(sizes)
-
+        for (correct,mfscorrect,size) in resultslist:
+            corrects.append(correct)
+            mfscorrects.append(mfscorrect)
+            sizes.append(size)
+    avg = sum(corrects) / sum(sizes)
+    mfsavg = sum(mfscorrects) / sum(sizes)
     print("classifiers:", avg)
     print("mfs:", mfsavg)
 
@@ -127,6 +124,7 @@ def main():
     trainingdata.set_sl_surface_sentences(surface_sentences)
 
     top_words = trainingdata.get_top_words(sl_sentences)
+    top_words = [w for (w,count) in top_words]
     do_a_case("REGULAR", top_words, nonnull=False)
     do_a_case("NONNULL", top_words, nonnull=True)
 
