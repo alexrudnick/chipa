@@ -79,6 +79,7 @@ class MFSClassifier(nltk.classify.ClassifierI):
     def __init__(self):
         self.fd = nltk.probability.FreqDist()
     def train(self, labeled_featuresets):
+        self.fd.clear()
         for (f,label) in labeled_featuresets:
             self.fd[label] += 1 
     def classify(self, featureset):

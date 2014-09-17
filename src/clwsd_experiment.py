@@ -31,38 +31,29 @@ def count_correct(classifier, testdata):
     correct = [l==r for ((fs,l), r) in zip(testdata, results)]
     return correct.count(True)
 
-def cross_validate(top_words, nonnull=False):
+def cross_validate(classifier, top_words, nonnull=False):
     """Given the most common words in the Spanish corpus, cross-validate our
     classifiers for each of those."""
-
-    ## return a map from word to [(accuracy, mfsaccuracy, size)]
+    ## return a map from word to [(ncorrect,size)]
     out = defaultdict(list)
     for w in top_words:
-        sys.stdout.flush()
         training = trainingdata.trainingdata_for(w, nonnull=nonnull)
-        # print('doing word "{0}" with {1} instances'.format(w, len(training)))
         labels = set(label for (feat,label) in training)
-        # print("possible labels:", labels)
         if len(labels) < 2:
-            print("ONLY ONE SENSE:", w, labels)
+            continue
+        if len(training) < 10:
+            print("not enough samples for", w)
             continue
         cv = cross_validation.KFold(len(training), n_folds=10,
                                     shuffle=False, random_state=None)
         for traincv, testcv in cv:
-            mytraining = training[traincv[0]:traincv[len(traincv)-1]]
-            mytesting  = training[testcv[0]:testcv[len(testcv)-1]]
-
-            mfs = learn.MFSClassifier()
-            mfs.train(mytraining)
-
-            ## XXX: try l1 regularization and different values of C!
-            classif = SklearnClassifier(LogisticRegression(C=1.0, penalty='l2'))
+            mytraining = [training[i] for i in traincv]
+            mytesting = [training[i] for i in testcv]
             mytraining = mytraining + [({"absolutelynotafeature":True},
                                         "absolutelynotalabel")]
-            classif.train(mytraining)
-            ncorrect = count_correct(classif, mytesting)
-            ncorrectmfs = count_correct(mfs, mytesting)
-            out[w].append((ncorrect,ncorrectmfs,len(mytesting)))
+            classifier.train(mytraining)
+            ncorrect = count_correct(classifier, mytesting)
+            out[w].append((ncorrect,len(mytesting)))
     return out
 
 def words_with_differences(results_table):
@@ -80,24 +71,19 @@ def words_with_differences(results_table):
     for word, diff in words_with_differences:
         print("{0}\t{1}".format(word,diff))
 
-def do_a_case(casename, top_words, nonnull):
+def do_a_case(casename, classifier, top_words, nonnull):
     print(casename)
-    results_table = cross_validate(top_words, nonnull=nonnull)
-    print("WEIGHTED ACCURACIES!!")
-
+    results_table = cross_validate(classifier, top_words, nonnull=nonnull)
     ## one entry into these per word
     corrects = []
     mfscorrects = []
     sizes = []
     for w, resultslist in results_table.items():
-        for (correct,mfscorrect,size) in resultslist:
+        for (correct,size) in resultslist:
             corrects.append(correct)
-            mfscorrects.append(mfscorrect)
             sizes.append(size)
     avg = sum(corrects) / sum(sizes)
-    mfsavg = sum(mfscorrects) / sum(sizes)
-    print("classifiers:", avg)
-    print("mfs:", mfsavg)
+    print("accuracy:", avg)
     # words_with_differences(results_table)
 
 def get_argparser():
@@ -131,7 +117,25 @@ def main():
 
     top_words = trainingdata.get_top_words(sl_sentences)
     top_words = [w for (w,count) in top_words]
-    do_a_case("REGULAR", top_words, nonnull=False)
-    do_a_case("NONNULL", top_words, nonnull=True)
+
+    THETOL = 0.1
+    classifier_pairs = []
+    classifier_pairs.append(("MFS", learn.MFSClassifier()))
+
+    ## trying a bunch of L1 settings
+    for c in [0.1, 1, 10, 100, 1000]:
+        classifier = SklearnClassifier(LogisticRegression(C=c, penalty='l1', tol=THETOL))
+        classifier_pairs.append(("maxent-l1-c{0}".format(c), classifier))
+
+    ## trying a bunch of L2 settings
+    for c in [0.1, 1, 10, 100, 1000]:
+        classifier = SklearnClassifier(LogisticRegression(C=c, penalty='l2', tol=THETOL))
+        classifier_pairs.append(("maxent-l2-c{0}".format(c), classifier))
+
+    for (name, classifier) in classifier_pairs:
+        do_a_case(name + "-regular", classifier, top_words, nonnull=False)
+
+    for (name, classifier) in classifier_pairs:
+        do_a_case(name + "-nonnull", classifier, top_words, nonnull=True)
 
 if __name__ == "__main__": main()

@@ -1,4 +1,5 @@
 from operator import itemgetter
+import functools
 
 import nltk
 
@@ -29,6 +30,7 @@ def build_instance(tagged_sentence, surface, index):
     label = tagged_sentence[index][1]
     return (feat, label)
 
+@functools.lru_cache(maxsize=100000)
 def trainingdata_for(word, nonnull=False):
     assert type(word) is str
     training = []
@@ -41,7 +43,6 @@ def trainingdata_for(word, nonnull=False):
     if nonnull:
         training = [(feat,label) for (feat,label) in training
                                  if label != UNTRANSLATED]
-
     return training
     ## XXX: just take the first 50 instances
     ## return training[:50]
