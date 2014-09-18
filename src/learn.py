@@ -141,22 +141,3 @@ def distribution_for(word):
     for (f,label) in labeled_featuresets:
         fd[label] += 1 
     return fd
-
-def repl():
-    while True:
-        try:
-            line = input('> ')
-        except: break
-        line = line.strip()
-        sentences = nltk.sent_tokenize(line)
-        s_tokenized = [nltk.word_tokenize(sent) for sent in sentences]
-        tokenized = []
-        for sent in s_tokenized:
-            tokenized.extend(sent)
-        print("tokenized:", tokenized)
-        answers = disambiguate_words(tokenized)
-        print(list(zip(tokenized, answers)))
-        for w in tokenized:
-            print(w, end=" ")
-            fd = distribution_for(w)
-            print(fd.most_common(10))
