@@ -82,17 +82,23 @@ def getlabel(tagged_sent, i):
     else:
         assert False, "don't ask for the future"
 
+FEATURES = []
+def load_featurefile(featurefn):
+    """Given a filename, load it. Should be one name of a feature function per
+    line."""
+    names = globals()
+    with open(featurefn) as infile:
+        for line in infile:
+            funkname = line.strip()
+            assert funkname in names, \
+                "{0} is not a known function".format(funkname)
+            FEATURES.append(funkname)
+
 def extract(tagged_sent, surface, index):
     """Given a WSDProblem, return the features for the sentence."""
     out = {}
-    allfeatures = [
-        bagofwords,
-        window,
-        bagofsurface,
-        surfacewindow,
-        #bagofbrown,
-        #brownwindow,
-    ]
+    allfeatures = [globals()[funkname] for funkname in FEATURES]
+    assert(allfeatures), "need some features"
     for funk in allfeatures:
         extracted = funk(tagged_sent, surface, index)
         if DEBUG: print(funk.__doc__.strip()); print(extracted)

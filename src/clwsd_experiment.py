@@ -16,12 +16,14 @@ import nltk
 from nltk.classify.scikitlearn import SklearnClassifier
 from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.linear_model import LogisticRegression
-from sklearn.pipeline import Pipeline
+from sklearn.svm import LinearSVC
+from sklearn.ensemble import RandomForestClassifier
 from sklearn import cross_validation
 
 import learn
 import trainingdata
 import brownclusters
+import features
 
 def count_correct(classifier, testdata):
     """Given an NLTK-style classifier and some test data, count how many of the
@@ -53,6 +55,8 @@ def cross_validate(classifier, top_words, nonnull=False):
                                         "absolutelynotalabel")]
             classifier.train(mytraining)
             ncorrect = count_correct(classifier, mytesting)
+            ## print("##", w, ncorrect, len(mytesting))
+            sys.stdout.flush()
             out[w].append((ncorrect,len(mytesting)))
     return out
 
@@ -73,6 +77,7 @@ def words_with_differences(results_table):
 
 def do_a_case(casename, classifier, top_words, nonnull):
     print(casename)
+    sys.stdout.flush()
     results_table = cross_validate(classifier, top_words, nonnull=nonnull)
     ## one entry into these per word
     corrects = []
@@ -92,6 +97,7 @@ def get_argparser():
     parser.add_argument('--alignfn', type=str, required=True)
     parser.add_argument('--surfacefn', type=str, required=True)
     parser.add_argument('--clusterfn', type=str, required=False)
+    parser.add_argument('--featurefn', type=str, required=True)
     return parser
 
 def main():
@@ -100,6 +106,8 @@ def main():
 
     if args.clusterfn:
         brownclusters.set_paths_file(args.clusterfn)
+
+    features.load_featurefile(args.featurefn)
 
     trainingdata.STOPWORDS = trainingdata.load_stopwords(args.bitextfn)
 
@@ -123,14 +131,17 @@ def main():
     classifier_pairs.append(("MFS", learn.MFSClassifier()))
 
     ## trying a bunch of L1 settings
-    for c in [0.1, 1, 10, 100, 1000]:
-        classifier = SklearnClassifier(LogisticRegression(C=c, penalty='l1', tol=THETOL))
-        classifier_pairs.append(("maxent-l1-c{0}".format(c), classifier))
+    ##for c in [1]:
+    ##     classifier = SklearnClassifier(LogisticRegression(C=c, penalty='l1', tol=THETOL))
+    ##     classifier_pairs.append(("maxent-l1-c{0}".format(c), classifier))
 
-    ## trying a bunch of L2 settings
-    for c in [0.1, 1, 10, 100, 1000]:
-        classifier = SklearnClassifier(LogisticRegression(C=c, penalty='l2', tol=THETOL))
-        classifier_pairs.append(("maxent-l2-c{0}".format(c), classifier))
+    #### trying a bunch of L2 settings
+    ##for c in [1, 10]:
+    ##    classifier = SklearnClassifier(LogisticRegression(C=c, penalty='l2', tol=THETOL))
+    ##    classifier_pairs.append(("maxent-l2-c{0}".format(c), classifier))
+
+    classifier = SklearnClassifier(LinearSVC(C=1, penalty='l2', tol=THETOL))
+    classifier_pairs.append(("linearsvc-l2-c1", classifier))
 
     for (name, classifier) in classifier_pairs:
         do_a_case(name + "-regular", classifier, top_words, nonnull=False)
