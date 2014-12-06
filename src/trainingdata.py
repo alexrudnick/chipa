@@ -4,6 +4,7 @@ import functools
 import nltk
 
 import features
+import util
 from constants import UNTRANSLATED
 
 SL_SENTENCES = None
@@ -18,12 +19,11 @@ def set_examples(sl_sentences, tagged_sentences):
     SL_SENTENCES = sl_sentences
     TAGGED_SENTENCES = tagged_sentences
 
-def set_sl_surface_sentences(surface_sentences):
-    global SL_SENTENCES_SURFACE
-    global SL_SENTENCES
-    SL_SENTENCES_SURFACE = surface_sentences
-
-    assert len(SL_SENTENCES_SURFACE) == len(SL_SENTENCES)
+#def set_sl_surface_sentences(surface_sentences):
+#    global SL_SENTENCES_SURFACE
+#    global SL_SENTENCES
+#    SL_SENTENCES_SURFACE = surface_sentences
+#    assert len(SL_SENTENCES_SURFACE) == len(SL_SENTENCES)
 
 def build_instance(tagged_sentence, surface, index):
     feat = features.extract(tagged_sentence, surface, index)
@@ -47,7 +47,11 @@ def trainingdata_for(word, nonnull=False):
     ## XXX: just take the first 50 instances
     ## return training[:50]
 
-def load_bitext_twofiles(bitextfn, alignfn):
+## XXX: what we should be doing here is setting the corpus so that we know what
+## words we're going to be looking for ahead of time.
+## as we go through, save the training data for each relevant word.
+
+def load_bitext(bitextfn, alignfn):
     """Take in bitext filename and then alignment filename.
     Return a list of (source,target,alignment) tuples. Lowercase everything.
     NB: input files should already be tokenized and lemmatized at this point.
@@ -64,16 +68,6 @@ def load_bitext_twofiles(bitextfn, alignfn):
             out_target.append(target.strip().lower().split())
             out_align.append(alignment.strip().split())
     return list(zip(out_source, out_target, out_align))
-
-def load_surface_file(surfacebitextfn):
-    """Load up the 'surface' version of the bitext. We're just going to store
-    the source side for now."""
-    out_source = []
-    with open(surfacebitextfn) as infile_bitext:
-        for bitext in infile_bitext:
-            source, target = bitext.split("|||")
-            out_source.append(source.strip().lower().split())
-    return out_source
 
 def target_words_for_each_source_word(ss, ts, alignment):
     """Given a list of tokens in source language, a list of tokens in target
@@ -148,7 +142,7 @@ def get_top_words(sl_sentences):
     out = []
     for (word, count) in mostcommon:
         if word not in STOPWORDS and not ispunct(word):
-            if count >= 50:
+            if count >= 200:
                 out.append((word, count))
             else:
                 break

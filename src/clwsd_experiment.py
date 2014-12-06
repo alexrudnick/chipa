@@ -20,10 +20,11 @@ from sklearn.svm import LinearSVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import cross_validation
 
-import learn
-import trainingdata
 import brownclusters
 import features
+import learn
+import trainingdata
+import util
 
 def count_correct(classifier, testdata):
     """Given an NLTK-style classifier and some test data, count how many of the
@@ -38,7 +39,9 @@ def cross_validate(classifier, top_words, nonnull=False):
     classifiers for each of those."""
     ## return a map from word to [(ncorrect,size)]
     out = defaultdict(list)
+    util.dprint("cross validating this many words:", len(top_words))
     for w in top_words:
+        ## util.dprint("cross validating:", w)
         training = trainingdata.trainingdata_for(w, nonnull=nonnull)
         labels = set(label for (feat,label) in training)
         if len(labels) < 2:
@@ -75,6 +78,7 @@ def words_with_differences(results_table):
     for word, diff in words_with_differences:
         print("{0}\t{1}".format(word,diff))
 
+@util.timeexecution
 def do_a_case(casename, classifier, top_words, nonnull):
     print(casename)
     sys.stdout.flush()
@@ -95,7 +99,7 @@ def get_argparser():
     parser = argparse.ArgumentParser(description='clwsd_experiment')
     parser.add_argument('--bitextfn', type=str, required=True)
     parser.add_argument('--alignfn', type=str, required=True)
-    parser.add_argument('--surfacefn', type=str, required=True)
+    parser.add_argument('--annotatedfn', type=str, required=True)
     parser.add_argument('--clusterfn', type=str, required=False)
     parser.add_argument('--featurefn', type=str, required=True)
     return parser
@@ -111,17 +115,14 @@ def main():
 
     trainingdata.STOPWORDS = trainingdata.load_stopwords(args.bitextfn)
 
-    triple_sentences = trainingdata.load_bitext_twofiles(args.bitextfn,
-                                                         args.alignfn)
+    triple_sentences = trainingdata.load_bitext(args.bitextfn, args.alignfn)
     tl_sentences = trainingdata.get_target_language_sentences(triple_sentences)
     sl_sentences = [s for (s,t,a) in triple_sentences]
     tagged_sentences = [list(zip(ss, ts))
                         for ss,ts in zip(sl_sentences, tl_sentences)]
     trainingdata.set_examples(sl_sentences,tagged_sentences)
 
-    ## Now we require the surface forms too.
-    surface_sentences = trainingdata.load_surface_file(args.surfacefn)
-    trainingdata.set_sl_surface_sentences(surface_sentences)
+    source_annotated = annotated_corpus.load_corpus(args.annotatedfn)
 
     top_words = trainingdata.get_top_words(sl_sentences)
     top_words = [w for (w,count) in top_words]
@@ -131,14 +132,14 @@ def main():
     classifier_pairs.append(("MFS", learn.MFSClassifier()))
 
     ## trying a bunch of L1 settings
-    ##for c in [1]:
-    ##     classifier = SklearnClassifier(LogisticRegression(C=c, penalty='l1', tol=THETOL))
-    ##     classifier_pairs.append(("maxent-l1-c{0}".format(c), classifier))
+    for c in [1]:
+         classifier = SklearnClassifier(LogisticRegression(C=c, penalty='l1', tol=THETOL))
+         classifier_pairs.append(("maxent-l1-c{0}".format(c), classifier))
 
     #### trying a bunch of L2 settings
-    ##for c in [1, 10]:
-    ##    classifier = SklearnClassifier(LogisticRegression(C=c, penalty='l2', tol=THETOL))
-    ##    classifier_pairs.append(("maxent-l2-c{0}".format(c), classifier))
+    for c in [1, 10]:
+        classifier = SklearnClassifier(LogisticRegression(C=c, penalty='l2', tol=THETOL))
+        classifier_pairs.append(("maxent-l2-c{0}".format(c), classifier))
 
     classifier = SklearnClassifier(LinearSVC(C=1, penalty='l2', tol=THETOL))
     classifier_pairs.append(("linearsvc-l2-c1", classifier))

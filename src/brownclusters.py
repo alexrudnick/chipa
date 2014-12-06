@@ -16,6 +16,7 @@ def set_paths_file(fn):
 
 def clusters_for_sentence(words):
     """Given a list of words, return the list of clusters for those words."""
+    assert THEMAP, "Need to load some Brown clusters. Specify --clusterfn ?"
     return [THEMAP[w] for w in words]
 
 def main():
