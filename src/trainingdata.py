@@ -19,11 +19,16 @@ def set_examples(sl_sentences, tagged_sentences):
     SL_SENTENCES = sl_sentences
     TAGGED_SENTENCES = tagged_sentences
 
-#def set_sl_surface_sentences(surface_sentences):
-#    global SL_SENTENCES_SURFACE
-#    global SL_SENTENCES
-#    SL_SENTENCES_SURFACE = surface_sentences
-#    assert len(SL_SENTENCES_SURFACE) == len(SL_SENTENCES)
+def set_sl_annotated(sl_annotated):
+    global SL_SENTENCES_SURFACE
+    global SL_SENTENCES
+
+    surface_sentences = []
+    for sentence in sl_annotated:
+        surface_sent = [token.surface for token in sentence]
+        surface_sentences.append(surface_sent)
+    SL_SENTENCES_SURFACE = surface_sentences
+    assert len(SL_SENTENCES_SURFACE) == len(SL_SENTENCES)
 
 def build_instance(tagged_sentence, surface, index):
     feat = features.extract(tagged_sentence, surface, index)
@@ -43,9 +48,9 @@ def trainingdata_for(word, nonnull=False):
     if nonnull:
         training = [(feat,label) for (feat,label) in training
                                  if label != UNTRANSLATED]
-    return training
     ## XXX: just take the first 50 instances
     ## return training[:50]
+    return training
 
 ## XXX: what we should be doing here is setting the corpus so that we know what
 ## words we're going to be looking for ahead of time.

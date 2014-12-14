@@ -20,6 +20,7 @@ from sklearn.svm import LinearSVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import cross_validation
 
+import annotated_corpus
 import brownclusters
 import features
 import learn
@@ -123,6 +124,7 @@ def main():
     trainingdata.set_examples(sl_sentences,tagged_sentences)
 
     source_annotated = annotated_corpus.load_corpus(args.annotatedfn)
+    trainingdata.set_sl_annotated(source_annotated)
 
     top_words = trainingdata.get_top_words(sl_sentences)
     top_words = [w for (w,count) in top_words]
