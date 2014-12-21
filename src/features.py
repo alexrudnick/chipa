@@ -10,13 +10,13 @@ import nltk
 import brownclusters
 DEBUG=False
 
-def bagofwords(tagged_sent, surface, index):
+def bagofwords(tagged_sent, annotated, index):
     """Bag of words features."""
     source = nltk.tag.untag(tagged_sent)
     return dict([('cw(%s)' % w, True) for w in source])
 
 WIDTH=3
-def window(tagged_sent, surface, index):
+def window(tagged_sent, annotated, index):
     """Immediate surrounding context features."""
     source = nltk.tag.untag(tagged_sent)
     out = {}
@@ -32,19 +32,21 @@ def window(tagged_sent, surface, index):
     out.update(windowfeatures)
     return out
 
-def bagofbrown(tagged_sent, surface, index):
+def bagofbrown(tagged_sent, annotated, index):
     """Bag of brown clusters for the whole sentence."""
     source = nltk.tag.untag(tagged_sent)
     clusters = brownclusters.clusters_for_sentence(source)
     return dict([('bb(%s)' % w, True) for w in clusters])
 
-def bagofsurface(tagged_sent, surface, index):
+def bagofsurface(tagged_sent, annotated, index):
     """Bag of words features."""
+    surface = [token.surface for token in annotated]
     return dict([('bs(%s)' % w, True) for w in surface])
 
-def surfacewindow(tagged_sent, surface, index):
+def surfacewindow(tagged_sent, annotated, index):
     """Immediate surrounding context features from the surface forms."""
     out = {}
+    surface = [token.surface for token in annotated]
     ## window of WIDTH before
     lowerbound = max(0, index-WIDTH)
     windowfeatures = dict([('sw(%s)' % w, True)
@@ -57,7 +59,7 @@ def surfacewindow(tagged_sent, surface, index):
     out.update(windowfeatures)
     return out
 
-def brownwindow(tagged_sent, surface, index):
+def brownwindow(tagged_sent, annotated, index):
     """Immediate surrounding brown clusters."""
     source = nltk.tag.untag(tagged_sent)
     clusters = brownclusters.clusters_for_sentence(source)
@@ -94,13 +96,13 @@ def load_featurefile(featurefn):
                 "{0} is not a known function".format(funkname)
             FEATURES.append(funkname)
 
-def extract(tagged_sent, surface, index):
+def extract(tagged_sent, annotated, index):
     """Given a WSDProblem, return the features for the sentence."""
     out = {}
     allfeatures = [globals()[funkname] for funkname in FEATURES]
     assert(allfeatures), "need some features"
     for funk in allfeatures:
-        extracted = funk(tagged_sent, surface, index)
+        extracted = funk(tagged_sent, annotated, index)
         if DEBUG: print(funk.__doc__.strip()); print(extracted)
         out.update(extracted)
     return out

@@ -9,7 +9,7 @@ from constants import UNTRANSLATED
 
 SL_SENTENCES = None
 TAGGED_SENTENCES = None
-SL_SENTENCES_SURFACE = None
+SL_SENTENCES_ANNOTATED = None
 
 STOPWORDS = None
 
@@ -20,18 +20,18 @@ def set_examples(sl_sentences, tagged_sentences):
     TAGGED_SENTENCES = tagged_sentences
 
 def set_sl_annotated(sl_annotated):
-    global SL_SENTENCES_SURFACE
+    global SL_SENTENCES_ANNOTATED
     global SL_SENTENCES
 
+    SL_SENTENCES_ANNOTATED = sl_annotated
     surface_sentences = []
     for sentence in sl_annotated:
         surface_sent = [token.surface for token in sentence]
         surface_sentences.append(surface_sent)
-    SL_SENTENCES_SURFACE = surface_sentences
-    assert len(SL_SENTENCES_SURFACE) == len(SL_SENTENCES)
+    assert len(SL_SENTENCES_ANNOTATED) == len(SL_SENTENCES)
 
-def build_instance(tagged_sentence, surface, index):
-    feat = features.extract(tagged_sentence, surface, index)
+def build_instance(tagged_sentence, annotated, index):
+    feat = features.extract(tagged_sentence, annotated, index)
     label = tagged_sentence[index][1]
     return (feat, label)
 
@@ -43,8 +43,8 @@ def trainingdata_for(word, nonnull=False):
         ## XXX: what if the word is in the source sentence more than once?
         if word in ss:
             index = ss.index(word)
-            surface = SL_SENTENCES_SURFACE[sent_index]
-            training.append(build_instance(tagged, surface, index))
+            annotated = SL_SENTENCES_ANNOTATED[sent_index]
+            training.append(build_instance(tagged, annotated, index))
     if nonnull:
         training = [(feat,label) for (feat,label) in training
                                  if label != UNTRANSLATED]
