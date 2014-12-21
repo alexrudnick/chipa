@@ -21,7 +21,6 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn import cross_validation
 
 import annotated_corpus
-import brownclusters
 import features
 import learn
 import trainingdata
@@ -101,16 +100,12 @@ def get_argparser():
     parser.add_argument('--bitextfn', type=str, required=True)
     parser.add_argument('--alignfn', type=str, required=True)
     parser.add_argument('--annotatedfn', type=str, required=True)
-    parser.add_argument('--clusterfn', type=str, required=False)
     parser.add_argument('--featurefn', type=str, required=True)
     return parser
 
 def main():
     parser = get_argparser()
     args = parser.parse_args()
-
-    if args.clusterfn:
-        brownclusters.set_paths_file(args.clusterfn)
 
     features.load_featurefile(args.featurefn)
 

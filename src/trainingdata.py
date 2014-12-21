@@ -98,8 +98,6 @@ def target_words_for_each_source_word(ss, ts, alignment):
             ## This happens a lot in the bible text apparently.
             # print("warning: non-contiguous target phrase")
     # return [" ".join(targetwords) for targetwords in outlist]
-
-    ## be a little aggressive about stripping punctuation
     out = []
     for targetlist in outlist:
         new_tws = []
