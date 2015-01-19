@@ -1,7 +1,7 @@
 import time
 import sys
 
-DPRINT=True
+DPRINT=False
 def dprint(*a,**aa):
     if DPRINT:
         print(file=sys.stderr, *a, **aa)
@@ -15,6 +15,6 @@ class timeexecution():
         dprint("Entering", self.f.__name__)
         starttime = time.time()
         out = self.f(*args, **kwargs)
-        dprint("Exiting {0}, {1} sec later".
+        dprint("Exiting {0}, {1:.2f} sec later".
               format(self.f.__name__, time.time() - starttime))
         return out

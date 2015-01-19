@@ -41,7 +41,7 @@ def cross_validate(classifier, top_words, nonnull=False):
     out = defaultdict(list)
     util.dprint("cross validating this many words:", len(top_words))
     for w in top_words:
-        ## util.dprint("cross validating:", w)
+        util.dprint("cross validating:", w)
         training = trainingdata.trainingdata_for(w, nonnull=nonnull)
         labels = set(label for (feat,label) in training)
         if len(labels) < 2:
@@ -58,9 +58,9 @@ def cross_validate(classifier, top_words, nonnull=False):
                                         "absolutelynotalabel")]
             classifier.train(mytraining)
             ncorrect = count_correct(classifier, mytesting)
-            ## print("##", w, ncorrect, len(mytesting))
-            sys.stdout.flush()
             out[w].append((ncorrect,len(mytesting)))
+            ## XXX cut it off after one iteration.
+            ## break
     return out
 
 def words_with_differences(results_table):
@@ -78,9 +78,9 @@ def words_with_differences(results_table):
     for word, diff in words_with_differences:
         print("{0}\t{1}".format(word,diff))
 
-@util.timeexecution
+## @util.timeexecution
 def do_a_case(casename, classifier, top_words, nonnull):
-    print(casename)
+    print("[[next case]]", casename)
     sys.stdout.flush()
     results_table = cross_validate(classifier, top_words, nonnull=nonnull)
     ## one entry into these per word
@@ -92,7 +92,8 @@ def do_a_case(casename, classifier, top_words, nonnull):
             corrects.append(correct)
             sizes.append(size)
     avg = sum(corrects) / sum(sizes)
-    print("accuracy:", avg)
+    print("accuracy: {0:.4f}".format(avg))
+    print()
     # words_with_differences(results_table)
 
 def get_argparser():
@@ -128,18 +129,14 @@ def main():
     classifier_pairs = []
     classifier_pairs.append(("MFS", learn.MFSClassifier()))
 
-    ## trying a bunch of L1 settings
-    for c in [1]:
-         classifier = SklearnClassifier(LogisticRegression(C=c, penalty='l1', tol=THETOL))
-         classifier_pairs.append(("maxent-l1-c{0}".format(c), classifier))
-
-    #### trying a bunch of L2 settings
-    for c in [1, 10]:
-        classifier = SklearnClassifier(LogisticRegression(C=c, penalty='l2', tol=THETOL))
-        classifier_pairs.append(("maxent-l2-c{0}".format(c), classifier))
-
+    classifier = SklearnClassifier(LogisticRegression(C=1,
+                                   penalty='l2',
+                                   tol=THETOL))
+    classifier_pairs.append(("maxent-l2-c1", classifier))
     classifier = SklearnClassifier(LinearSVC(C=1, penalty='l2', tol=THETOL))
     classifier_pairs.append(("linearsvc-l2-c1", classifier))
+    classifier = SklearnClassifier(RandomForestClassifier(), sparse=False)
+    classifier_pairs.append(("random-forest-default", classifier))
 
     for (name, classifier) in classifier_pairs:
         do_a_case(name + "-regular", classifier, top_words, nonnull=False)
