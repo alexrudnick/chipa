@@ -28,7 +28,8 @@ def set_sl_annotated(sl_annotated):
     for sentence in sl_annotated:
         surface_sent = [token.surface for token in sentence]
         surface_sentences.append(surface_sent)
-    assert len(SL_SENTENCES_ANNOTATED) == len(SL_SENTENCES)
+    assert len(SL_SENTENCES_ANNOTATED) == len(SL_SENTENCES), \
+        "{0} vs {1}".format(len(SL_SENTENCES_ANNOTATED), len(SL_SENTENCES))
 
 def build_instance(tagged_sentence, annotated, index):
     feat = features.extract(tagged_sentence, annotated, index)
