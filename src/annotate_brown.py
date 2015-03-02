@@ -34,6 +34,7 @@ def main():
     for sentence in corpus:
         for token in sentence:
             w = token.lemma if args.lemmas else token.surface
+            w = w.lower()
             if w in word_to_cluster:
                 token.annotations.add(args.featureprefix +
                                       "=" +

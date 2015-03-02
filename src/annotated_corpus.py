@@ -18,23 +18,27 @@ class Token:
         out.annotations = set(annotations.split('\t'))
         return out
 
+def load_corpus_from_lines(lines):
+    sentences = []
+    sentence = []
+    for line in lines:
+        line = line.strip()
+        if line:
+            token = Token.from_string(line)
+            sentence.append(token)
+        elif sentence:
+            sentences.append(sentence)
+            sentence = []
+    if sentence:
+        sentences.append(sentence)
+    return sentences
+
 def load_corpus(fn):
     """Given a filename, load it up and return a list of list of Tokens. Each
     sublist is a sentence."""
-    sentences = []
-    sentence = []
     with open(fn) as infile:
-        for line in infile:
-            line = line.strip()
-            if line:
-                token = Token.from_string(line)
-                sentence.append(token)
-            elif sentence:
-                sentences.append(sentence)
-                sentence = []
-        if sentence:
-            sentences.append(sentence)
-    return sentences
+        lines = infile.readlines()
+    return load_corpus_from_lines(lines)
 
 def main():
     tok = Token.from_string("cat\tcats\tpos=N\tcategory=animal")
