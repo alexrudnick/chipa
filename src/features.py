@@ -14,21 +14,23 @@ def bagofwords(tagged_sent, annotated, index):
     source = nltk.tag.untag(tagged_sent)
     return dict([('cw(%s)' % w, True) for w in source])
 
+def window_indices(index, width, length):
+    """Return a list of the indices in the window, for width before and after
+    the index, constrained by the length of the sequence."""
+
+    lowerbound = max(0, index-width)
+    upperbound = min(index+width, length-1)
+    indices = list(range(lowerbound, index)) + \
+              list(range(index+1, upperbound+1))
+    return indices
+
 WIDTH=3
 def window(tagged_sent, annotated, index):
     """Immediate surrounding context features."""
     source = nltk.tag.untag(tagged_sent)
-    out = {}
-    ## window of WIDTH before
-    lowerbound = max(0, index-WIDTH)
-    windowfeatures = dict([('w(%s)' % w, True)
-                          for w in source[lowerbound:index]])
-    out.update(windowfeatures)
-    ## and WIDTH after
-    upperbound = index+WIDTH
-    windowfeatures = dict([('w(%s)' % w, True)
-                          for w in source[index+1:upperbound+1]])
-    out.update(windowfeatures)
+    indices = window_indices(index, WIDTH, len(source))
+    out = {'w(%s)' % source[i] : True
+           for i in indices}
     return out
 
 def clusters_for_sentence(annotated, clusterprefix):
@@ -45,16 +47,6 @@ def clusters_for_sentence(annotated, clusterprefix):
     assert len(clusters) == len(annotated), \
         "clusters: {0} annotated: {1}".format(len(clusters), len(annotated))
     return clusters
-
-def window_indices(index, width, length):
-    """Return a list of the indices in the window, for width before and after
-    the index, constrained by the length of the sequence."""
-
-    lowerbound = max(0, index-width)
-    upperbound = min(index+width, length-1)
-    indices = list(range(lowerbound, index)) + \
-              list(range(index+1, upperbound+1))
-    return indices
 
 def bagofsurface(tagged_sent, annotated, index):
     """Bag of words features."""
@@ -121,6 +113,16 @@ def brown_window_europarl(tagged_sent, annotated, index):
         variations = brown_variations("brown_window_europarl", cluster)
         out.update(variations)
     return out
+
+def postag(tagged_sent, annotated, index):
+    out = {}
+    token = annotated[index]
+    for annotation in token.annotations:
+        if annotation.startswith("tag="):
+            tag = annotation[4:]
+            out["postag(%s)" % tag] = True
+    return out
+
 
 def getlabel(tagged_sent, i):
     if i in range(len(tagged_sent)):

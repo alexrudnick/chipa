@@ -37,6 +37,33 @@ class TestFeatures(unittest.TestCase):
         ]
         self.annotated_europarl = annotated_corpus.load_corpus_from_lines(lines)
 
+
+        sent_en = "i kick the ball ."
+        sent_es = "yo pateo la pelota ."
+        self.tagged_sent2 = list(zip(sent_en.split(), sent_es.split()))
+        lines = [
+            "I\tI\ttag=PRON",
+            "kick\tkicked\ttag=VERB",
+            "the\tthe\ttag=DET",
+            "ball\tball\ttag=NOUN",
+            ".\t.\ttag=PUNCT",
+        ]
+        self.annotated_postags = annotated_corpus.load_corpus_from_lines(lines)
+
+    def test_window(self):
+        feats = features.window(self.tagged_sent, self.annotated[0], 0)
+        self.assertNotIn("w(one)", feats)
+        self.assertIn("w(two)", feats)
+        self.assertIn("w(three)", feats)
+        self.assertIn("w(four)", feats)
+
+        feats = features.window(self.tagged_sent, self.annotated[0], 1)
+        self.assertIn("w(one)", feats)
+        self.assertNotIn("w(two)", feats)
+        self.assertIn("w(three)", feats)
+        self.assertIn("w(four)", feats)
+        self.assertIn("w(five)", feats)
+
     def test_brown_bag_bible(self):
         feats = features.brown_bag_bible(self.tagged_sent, self.annotated[0], 0)
         self.assertIn("brown_bag_bible_complete(0000)", feats)
@@ -93,6 +120,18 @@ class TestFeatures(unittest.TestCase):
                                                2)
         self.assertIn("brown_window_europarl_complete(0001)", feats)
         self.assertIn("brown_window_europarl_0(0)", feats)
+
+    def test_brown_variations(self):
+        variations = features.brown_variations("foo", "1111")
+        self.assertIn("foo_complete(1111)", variations)
+        self.assertIn("foo_0(1)", variations)
+        self.assertIn("foo_3(1111)", variations)
+
+    def test_tag(self):
+        feats = features.postag(self.tagged_sent2,
+                                self.annotated_postags[0],
+                                2)
+        self.assertEqual({"postag(DET)": True}, feats)
 
 if __name__ == '__main__':
     unittest.main()
