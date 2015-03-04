@@ -123,6 +123,26 @@ def postag(tagged_sent, annotated, index):
             out["postag(%s)" % tag] = True
     return out
 
+def postag_left(tagged_sent, annotated, index):
+    out = {}
+    if (index - 1) in range(len(annotated)):
+        token = annotated[index - 1]
+        for annotation in token.annotations:
+            if annotation.startswith("tag="):
+                tag = annotation[4:]
+                out["postag_left(%s)" % tag] = True
+    return out
+
+def postag_right(tagged_sent, annotated, index):
+    out = {}
+    if (index + 1) in range(len(annotated)):
+        token = annotated[index + 1]
+        for annotation in token.annotations:
+            if annotation.startswith("tag="):
+                tag = annotation[4:]
+                out["postag_right(%s)" % tag] = True
+    return out
+
 
 def getlabel(tagged_sent, i):
     if i in range(len(tagged_sent)):

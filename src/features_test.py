@@ -127,11 +127,23 @@ class TestFeatures(unittest.TestCase):
         self.assertIn("foo_0(1)", variations)
         self.assertIn("foo_3(1111)", variations)
 
-    def test_tag(self):
+    def test_postag(self):
         feats = features.postag(self.tagged_sent2,
                                 self.annotated_postags[0],
                                 2)
         self.assertEqual({"postag(DET)": True}, feats)
+
+    def test_postag_left(self):
+        feats = features.postag_left(self.tagged_sent2,
+                                     self.annotated_postags[0],
+                                     2)
+        self.assertEqual({"postag_left(VERB)": True}, feats)
+
+    def test_postag_right(self):
+        feats = features.postag_right(self.tagged_sent2,
+                                      self.annotated_postags[0],
+                                      2)
+        self.assertEqual({"postag_right(NOUN)": True}, feats)
 
 if __name__ == '__main__':
     unittest.main()
