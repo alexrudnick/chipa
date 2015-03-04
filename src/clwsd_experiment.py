@@ -5,11 +5,12 @@ Main script for running in-vitro CL-WSD experiments with cross-validation, given
 some aligned bitext.
 """
 
-import sys
-import argparse
 from argparse import Namespace
-from operator import itemgetter
 from collections import defaultdict
+from operator import itemgetter
+import argparse
+import os
+import sys
 
 import nltk
 
@@ -109,6 +110,10 @@ def main():
     parser = get_argparser()
     args = parser.parse_args()
 
+    print("## RUNNING EXPERIMENT on {0} with features {1}".format(
+        os.path.basename(args.bitextfn),
+        os.path.basename(args.featurefn)))
+
     util.DPRINT = args.dprint
     features.load_featurefile(args.featurefn)
 
@@ -126,6 +131,9 @@ def main():
 
     top_words = trainingdata.get_top_words(sl_sentences)
     top_words = [w for (w,count) in top_words]
+
+    print("## GOT THIS MANY TOP WORDS:", len(top_words))
+    print("## THEY ARE:", top_words)
 
     THETOL = 0.1
     classifier_pairs = []
