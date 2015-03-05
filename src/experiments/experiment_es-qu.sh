@@ -1,6 +1,6 @@
 #!/bin/bash
 
-LANGPAIR=es-gn
+LANGPAIR=es-qu
 FEATNAME=$(echo $1 | cut -f 2 -d / | cut -f 1 -d .)
 
 python3 clwsd_experiment.py \

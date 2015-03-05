@@ -50,7 +50,7 @@ def trainingdata_for(word, nonnull=False):
         training = [(feat,label) for (feat,label) in training
                                  if label != UNTRANSLATED]
     ## XXX: just take the first 50 instances
-    return training[:50]
+    ## return training[:50]
     return training
 
 ## XXX: what we should be doing here is setting the corpus so that we know what
