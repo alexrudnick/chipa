@@ -143,15 +143,6 @@ def postag_right(tagged_sent, annotated, index):
                 out["postag_right(%s)" % tag] = True
     return out
 
-
-def getlabel(tagged_sent, i):
-    if i in range(len(tagged_sent)):
-        return tagged_sent[i][1]
-    elif i < 0:
-        return "*START*"
-    else:
-        assert False, "don't ask for the future"
-
 FEATURES = []
 def load_featurefile(featurefn):
     """Given a filename, load it. Should be one name of a feature function per
