@@ -6,8 +6,6 @@ Script for generating stats about the most common words in a bitext corpus.
 
 import sys
 import argparse
-from argparse import Namespace
-from operator import itemgetter
 from collections import defaultdict
 from collections import Counter
 

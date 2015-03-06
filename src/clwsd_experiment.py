@@ -5,7 +5,6 @@ Main script for running in-vitro CL-WSD experiments with cross-validation, given
 some aligned bitext.
 """
 
-from argparse import Namespace
 from collections import defaultdict
 from operator import itemgetter
 import argparse
