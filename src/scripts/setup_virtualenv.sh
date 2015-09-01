@@ -8,6 +8,6 @@ pip install scipy
 pip install scikit-learn
 pip install pyyaml
 pip install nose
-pip install https://github.com/nltk/nltk/tarball/develop
+pip install https://github.com/nltk/nltk/archive/3.0.4.zip
 ## make sure we have sentence segmenter models
 ## python3 -m nltk.downloader punkt
