@@ -29,11 +29,11 @@ import util
 def count_correct(classifier, testdata):
     """Given an NLTK-style classifier and some test data, count how many of the
     test instances this classifier gets correct."""
-    ## results = classifier.batch_classify([fs for (fs,l) in testdata])
     results = [classifier.classify(fs) for (fs,l) in testdata]
     correct = [l==r for ((fs,l), r) in zip(testdata, results)]
     return correct.count(True)
 
+@util.timeexecution
 def cross_validate(classifier, top_words, nonnull=False):
     """Given the most common words in the Spanish corpus, cross-validate our
     classifiers for each of those."""
@@ -59,8 +59,6 @@ def cross_validate(classifier, top_words, nonnull=False):
             classifier.train(mytraining)
             ncorrect = count_correct(classifier, mytesting)
             out[w].append((ncorrect,len(mytesting)))
-            ## XXX cut it off after one iteration.
-            ## break
     return out
 
 def words_with_differences(results_table):
@@ -79,22 +77,21 @@ def words_with_differences(results_table):
         print("{0}\t{1}".format(word,diff))
 
 ## @util.timeexecution
-def do_a_case(casename, classifier, top_words, nonnull):
+def do_a_case(classifier, top_words, nonnull, casename, stamp):
     print("[[next case]]", casename)
     sys.stdout.flush()
-    results_table = cross_validate(classifier, top_words, nonnull=nonnull)
-    ## one entry into these per word
-    corrects = []
-    mfscorrects = []
-    sizes = []
-    for w, resultslist in results_table.items():
-        for (correct,size) in resultslist:
-            corrects.append(correct)
-            sizes.append(size)
-    avg = sum(corrects) / sum(sizes)
-    print("accuracy: {0:.4f}".format(avg))
-    print()
-    # words_with_differences(results_table)
+    with open("results/{0}-{1}".format(stamp, casename), "w") as outfile:
+        results_table = cross_validate(classifier, top_words, nonnull=nonnull)
+        ## one entry into these per word
+        corrects = []
+        mfscorrects = []
+        sizes = []
+        for w, resultslist in results_table.items():
+            for (correct,size) in resultslist:
+                corrects.append(correct)
+                sizes.append(size)
+        avg = sum(corrects) / sum(sizes)
+        print("accuracy: {0:.4f}".format(avg), file=outfile)
 
 def get_argparser():
     parser = argparse.ArgumentParser(description='clwsd_experiment')
@@ -109,14 +106,15 @@ def main():
     parser = get_argparser()
     args = parser.parse_args()
 
-    print("## RUNNING EXPERIMENT on {0} with features {1}".format(
-        os.path.basename(args.bitextfn),
-        os.path.basename(args.featurefn)))
-
     util.DPRINT = args.dprint
+    featureset_name = os.path.basename(args.featurefn).split('.')[0]
     features.load_featurefile(args.featurefn)
 
     trainingdata.STOPWORDS = trainingdata.load_stopwords(args.bitextfn)
+
+    print("## RUNNING EXPERIMENT on {0} with features {1}".format(
+        os.path.basename(args.bitextfn),
+        os.path.basename(args.featurefn)))
 
     triple_sentences = trainingdata.load_bitext(args.bitextfn, args.alignfn)
     tl_sentences = trainingdata.get_target_language_sentences(triple_sentences)
@@ -134,7 +132,8 @@ def main():
     print("## GOT THIS MANY TOP WORDS:", len(top_words))
     print("## THEY ARE:", top_words)
 
-    THETOL = 0.1
+    ## default is 1e-4.
+    THETOL = 1e-3
     classifier_pairs = []
     classifier_pairs.append(("MFS", learn.MFSClassifier()))
 
@@ -151,10 +150,12 @@ def main():
     classifier = SklearnClassifier(RandomForestClassifier(), sparse=False)
     classifier_pairs.append(("random-forest-default", classifier))
 
-    for (name, classifier) in classifier_pairs:
-        do_a_case(name + "-regular", classifier, top_words, nonnull=False)
+    stamp = util.timestamp()
 
-    for (name, classifier) in classifier_pairs:
-        do_a_case(name + "-nonnull", classifier, top_words, nonnull=True)
+    for (clname, classifier) in classifier_pairs:
+        casename = "{0}-{1}-regular".format(clname, featureset_name)
+        do_a_case(classifier, top_words, False, casename, stamp)
+        casename = "{0}-{1}-nonnull".format(clname, featureset_name)
+        do_a_case(classifier, top_words, True, casename, stamp)
 
 if __name__ == "__main__": main()

@@ -1,5 +1,6 @@
 import time
 import sys
+from datetime import datetime
 
 DPRINT=False
 def dprint(*a,**aa):
@@ -18,3 +19,8 @@ class timeexecution():
         dprint("Exiting {0}, {1:.2f} sec later".
               format(self.f.__name__, time.time() - starttime))
         return out
+
+def timestamp():
+    now = datetime.now()
+    return ("%4d-%02d-%02d-%02d-%02d" % (now.year, now.month, now.day, now.hour,
+                                         now.minute))
