@@ -9,6 +9,10 @@ import nltk
 
 DEBUG=False
 
+def NOFEATURES(tagged_sent, annotated, index):
+    """An empty dictionary."""
+    return dict()
+
 def bagofwords(tagged_sent, annotated, index):
     """Bag of words features."""
     source = nltk.tag.untag(tagged_sent)

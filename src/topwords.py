@@ -11,16 +11,21 @@ from collections import Counter
 
 import nltk
 
+import annotated_corpus
 import trainingdata
 import clwsd_experiment
 from constants import UNTRANSLATED
 from entropy import entropy
 
+## sort of a gross hack
+import features
+features.FEATURES = ["NOFEATURES"]
+
 def get_argparser():
     parser = argparse.ArgumentParser(description='topwords')
     parser.add_argument('--bitextfn', type=str, required=True)
     parser.add_argument('--alignfn', type=str, required=True)
-    parser.add_argument('--surfacefn', type=str, required=True)
+    parser.add_argument('--annotatedfn', type=str, required=True)
     return parser
 
 paperwords = "ser haber decir dios estar hacer tierra ir/ser pueblo pues si así padre señor poner mujer volver poder ir salir judá mismo llevar dicho cielo ojo llegar entrar llamar subir obra hija dejar".split()
@@ -31,19 +36,18 @@ def main():
 
     trainingdata.STOPWORDS = trainingdata.load_stopwords(args.bitextfn)
 
-    triple_sentences = trainingdata.load_bitext_twofiles(args.bitextfn,
-                                                         args.alignfn)
+    triple_sentences = trainingdata.load_bitext(args.bitextfn, args.alignfn)
     tl_sentences = trainingdata.get_target_language_sentences(triple_sentences)
     sl_sentences = [s for (s,t,a) in triple_sentences]
     tagged_sentences = [list(zip(ss, ts))
                         for ss,ts in zip(sl_sentences, tl_sentences)]
     trainingdata.set_examples(sl_sentences,tagged_sentences)
 
-    ## Now we require the surface forms too.
-    surface_sentences = trainingdata.load_surface_file(args.surfacefn)
-    trainingdata.set_sl_surface_sentences(surface_sentences)
+    source_annotated = annotated_corpus.load_corpus(args.annotatedfn)
+    trainingdata.set_sl_annotated(source_annotated)
 
     top_words = trainingdata.get_top_words(sl_sentences)
+
     with open("topwords.txt", "w") as topwordsout:
         for (i, (word, count)) in enumerate(top_words):
             print("{0} & {1} & {2} \\\\".format(1+i, word, count),
