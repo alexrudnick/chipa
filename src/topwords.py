@@ -14,6 +14,7 @@ import nltk
 import annotated_corpus
 import trainingdata
 import clwsd_experiment
+import util
 from constants import UNTRANSLATED
 from entropy import entropy
 
@@ -53,10 +54,15 @@ def main():
             print("{0} & {1} & {2} \\\\".format(1+i, word, count),
                   file=topwordsout)
 
-    with open("topwords-translations.txt", "w") as topwordsout, \
-         open("topwords-entropy.txt", "w") as entropyout:
-        ## for (i, (word, count)) in enumerate(top_words):
-        for (i, word) in enumerate(paperwords):
+    stamp = util.timestamp()
+    langs = args.bitextfn.split(".")[1]
+    translations_fn = "results/{0}-{1}-translations".format(stamp, langs)
+    entropy_fn = "results/{0}-{1}-entropy".format(stamp, langs)
+
+    with open(translations_fn, "w") as topwordsout, \
+         open(entropy_fn, "w") as entropyout:
+        for (i, (word, count)) in enumerate(top_words):
+        ## for (i, word) in enumerate(paperwords):
             training = trainingdata.trainingdata_for(word, nonnull=False)
             labels = [label for (feat,label) in training]
             counts = Counter(labels)
