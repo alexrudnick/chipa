@@ -29,7 +29,10 @@ def get_argparser():
     parser.add_argument('--annotatedfn', type=str, required=True)
     return parser
 
-paperwords = "ser haber decir dios estar hacer tierra ir/ser pueblo pues si así padre señor poner mujer volver poder ir salir judá mismo llevar dicho cielo ojo llegar entrar llamar subir obra hija dejar".split()
+## XXX: how were these chosen? when were these chosen? ...
+## paperwords = "ser haber decir dios estar hacer tierra ir/ser pueblo pues si
+## así padre señor poner mujer volver poder ir salir judá mismo llevar dicho
+## cielo ojo llegar entrar llamar subir obra hija dejar".split()
 
 def main():
     parser = get_argparser()
@@ -61,8 +64,7 @@ def main():
 
     with open(translations_fn, "w") as topwordsout, \
          open(entropy_fn, "w") as entropyout:
-        for (i, (word, count)) in enumerate(top_words):
-        ## for (i, word) in enumerate(paperwords):
+         for (i, (word, count)) in enumerate(top_words):
             training = trainingdata.trainingdata_for(word, nonnull=False)
             labels = [label for (feat,label) in training]
             counts = Counter(labels)
@@ -75,8 +77,6 @@ def main():
             print("{0} & {1}".format(word, translations), file=topwordsout)
 
             bits = entropy(labels)
-            if word in paperwords:
-                print("%30s%30.2f" % (word, bits), file=entropyout)
-            ## print("{0} & {1}".format(word, "%.2f" % bits), 
+            print("%30s%30.2f" % (word, bits), file=entropyout)
 
 if __name__ == "__main__": main()
