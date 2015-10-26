@@ -11,7 +11,7 @@ SL_SENTENCES = None
 TAGGED_SENTENCES = None
 SL_SENTENCES_ANNOTATED = None
 
-STOPWORDS = None
+STOPWORDS = []
 
 def set_examples(sl_sentences, tagged_sentences):
     global SL_SENTENCES
