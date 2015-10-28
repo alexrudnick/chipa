@@ -59,18 +59,12 @@ def extract_wsd_problems(fn):
 
     out = []
     for (lexelt, head_count, context, inst) in list(handler.sentences):
-        ## problem = WSDProblem(lexelt, context, instance_id=inst, testset=True)
-        ##out.append(problem)
-        print(lexelt, head_count, context, inst)
         out.append((lexelt, head_count, context, inst))
-    ## sents = [problem.tokenized for problem in out]
-    ## tagger = stanford.get_tagger()
-    ## tagged_sents = tagger.batch_tag(sents)
-    ## assert len(tagged_sents) == len(out)
-    ## for tagged_sent,problem in zip(tagged_sents, out):
-    ##     problem.tagged = tagged_sent
-    ## print("tagged.")
     return out
+
+## TODO(alexr): We need to get these run through the whole preprocessing
+## pipeline so we can evaluate the semeval test set. Can we call it
+## programmatically? Probably better to do it offline.
 
 def main():
     parser = argparse.ArgumentParser(description='clwsd')
