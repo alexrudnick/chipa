@@ -1,0 +1,35 @@
+the	the	pos=DET
+quick	quick	pos=ADJ
+brown	brown	pos=ADJ
+fox	foxes	pos=N
+jump	jumped	pos=V
+over	over	pos=ADV
+the	the	pos=DET
+lazy	lazy	pos=ADJ
+sleep	sleeping	pos=V
+dog	dogs	pos=N
+.	.	pos=PUNC
+
+the	the	pos=DET
+quick	quick	pos=ADJ
+brown	brown	pos=ADJ
+fox	foxes	pos=N
+jump	jumped	pos=V
+over	over	pos=ADV
+the	the	pos=DET
+lazy	lazy	pos=ADJ
+sleep	sleeping	pos=V
+dog	dogs	pos=N
+.	.	pos=PUNC
+
+the	the	pos=DET
+quick	quick	pos=ADJ
+brown	brown	pos=ADJ
+fox	foxes	pos=N
+jump	jumped	pos=V
+over	over	pos=ADV
+the	the	pos=DET
+lazy	lazy	pos=ADJ
+sleep	sleeping	pos=V
+dog	dogs	pos=N
+.	.	pos=PUNC
