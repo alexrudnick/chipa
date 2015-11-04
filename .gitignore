@@ -39,3 +39,5 @@ venv
 
 ## All the output we're going to generate
 hmmwsd/*output*/*
+src/results/*
+src/LOGS/*
