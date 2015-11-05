@@ -24,6 +24,7 @@ import features
 import learn
 import trainingdata
 import util
+import semeval_testset
 
 def get_argparser():
     parser = argparse.ArgumentParser(description='clwsd_experiment')
@@ -53,6 +54,7 @@ def main():
     source_annotated = annotated_corpus.load_corpus(args.annotatedfn)
     trainingdata.set_sl_annotated(source_annotated)
 
+
     ## default is 1e-4.
     THETOL = 1e-3
     classifier_pairs = []
@@ -62,21 +64,11 @@ def main():
                                    penalty='l1',
                                    tol=THETOL))
     classifier_pairs.append(("maxent-l1-c1", classifier))
-    classifier = SklearnClassifier(LogisticRegression(C=1,
-                                   penalty='l2',
-                                   tol=THETOL))
-    classifier_pairs.append(("maxent-l2-c1", classifier))
-    classifier = SklearnClassifier(LinearSVC(C=1, penalty='l2', tol=THETOL))
-    classifier_pairs.append(("linearsvc-l2-c1", classifier))
-    classifier = SklearnClassifier(RandomForestClassifier(), sparse=False)
-    classifier_pairs.append(("random-forest-default", classifier))
-
     stamp = util.timestamp()
 
-    for (clname, classifier) in classifier_pairs:
-        casename = "{0}-{1}-regular".format(clname, featureset_name)
-        do_a_case(classifier, top_words, False, casename, stamp)
-        casename = "{0}-{1}-nonnull".format(clname, featureset_name)
-        do_a_case(classifier, top_words, True, casename, stamp)
+    problems = semeval_testset.extract_wsd_problems(args.testset)
+    for problem in problems:
+        print(problem)
+    # for (clname, classifier) in classifier_pairs:
 
 if __name__ == "__main__": main()

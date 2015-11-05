@@ -160,7 +160,7 @@ def load_featurefile(featurefn):
             FEATURES.append(funkname)
 
 def extract(tagged_sent, annotated, index):
-    """Given a WSDProblem, return the features for the sentence."""
+    """Extract the features for this sentence."""
     out = {}
     allfeatures = [globals()[funkname] for funkname in FEATURES]
     assert(allfeatures), "need some features"
