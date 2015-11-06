@@ -62,10 +62,6 @@ def extract_wsd_problems(fn):
         out.append((lexelt, head_count, context, inst))
     return out
 
-## TODO(alexr): We need to get these run through the whole preprocessing
-## pipeline so we can evaluate the semeval test set. Can we call it
-## programmatically? Probably better to do it offline.
-
 def main():
     parser = argparse.ArgumentParser(description='clwsd')
     parser.add_argument('--problems', type=str, required=True)

@@ -25,6 +25,7 @@ import learn
 import trainingdata
 import util
 import semeval_testset
+import preprocessing
 
 def get_argparser():
     parser = argparse.ArgumentParser(description='clwsd_experiment')
@@ -68,7 +69,10 @@ def main():
 
     problems = semeval_testset.extract_wsd_problems(args.testset)
     for problem in problems:
-        print(problem)
+        annotated = preprocessing.preprocess(problem[2], "en")
+        sentence = [token.lemma for token in annotated]
+        feats = features.extract_untagged(sentence, annotated, 0)
+        print(feats)
     # for (clname, classifier) in classifier_pairs:
 
 if __name__ == "__main__": main()

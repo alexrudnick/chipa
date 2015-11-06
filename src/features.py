@@ -164,8 +164,16 @@ def extract(tagged_sent, annotated, index):
     out = {}
     allfeatures = [globals()[funkname] for funkname in FEATURES]
     assert(allfeatures), "need some features"
+    assert len(tagged_sent) == len(annotated), \
+           "length mismatch in tokens vs annotated tokens"
     for funk in allfeatures:
         extracted = funk(tagged_sent, annotated, index)
         if DEBUG: print(funk.__doc__.strip()); print(extracted)
         out.update(extracted)
     return out
+
+def extract_untagged(sentence, annotated, index):
+    """Extract the features for this sentence; here sentence is a list of words,
+    rather than a list of pairs."""
+    tagged_sent = [(word, word) for word in sentence]
+    return extract(tagged_sent, annotated, index)
