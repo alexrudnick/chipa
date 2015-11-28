@@ -27,6 +27,7 @@ def get_argparser():
     parser.add_argument('--bitextfn', type=str, required=True)
     parser.add_argument('--alignfn', type=str, required=True)
     parser.add_argument('--annotatedfn', type=str, required=True)
+    parser.add_argument('--usetarget', type=bool, required=False)
     return parser
 
 ## XXX: how were these chosen? when were these chosen? ...
@@ -38,24 +39,34 @@ def main():
     parser = get_argparser()
     args = parser.parse_args()
 
-    trainingdata.STOPWORDS = trainingdata.load_stopwords(args.bitextfn)
+    if not args.usetarget:
+        trainingdata.STOPWORDS = trainingdata.load_stopwords(args.bitextfn)
 
     triple_sentences = trainingdata.load_bitext(args.bitextfn, args.alignfn)
-    tl_sentences = trainingdata.get_target_language_sentences(triple_sentences)
+
+    if args.usetarget:
+        ## Flip directionality -- we want the top words out of the target text.
+        new_triple_sentences = [(t, s, a) for (s, t, a) in triple_sentences]
+        triple_sentences = new_triple_sentences
+
     sl_sentences = [s for (s,t,a) in triple_sentences]
-    tagged_sentences = [list(zip(ss, ts))
-                        for ss,ts in zip(sl_sentences, tl_sentences)]
-    trainingdata.set_examples(sl_sentences,tagged_sentences)
-
-    source_annotated = annotated_corpus.load_corpus(args.annotatedfn)
-    trainingdata.set_sl_annotated(source_annotated)
-
     top_words = trainingdata.get_top_words(sl_sentences)
 
     with open("topwords.txt", "w") as topwordsout:
         for (i, (word, count)) in enumerate(top_words):
             print("{0} & {1} & {2} \\\\".format(1+i, word, count),
                   file=topwordsout)
+
+    if args.usetarget:
+        ## Bail out -- just getting target text top words.
+        return
+
+    tl_sentences = trainingdata.get_target_language_sentences(triple_sentences)
+    tagged_sentences = [list(zip(ss, ts))
+                        for ss,ts in zip(sl_sentences, tl_sentences)]
+    trainingdata.set_examples(sl_sentences, tagged_sentences)
+    source_annotated = annotated_corpus.load_corpus(args.annotatedfn)
+    trainingdata.set_sl_annotated(source_annotated)
 
     stamp = util.timestamp()
     langs = args.bitextfn.split(".")[1]
