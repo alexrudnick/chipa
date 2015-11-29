@@ -11,6 +11,13 @@ class Token:
                                           "\t".join(annotations))
         return out
 
+    def __repr__(self):
+        annotations = sorted(list(self.annotations))
+        out = "[Token: {0} {1} {2}]".format(self.lemma,
+                                              self.surface,
+                                              "//".join(annotations))
+        return out
+
     @staticmethod
     def from_string(s):
         lemma, surface, annotations = s.split('\t', maxsplit=2)
