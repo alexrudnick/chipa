@@ -12,24 +12,36 @@ FREELINGCONFIGDIR = "/home/alex/terere/bibletools/freeling-config"
 import fileinput
 from subprocess import Popen, PIPE, STDOUT
 
-import nltk
-
 from annotated_corpus import Token
 
-def tokenize(sentence, sl):
-    """Tokenize input sentence, given as a string."""
-    assert isinstance(sentence, str)
-    return nltk.word_tokenize(sentence)
-
-def annotate(sentence, sl):
-    """Given an input sentence as a tokenized list of strings, return a list of
-    Token objects."""
-    assert isinstance(sentence, list)
-    out = []
-    for word in sentence:
-        token = Token(word.lower(), word)
-        out.append(token)
-    return out
+def freeling_output_to_sentences(freeling_output):
+    """Return a list of lists of tokens."""
+    sentences = []
+    sentence = []
+    lines = freeling_output.split("\n")
+    print("lines:", lines)
+    lemmas = []
+    lineno = 0
+    for line in lines:
+        lineno += 1
+        line = line.strip()
+        if sentence and not line:
+            sentences.append(sentence)
+            sentence = []
+            continue
+        # sirvan servir VMSP3P0 0.885892
+        try:
+            ## There can actually be more than the first four fields.
+            ## But we just take the first four.
+            surface, lemma, tag, confidence = line.split()[:4]
+            token = Token(surface, lemma)
+            token.annotations.add("tag=" + tag)
+            sentence.append(token)
+        except:
+            print("surprising line:", line, lineno)
+            break
+    return sentences
+    ## print("{0}\t{1}\ttag={2}".format(lemma, surface, tag), file=annotatedout)
 
 ## XXX: this assumes that Freeling is installed on the system and that we have a
 ## path to a directory of config files.
@@ -38,16 +50,14 @@ def run_freeling(sentence, sl):
     with Popen(["analyze", "-f", FREELINGCONFIGDIR + "/" + sl + ".cfg"],
               stdout=PIPE, stdin=PIPE, stderr=STDOUT) as p:
         stdout_b = p.communicate(input=sentence.encode("utf-8"))
-        print(stdout_b[0].decode("utf-8"))
+        stdout = stdout_b[0].decode("utf-8")
+        return freeling_output_to_sentences(stdout)
 
 def preprocess(sentence, sl):
     """Run the preprocessing pipeline on the sentence, which should be a
     string."""
     assert isinstance(sentence, str)
-    run_freeling(sentence, sl)
-
-    words = tokenize(sentence, sl)
-    return annotate(words, sl)
+    return run_freeling(sentence, sl)
 
 def main():
     for line in fileinput.input():

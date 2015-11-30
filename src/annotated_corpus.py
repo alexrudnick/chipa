@@ -13,7 +13,7 @@ class Token:
 
     def __repr__(self):
         annotations = sorted(list(self.annotations))
-        out = "[Token: {0} {1} {2}]".format(self.lemma,
+        out = "<Token: {0} {1} {2}>".format(self.lemma,
                                               self.surface,
                                               "//".join(annotations))
         return out
