@@ -71,6 +71,8 @@ def main():
     for problem in problems:
         annotated = preprocessing.preprocess(problem[2], "en")
         sentence = [token.lemma for token in annotated]
+
+        ## XXX: for our next trick, get the right index into the sentence.
         feats = features.extract_untagged(sentence, annotated, 0)
         print(feats)
     # for (clname, classifier) in classifier_pairs:
