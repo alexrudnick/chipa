@@ -14,21 +14,20 @@ from subprocess import Popen, PIPE, STDOUT
 
 from annotated_corpus import Token
 
-def freeling_output_to_sentences(freeling_output):
-    """Return a list of lists of tokens."""
-    sentences = []
+def freeling_output_to_sentence(freeling_output):
+    """Return a list of tokens. We should only be given a single sentence at
+    once."""
     sentence = []
     lines = freeling_output.split("\n")
     print("lines:", lines)
     lemmas = []
     lineno = 0
-    for line in lines:
+    for i, line in enumerate(lines):
         lineno += 1
         line = line.strip()
         if sentence and not line:
-            sentences.append(sentence)
-            sentence = []
-            continue
+            assert ("" == line.strip() for line in lines[i:])
+            return sentence
         # sirvan servir VMSP3P0 0.885892
         try:
             ## There can actually be more than the first four fields.
@@ -40,7 +39,7 @@ def freeling_output_to_sentences(freeling_output):
         except:
             print("surprising line:", line, lineno)
             break
-    return sentences
+    return sentence
     ## print("{0}\t{1}\ttag={2}".format(lemma, surface, tag), file=annotatedout)
 
 ## XXX: this assumes that Freeling is installed on the system and that we have a
@@ -51,7 +50,7 @@ def run_freeling(sentence, sl):
               stdout=PIPE, stdin=PIPE, stderr=STDOUT) as p:
         stdout_b = p.communicate(input=sentence.encode("utf-8"))
         stdout = stdout_b[0].decode("utf-8")
-        return freeling_output_to_sentences(stdout)
+        return freeling_output_to_sentence(stdout)
 
 def preprocess(sentence, sl):
     """Run the preprocessing pipeline on the sentence, which should be a
