@@ -19,7 +19,6 @@ def freeling_output_to_sentence(freeling_output):
     once."""
     sentence = []
     lines = freeling_output.split("\n")
-    print("lines:", lines)
     lemmas = []
     lineno = 0
     for i, line in enumerate(lines):
@@ -33,14 +32,13 @@ def freeling_output_to_sentence(freeling_output):
             ## There can actually be more than the first four fields.
             ## But we just take the first four.
             surface, lemma, tag, confidence = line.split()[:4]
-            token = Token(surface, lemma)
+            token = Token(lemma, surface)
             token.annotations.add("tag=" + tag)
             sentence.append(token)
         except:
             print("surprising line:", line, lineno)
             break
     return sentence
-    ## print("{0}\t{1}\ttag={2}".format(lemma, surface, tag), file=annotatedout)
 
 ## XXX: this assumes that Freeling is installed on the system and that we have a
 ## path to a directory of config files.

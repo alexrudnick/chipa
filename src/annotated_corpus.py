@@ -7,8 +7,8 @@ class Token:
     def __str__(self):
         annotations = sorted(list(self.annotations))
         out = "{0}\t{1}\t{2}".format(self.lemma,
-                                          self.surface,
-                                          "\t".join(annotations))
+                                     self.surface,
+                                     "\t".join(annotations))
         return out
 
     def __repr__(self):

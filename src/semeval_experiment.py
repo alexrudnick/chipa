@@ -4,11 +4,9 @@
 Run CL-WSD experiments from semeval2013!
 """
 
-from collections import defaultdict
-from operator import itemgetter
 import argparse
 import os
-import sys
+import re
 
 import nltk
 
@@ -36,6 +34,22 @@ def get_argparser():
     parser.add_argument('--testset', type=str, required=True)
     parser.add_argument('--dprint', type=bool, default=False, required=False)
     return parser
+
+def find_head_token_index(rawtext, annotated):
+    replaced = re.sub(r"<head>(.*)</head>", "QQQQQQ", rawtext)
+    pointer_annotated = preprocessing.preprocess(replaced, "en")
+    assert len(annotated) == len(pointer_annotated)
+    for i, (token, pointer) in enumerate(zip(annotated, pointer_annotated)):
+        print(i, token, pointer)
+        if pointer.surface == "QQQQQQ":
+            if i > 0:
+                assert (annotated[i - 1].surface ==
+                        pointer_annotated[i - 1].surface)
+            if i < len(annotated) - 1:
+                assert (annotated[i + 1].surface ==
+                        pointer_annotated[i + 1].surface)
+            return i
+    assert False, "failed to find head"
 
 def main():
     parser = get_argparser()
@@ -69,12 +83,13 @@ def main():
 
     problems = semeval_testset.extract_wsd_problems(args.testset)
     for problem in problems:
-        annotated = preprocessing.preprocess(problem[2], "en")
+        rawtext = problem[2]
+        replaced = re.sub(r"<head>(.*)</head>", "\\1", rawtext)
+        annotated = preprocessing.preprocess(replaced, "en")
         sentence = [token.lemma for token in annotated]
 
-        ## XXX: for our next trick, get the right index into the sentence.
-        feats = features.extract_untagged(sentence, annotated, 0)
+        focus_index = find_head_token_index(rawtext, annotated)
+        feats = features.extract_untagged(sentence, annotated, focus_index)
         print(feats)
-    # for (clname, classifier) in classifier_pairs:
 
 if __name__ == "__main__": main()
