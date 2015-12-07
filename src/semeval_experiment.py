@@ -7,6 +7,7 @@ Run CL-WSD experiments from semeval2013!
 import argparse
 import os
 import re
+from glob import glob
 
 import nltk
 
@@ -81,28 +82,32 @@ def main():
     classifier_pairs.append(("maxent-l1-c1", classifier))
     stamp = util.timestamp()
 
-    problems = semeval_testset.extract_wsd_problems(args.testset)
-    for problem in problems:
-        w = problem[0]
-        assert w.endswith(".n")
-        w = w[:-2]
-        print(w)
+    for fn in glob(args.testset + "/*data"):
+        problems = semeval_testset.extract_wsd_problems(fn)
+        for problem in problems:
+            w = problem[0]
+            assert w.endswith(".n")
+            w = w[:-2]
+            print(w)
 
-        training = trainingdata.trainingdata_for(w, nonnull=True)
-        ## labels = set(label for (feat,label) in training)
-        if len(training) < 10:
-            print("not enough samples for", w)
-            continue
-        classifier.train(training)
+            training = trainingdata.trainingdata_for(w, nonnull=True)
+            labels = set(label for (feat,label) in training)
+            if len(training) == 0:
+                print("no samples for", w)
+                break
+            if len(labels) < 2:
+                print("there's only one sense for", w, " and it is ", labels)
+                break
+            classifier.train(training)
 
-        rawtext = problem[2]
-        replaced = re.sub(r"<head>(.*)</head>", "\\1", rawtext)
-        annotated = preprocessing.preprocess(replaced, "en")
-        sentence = [token.lemma for token in annotated]
+            rawtext = problem[2]
+            replaced = re.sub(r"<head>(.*)</head>", "\\1", rawtext)
+            annotated = preprocessing.preprocess(replaced, "en")
+            sentence = [token.lemma for token in annotated]
 
-        focus_index = find_head_token_index(rawtext, annotated)
-        feats = features.extract_untagged(sentence, annotated, focus_index)
+            focus_index = find_head_token_index(rawtext, annotated)
+            feats = features.extract_untagged(sentence, annotated, focus_index)
 
-        print(classifier.classify(feats))
+            print(classifier.classify(feats))
 
 if __name__ == "__main__": main()
