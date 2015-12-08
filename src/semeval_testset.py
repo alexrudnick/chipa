@@ -6,6 +6,7 @@ that are specified on the command line.
 """
 
 import sys
+import re
 import argparse
 from xml.sax import handler, make_parser
 
@@ -61,6 +62,20 @@ def extract_wsd_problems(fn):
     for (lexelt, head_count, context, inst) in list(handler.sentences):
         out.append((lexelt, head_count, context, inst))
     return out
+
+def head_surface_and_index(text):
+    """There is a string in a <head> tag in this text -- we want to know which
+    instance of that string is the one with the <head> tag; there might be more
+    than one instance of that string."""
+    assert "<head>" in text
+    assert "</head>" in text
+
+    needle = re.sub(r".*<head>(.*)</head>.*", "\\1", text)
+    for index, match in enumerate(re.finditer(r"\b" + needle + r"\b", text)):
+        curpos = match.span()[0]
+        if text.find("<head>" + needle) == (curpos - len("<head>")):
+            return needle, index
+    assert False, "couldn't find head instance"
 
 def main():
     parser = argparse.ArgumentParser(description='clwsd')

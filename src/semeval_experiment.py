@@ -36,20 +36,20 @@ def get_argparser():
     parser.add_argument('--dprint', type=bool, default=False, required=False)
     return parser
 
-def find_head_token_index(rawtext, annotated):
-    replaced = re.sub(r"<head>(.*)</head>", "QQQQQQ", rawtext)
-    pointer_annotated = preprocessing.preprocess(replaced, "en")
-    assert len(annotated) == len(pointer_annotated)
-    for i, (token, pointer) in enumerate(zip(annotated, pointer_annotated)):
-        print(i, token, pointer)
-        if pointer.surface == "QQQQQQ":
-            if i > 0:
-                assert (annotated[i - 1].surface ==
-                        pointer_annotated[i - 1].surface)
-            if i < len(annotated) - 1:
-                assert (annotated[i + 1].surface ==
-                        pointer_annotated[i + 1].surface)
-            return i
+def find_head_token_index(annotated, surface, index):
+    """Here we are given an annotated sentence, the surface form of the head
+    we're looking for, and the index of the particular instance of the thing
+    with that surface form that is the head."""
+
+    surface_index = 0
+    for i, token in enumerate(annotated):
+        if (token.surface == surface or 
+            ("_" + surface in token.surface) or
+            (surface + "_" in token.surface)):
+            if surface_index == index:
+                return i
+            surface_index += 1
+    print(annotated, surface, index)
     assert False, "failed to find head"
 
 def main():
@@ -70,6 +70,7 @@ def main():
     source_annotated = annotated_corpus.load_corpus(args.annotatedfn)
     trainingdata.set_sl_annotated(source_annotated)
 
+    print("TRAINING DATA LOADED.")
 
     ## default is 1e-4.
     THETOL = 1e-3
@@ -84,28 +85,34 @@ def main():
 
     for fn in glob(args.testset + "/*data"):
         problems = semeval_testset.extract_wsd_problems(fn)
+
+        training = None
         for problem in problems:
             w = problem[0]
             assert w.endswith(".n")
             w = w[:-2]
-            print(w)
+            print(problem)
 
-            training = trainingdata.trainingdata_for(w, nonnull=True)
-            labels = set(label for (feat,label) in training)
-            if len(training) == 0:
-                print("no samples for", w)
-                break
-            if len(labels) < 2:
-                print("there's only one sense for", w, " and it is ", labels)
-                break
-            classifier.train(training)
+            if training is None:
+                training = trainingdata.trainingdata_for(w, nonnull=True)
+                print("got {0} instances for {1}".format(len(training), w))
+                labels = set(label for (feat,label) in training)
+                if len(training) == 0:
+                    print("no samples for", w)
+                    break
+                if len(labels) < 2:
+                    print("there's only one sense for", w, " and it is ",
+                          labels)
+                    break
+                classifier.train(training)
 
             rawtext = problem[2]
+            surface, index = semeval_testset.head_surface_and_index(rawtext)
             replaced = re.sub(r"<head>(.*)</head>", "\\1", rawtext)
             annotated = preprocessing.preprocess(replaced, "en")
             sentence = [token.lemma for token in annotated]
 
-            focus_index = find_head_token_index(rawtext, annotated)
+            focus_index = find_head_token_index(annotated, surface, index)
             feats = features.extract_untagged(sentence, annotated, focus_index)
 
             print(classifier.classify(feats))
