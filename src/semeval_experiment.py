@@ -113,7 +113,7 @@ def main():
 
             rawtext = problem[2]
             surface, index = semeval_testset.head_surface_and_index(rawtext)
-            replaced = re.sub(r"<head>(.*)</head>", "\\1", rawtext)
+            replaced = re.sub(r"<head>(.*)</head>", " \\1 ", rawtext)
             annotated = preprocessing.preprocess(replaced, "en")
             sentence = [token.lemma for token in annotated]
 
