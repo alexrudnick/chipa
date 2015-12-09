@@ -1,5 +1,6 @@
 from operator import itemgetter
 import functools
+import re
 
 import nltk
 
@@ -70,6 +71,26 @@ def load_bitext(bitextfn, alignfn):
          open(alignfn) as infile_align:
         for bitext, alignment in zip(infile_bitext, infile_align):
             source, target = bitext.split("|||")
+            out_source.append(source.strip().lower().split())
+            out_target.append(target.strip().lower().split())
+            out_align.append(alignment.strip().split())
+    return list(zip(out_source, out_target, out_align))
+
+def load_bitext_for_word(word, bitextfn, alignfn):
+    """Take in bitext filename and then alignment filename.
+    Return a list of (source,target,alignment) tuples. Lowercase everything.
+    NB: input files should already be tokenized and lemmatized at this point.
+    """
+    out_source = []
+    out_target = []
+    out_align = []
+
+    with open(bitextfn) as infile_bitext, \
+         open(alignfn) as infile_align:
+        for bitext, alignment in zip(infile_bitext, infile_align):
+            source, target = bitext.split("|||")
+            if not re.search(r"\b" + word + r"\b", source):
+                continue
             out_source.append(source.strip().lower().split())
             out_target.append(target.strip().lower().split())
             out_align.append(alignment.strip().split())

@@ -52,6 +52,18 @@ def find_head_token_index(annotated, surface, index):
     print(annotated, surface, index)
     assert False, "failed to find head"
 
+def load_training_for_word(word, bitextfn, alignfn, annotatedfn):
+    triple_sentences = trainingdata.load_bitext_for_word(word, bitextfn, alignfn)
+    tl_sentences = trainingdata.get_target_language_sentences(triple_sentences)
+    sl_sentences = [s for (s,t,a) in triple_sentences]
+    tagged_sentences = [list(zip(ss, ts))
+                        for ss,ts in zip(sl_sentences, tl_sentences)]
+    trainingdata.set_examples(sl_sentences,tagged_sentences)
+
+    source_annotated = annotated_corpus.load_corpus_for_word(word, annotatedfn)
+    trainingdata.set_sl_annotated(source_annotated)
+    print("TRAINING DATA LOADED.")
+
 def main():
     parser = get_argparser()
     args = parser.parse_args()
@@ -59,18 +71,6 @@ def main():
     util.DPRINT = args.dprint
     featureset_name = os.path.basename(args.featurefn).split('.')[0]
     features.load_featurefile(args.featurefn)
-
-    triple_sentences = trainingdata.load_bitext(args.bitextfn, args.alignfn)
-    tl_sentences = trainingdata.get_target_language_sentences(triple_sentences)
-    sl_sentences = [s for (s,t,a) in triple_sentences]
-    tagged_sentences = [list(zip(ss, ts))
-                        for ss,ts in zip(sl_sentences, tl_sentences)]
-    trainingdata.set_examples(sl_sentences,tagged_sentences)
-
-    source_annotated = annotated_corpus.load_corpus(args.annotatedfn)
-    trainingdata.set_sl_annotated(source_annotated)
-
-    print("TRAINING DATA LOADED.")
 
     ## default is 1e-4.
     THETOL = 1e-3
@@ -85,6 +85,11 @@ def main():
 
     for fn in glob(args.testset + "/*data"):
         problems = semeval_testset.extract_wsd_problems(fn)
+
+        w = problems[0][0]
+        assert w.endswith(".n")
+        w = w[:-2]
+        load_training_for_word(w, args.bitextfn, args.alignfn, args.annotatedfn)
 
         training = None
         for problem in problems:
