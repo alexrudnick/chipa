@@ -89,7 +89,7 @@ def load_bitext_for_word(word, bitextfn, alignfn):
          open(alignfn) as infile_align:
         for bitext, alignment in zip(infile_bitext, infile_align):
             source, target = bitext.split("|||")
-            if not re.search(r"\b" + word + r"\b", source):
+            if word not in (source.strip().lower().split()):
                 continue
             out_source.append(source.strip().lower().split())
             out_target.append(target.strip().lower().split())
