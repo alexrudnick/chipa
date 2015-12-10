@@ -64,6 +64,31 @@ def load_training_for_word(word, bitextfn, alignfn, annotatedfn):
     trainingdata.set_sl_annotated(source_annotated)
     print("TRAINING DATA LOADED.")
 
+
+def output_one_best(problem, target, solution):
+    """Return output for a solution for the one-best."""
+    return "{0}.{1} {2} :: {3};".format(problem[0],
+                                        target,
+                                        problem[3],
+                                        solution)
+
+def output_five_best(problem, target, solutions):
+    """Return output for a solution for the one-best."""
+    answerstr = ";".join(solutions)
+    return "{0}.{1} {2} ::: {3};".format(problem[0],
+                                         target,
+                                         problem[3],
+                                         answerstr)
+
+def topfive(dist):
+    """Given a distribution (the output of running prob_classify), return the
+    top five labels in that distribution."""
+    probs_and_labels = [(dist.prob(key), key) for key in dist.samples()]
+    descending = sorted(probs_and_labels, reverse=True)
+    labels = [label for (prob,label) in descending]
+    return labels[:5]
+
+
 def main():
     parser = get_argparser()
     args = parser.parse_args()
@@ -91,7 +116,15 @@ def main():
         w = w[:-2]
         load_training_for_word(w, args.bitextfn, args.alignfn, args.annotatedfn)
 
+        bestoutfn = "../semevaloutput/{0}.{1}.best".format(w, "es")
+        oofoutfn = "../semevaloutput/{0}.{1}.oof".format(w, "es")
+        if os.path.exists(bestoutfn):
+            os.remove(bestoutfn)
+        if os.path.exists(oofoutfn):
+            os.remove(oofoutfn)
+
         training = None
+
         for problem in problems:
             w = problem[0]
             assert w.endswith(".n")
@@ -120,6 +153,17 @@ def main():
             focus_index = find_head_token_index(annotated, surface, index)
             feats = features.extract_untagged(sentence, annotated, focus_index)
 
-            print(classifier.classify(feats))
+            bestoutfn = "../semevaloutput/{0}.{1}.best".format(w, "es")
+            oofoutfn = "../semevaloutput/{0}.{1}.oof".format(w, "es")
+            with open(bestoutfn, "a") as bestoutfile, \
+                 open(oofoutfn, "a") as oofoutfile:
+
+                answer = classifier.classify(feats)
+                print(answer)
+                dist = classifier.prob_classify(feats)
+                oof_answers = topfive(dist)
+                print(output_one_best(problem, "es", answer), file=bestoutfile)
+                print(output_five_best(problem, "es", oof_answers),
+                      file=oofoutfile)
 
 if __name__ == "__main__": main()
