@@ -40,7 +40,10 @@ venv
 ## All the output we're going to generate
 hmmwsd/*output*/*
 src/results/*
-semevaloutput/*.results
-semevaloutput/*.best
-semevaloutput/*.oof
+semeval_2013_output/*.results
+semeval_2013_output/*.best
+semeval_2013_output/*.oof
+semeval_2010_output/*.results
+semeval_2010_output/*.best
+semeval_2010_output/*.oof
 src/LOGS/*

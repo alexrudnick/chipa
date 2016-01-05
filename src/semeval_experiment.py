@@ -33,6 +33,7 @@ def get_argparser():
     parser.add_argument('--annotatedfn', type=str, required=True)
     parser.add_argument('--featurefn', type=str, required=True)
     parser.add_argument('--testset', type=str, required=True)
+    parser.add_argument('--outputdir', type=str, required=True)
     parser.add_argument('--dprint', type=bool, default=False, required=False)
     return parser
 
@@ -116,8 +117,8 @@ def main():
         w = w[:-2]
         load_training_for_word(w, args.bitextfn, args.alignfn, args.annotatedfn)
 
-        bestoutfn = "../semevaloutput/{0}.{1}.best".format(w, "es")
-        oofoutfn = "../semevaloutput/{0}.{1}.oof".format(w, "es")
+        bestoutfn = args.outputdir + "/{0}.{1}.best".format(w, "es")
+        oofoutfn = args.outputdir + "/{0}.{1}.oof".format(w, "es")
         if os.path.exists(bestoutfn):
             os.remove(bestoutfn)
         if os.path.exists(oofoutfn):
@@ -153,8 +154,8 @@ def main():
             focus_index = find_head_token_index(annotated, surface, index)
             feats = features.extract_untagged(sentence, annotated, focus_index)
 
-            bestoutfn = "../semevaloutput/{0}.{1}.best".format(w, "es")
-            oofoutfn = "../semevaloutput/{0}.{1}.oof".format(w, "es")
+            bestoutfn = args.outputdir + "/{0}.{1}.best".format(w, "es")
+            oofoutfn = args.outputdir + "/{0}.{1}.oof".format(w, "es")
             with open(bestoutfn, "a") as bestoutfile, \
                  open(oofoutfn, "a") as oofoutfile:
 

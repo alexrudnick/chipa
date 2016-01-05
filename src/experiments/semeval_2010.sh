@@ -5,5 +5,5 @@ python3 semeval_experiment.py \
   --alignfn ~/terere/bibletools/output/europarl.en-es.align \
   --annotatedfn annotated/europarl.en-es.source.annotated \
   --featurefn $@ \
-  --testset ~/chipa/semeval_2013_test/ \
-  --outputdir ~/chipa/semeval_2013_output/
+  --testset ~/chipa/semeval_2010_test/ \
+  --outputdir ~/chipa/semeval_2010_output/
