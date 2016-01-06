@@ -150,7 +150,8 @@ def main():
     classifier = SklearnClassifier(RandomForestClassifier(), sparse=False)
     classifier_pairs.append(("random-forest-default", classifier))
 
-    stamp = util.timestamp()
+    language_pair = args.bitextfn.split(".")[1]
+    stamp = util.timestamp() + "-" + language_pair
 
     for (clname, classifier) in classifier_pairs:
         casename = "{0}-{1}-regular".format(clname, featureset_name)

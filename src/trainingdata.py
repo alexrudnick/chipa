@@ -167,7 +167,7 @@ def get_top_words(sl_sentences):
     out = []
     for (word, count) in mostcommon:
         if word not in STOPWORDS and not ispunct(word):
-            if count >= 200:
+            if count >= 50:
                 out.append((word, count))
             else:
                 break
