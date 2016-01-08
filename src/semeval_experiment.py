@@ -104,9 +104,9 @@ def main():
     classifier_pairs.append(("MFS", learn.MFSClassifier()))
 
     classifier = SklearnClassifier(LogisticRegression(C=1,
-                                   penalty='l1',
+                                   penalty='l2',
                                    tol=THETOL))
-    classifier_pairs.append(("maxent-l1-c1", classifier))
+    classifier_pairs.append(("maxent-l2-c1", classifier))
     stamp = util.timestamp()
 
     for fn in glob(args.testset + "/*data"):
