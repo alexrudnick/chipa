@@ -76,28 +76,33 @@ def surfacewindow(tagged_sent, annotated, index):
 def brown_variations(featprefix, cluster):
     """Return all the feature variations for this brown cluster."""
     out = {}
-    out.update({'%s_complete(%s)' % (featprefix, cluster): True})
-    if cluster != "NONE":
-        for end in range(0, len(cluster)):
-            out.update(dict([('%s_%d(%s)' % (featprefix, end, cluster[:end+1]),
-                             True)]))
+    out.update({'%s(%s)' % (featprefix, cluster): True})
+    if cluster == "NONE":
+        return out
+    ## do prefixes of the complete cluster label at 4, 6, 10, and
+    ## the whole cluster (like Turian et al 2010, but they maxed out
+    ## at 20. Ours aren't wider than 20 though.)
+    for prefixlen in [4, 6, 10]:
+        out.update(dict([('%s_%d(%s)' % (featprefix, prefixlen,
+                                         cluster[:prefixlen]),
+                         True)]))
     return out
 
-def brown_bag_bible(tagged_sent, annotated, index):
-    """Bag of all the brown_bible clusters for this sentence."""
+def brown_bag_wikipedia(tagged_sent, annotated, index):
+    """Bag of all the brown_wikipedia clusters for this sentence."""
     out = {}
-    clusters = clusters_for_sentence(annotated, "brown_bible=")
+    clusters = clusters_for_sentence(annotated, "brown_wikipedia=")
     for cluster in clusters:
-        out.update(brown_variations("brown_bag_bible", cluster))
+        out.update(brown_variations("brown_bag_wikipedia", cluster))
     return out
 
-def brown_window_bible(tagged_sent, annotated, index):
+def brown_window_wikipedia(tagged_sent, annotated, index):
     out = {}
-    clusters = clusters_for_sentence(annotated, "brown_bible=")
+    clusters = clusters_for_sentence(annotated, "brown_wikipedia=")
     w_indices = window_indices(index, WIDTH, len(annotated))
     for w_index in w_indices:
         cluster = clusters[w_index]
-        variations = brown_variations("brown_window_bible", cluster)
+        variations = brown_variations("brown_window_wikipedia", cluster)
         out.update(variations)
     return out
 

@@ -12,15 +12,15 @@ class TestFeatures(unittest.TestCase):
         self.tagged_sent = list(zip(sent_en.split(), sent_es.split()))
 
         lines = [
-            "one\tone\tbrown_bible=0001",
-            "two\ttwo\tbrown_bible=0010",
-            "three\tthree\tbrown_bible=0011",
-            "four\tfour\tbrown_bible=0100",
-            "five\tfive\tbrown_bible=0101",
-            "six\tsix\tbrown_bible=0110",
-            "seven\tseven\tbrown_bible=0111",
-            "eight\tsevent\tbrown_bible=1000",
-            ".\t.\tbrown_bible=0000"
+            "one\tone\tbrown_wikipedia=0001",
+            "two\ttwo\tbrown_wikipedia=0010",
+            "three\tthree\tbrown_wikipedia=0011",
+            "four\tfour\tbrown_wikipedia=0100",
+            "five\tfive\tbrown_wikipedia=0101",
+            "six\tsix\tbrown_wikipedia=0110",
+            "seven\tseven\tbrown_wikipedia=0111",
+            "eight\teight\tbrown_wikipedia=1000",
+            ".\t.\tbrown_wikipedia=0000"
         ]
         self.annotated = annotated_corpus.load_corpus_from_lines(lines)
 
@@ -64,28 +64,29 @@ class TestFeatures(unittest.TestCase):
         self.assertIn("w(four)", feats)
         self.assertIn("w(five)", feats)
 
-    def test_brown_bag_bible(self):
-        feats = features.brown_bag_bible(self.tagged_sent, self.annotated[0], 0)
-        self.assertIn("brown_bag_bible_complete(0000)", feats)
-        self.assertIn("brown_bag_bible_complete(1000)", feats)
-        self.assertIn("brown_bag_bible_0(1)", feats)
-        self.assertIn("brown_bag_bible_0(0)", feats)
-        self.assertIn("brown_bag_bible_1(00)", feats)
+    def test_brown_bag_wikipedia(self):
+        feats = features.brown_bag_wikipedia(self.tagged_sent, self.annotated[0], 0)
+        self.assertIn("brown_bag_wikipedia(0000)", feats)
+        self.assertIn("brown_bag_wikipedia(1000)", feats)
+        self.assertIn("brown_bag_wikipedia_4(0100)", feats)
+        self.assertIn("brown_bag_wikipedia_4(0111)", feats)
+        self.assertIn("brown_bag_wikipedia_4(0010)", feats)
+        self.assertIn("brown_bag_wikipedia_10(0010)", feats)
 
-    def test_brown_window_bible(self):
-        feats = features.brown_window_bible(self.tagged_sent,
+    def test_brown_window_wikipedia(self):
+        feats = features.brown_window_wikipedia(self.tagged_sent,
                                             self.annotated[0],
                                             0)
-        self.assertNotIn("brown_window_bible_complete(0000)", feats)
-        self.assertIn("brown_window_bible_complete(0010)", feats)
-        self.assertIn("brown_window_bible_complete(0011)", feats)
+        self.assertNotIn("brown_window_wikipedia(0000)", feats)
+        self.assertIn("brown_window_wikipedia(0010)", feats)
+        self.assertIn("brown_window_wikipedia(0011)", feats)
 
-        feats = features.brown_window_bible(self.tagged_sent,
+        feats = features.brown_window_wikipedia(self.tagged_sent,
                                             self.annotated[0],
                                             8)
-        self.assertIn("brown_window_bible_complete(1000)", feats)
-        self.assertNotIn("brown_window_bible_complete(0000)", feats)
-        self.assertNotIn("brown_window_bible_complete(0001)", feats)
+        self.assertIn("brown_window_wikipedia(1000)", feats)
+        self.assertNotIn("brown_window_wikipedia(0000)", feats)
+        self.assertNotIn("brown_window_wikipedia(0001)", feats)
 
     def test_window_indices(self):
         indices = features.window_indices(0, 1, 2)
@@ -105,27 +106,27 @@ class TestFeatures(unittest.TestCase):
         feats = features.brown_bag_europarl(self.tagged_sent,
                                             self.annotated[0],
                                             0)
-        self.assertIn("brown_bag_europarl_complete(NONE)", feats)
+        self.assertIn("brown_bag_europarl(NONE)", feats)
 
 
         feats = features.brown_bag_europarl(self.tagged_sent,
                                             self.annotated_europarl[0],
                                             0)
-        self.assertNotIn("brown_bag_europarl_complete(NONE)", feats)
-        self.assertIn("brown_bag_europarl_complete(0000)", feats)
+        self.assertNotIn("brown_bag_europarl(NONE)", feats)
+        self.assertIn("brown_bag_europarl(0000)", feats)
 
     def test_brown_window_europarl(self):
         feats = features.brown_window_europarl(self.tagged_sent,
                                                self.annotated_europarl[0],
                                                2)
-        self.assertIn("brown_window_europarl_complete(0001)", feats)
-        self.assertIn("brown_window_europarl_0(0)", feats)
+        self.assertIn("brown_window_europarl(0001)", feats)
+        self.assertIn("brown_window_europarl_4(0001)", feats)
 
     def test_brown_variations(self):
-        variations = features.brown_variations("foo", "1111")
-        self.assertIn("foo_complete(1111)", variations)
-        self.assertIn("foo_0(1)", variations)
-        self.assertIn("foo_3(1111)", variations)
+        variations = features.brown_variations("foo", "11111111")
+        self.assertIn("foo(11111111)", variations)
+        self.assertIn("foo_4(1111)", variations)
+        self.assertIn("foo_6(111111)", variations)
 
     def test_postag(self):
         feats = features.postag(self.tagged_sent2,

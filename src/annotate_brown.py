@@ -38,15 +38,7 @@ def main():
             ## w = w.lower()
             w = token.surface
             if w in word_to_cluster:
-                ## do prefixes of the complete cluster label at 4, 6, 10, and
-                ## the whole cluster (like Turian et al 2010, but they maxed out
-                ## at 20. Ours aren't wider than 20 though.)
-                for prefixlen in [4, 6, 10]:
-                    token.annotations.add(args.featureprefix + str(prefixlen) +
-                                          "=" +
-                                          word_to_cluster[w][:prefixlen])
-                token.annotations.add(args.featureprefix +
-                                      "=" +
+                token.annotations.add(args.featureprefix + "=" +
                                       word_to_cluster[w])
             print(token)
         print()
