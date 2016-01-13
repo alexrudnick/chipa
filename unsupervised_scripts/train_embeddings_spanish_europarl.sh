@@ -13,16 +13,16 @@ if [ ! -e "/tmp/europarl-v7.es-en.es.tok" ]; then
 fi
 
 time $WORD2VEC -train $CORPUS \
-  -output /clustering/word2vec-spanish-europarl-200 \
+  -output /space/clustering/word2vec-spanish-europarl-200 \
   -cbow 1 -size 200 -window 8 -negative 25 -hs 0 -sample 1e-4 \
   -threads 20 -binary 0 -iter 15
 
 time $WORD2VEC -train $CORPUS \
-  -output /clustering/word2vec-spanish-europarl-100 \
+  -output /space/clustering/word2vec-spanish-europarl-100 \
   -cbow 1 -size 100 -window 8 -negative 25 -hs 0 -sample 1e-4 \
   -threads 20 -binary 0 -iter 15
 
 time $WORD2VEC -train $CORPUS \
-  -output /clustering/word2vec-spanish-europarl-50 \
+  -output /space/clustering/word2vec-spanish-europarl-50 \
   -cbow 1 -size 50 -window 8 -negative 25 -hs 0 -sample 1e-4 \
   -threads 20 -binary 0 -iter 15
