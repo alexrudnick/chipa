@@ -28,6 +28,14 @@ def window_indices(index, width, length):
               list(range(index+1, upperbound+1))
     return indices
 
+def window_indices_inclusive(index, width, length):
+    """Return a list of the indices in the window, for width before and after
+    the index, constrained by the length of the sequence. Includes index."""
+
+    lowerbound = max(0, index-width)
+    upperbound = min(index+width, length-1)
+    return list(range(lowerbound, upperbound+1))
+
 WIDTH=3
 def window(tagged_sent, annotated, index):
     """Immediate surrounding context features."""
@@ -99,7 +107,7 @@ def brown_bag_wikipedia(tagged_sent, annotated, index):
 def brown_window_wikipedia(tagged_sent, annotated, index):
     out = {}
     clusters = clusters_for_sentence(annotated, "brown_wikipedia=")
-    w_indices = window_indices(index, WIDTH, len(annotated))
+    w_indices = window_indices_inclusive(index, WIDTH, len(annotated))
     for w_index in w_indices:
         cluster = clusters[w_index]
         variations = brown_variations("brown_window_wikipedia", cluster)
@@ -116,7 +124,7 @@ def brown_bag_europarl(tagged_sent, annotated, index):
 def brown_window_europarl(tagged_sent, annotated, index):
     out = {}
     clusters = clusters_for_sentence(annotated, "brown_europarl=")
-    w_indices = window_indices(index, WIDTH, len(annotated))
+    w_indices = window_indices_inclusive(index, WIDTH, len(annotated))
     for w_index in w_indices:
         cluster = clusters[w_index]
         variations = brown_variations("brown_window_europarl", cluster)
@@ -126,12 +134,14 @@ def brown_window_europarl(tagged_sent, annotated, index):
 def word2vec_windowsum(tagged_sent, annotated, index):
     out = {}
     word2vec_strings = clusters_for_sentence(annotated, "word2vec_europarl=")
-    w_indices = window_indices(index, WIDTH, len(annotated))
+    w_indices = window_indices_inclusive(index, WIDTH, len(annotated))
 
     vectors = []
     for w_index in w_indices:
-        ss = word2vec_strings[w_index]
-        vec = [float(s) for s in ss.split("_")]
+        joined = word2vec_strings[w_index]
+        if joined == "NONE":
+            continue
+        vec = [float(s) for s in joined.split("_")]
         vectors.append(vec)
     summed_vector = [sum(vals) for vals in zip(*vectors)]
 

@@ -56,11 +56,31 @@ class TestFeatures(unittest.TestCase):
         lines = [
             "I\tI\tword2vec_europarl=0.1_0.1",
             "kick\tkicked\tword2vec_europarl=0.2_0.2",
-            "the\tthe\ttword2vec_europarl=0.3_0.3",
+            "the\tthe\tword2vec_europarl=0.3_0.3",
             "ball\tball\tword2vec_europarl=0.4_0.4",
             ".\t.\tword2vec_europarl=0.5_0.5",
         ]
         self.annotated_word2vec = annotated_corpus.load_corpus_from_lines(lines)
+
+        lines = [
+            "I\tI\tword2vec_europarl=0.1_0.1",
+            "kick\tkicked\tword2vec_europarl=0.2_0.2",
+            "the\tthe\tpos=DET",
+            "ball\tball\tword2vec_europarl=0.4_0.4",
+            ".\t.\tword2vec_europarl=0.5_0.5",
+        ]
+        self.annotated_word2vec_missing = \
+            annotated_corpus.load_corpus_from_lines(lines)
+
+        lines = [
+            "I\tI\tpos=foo",
+            "kick\tkicked\tpos=foo",
+            "the\tthe\tpos=foo",
+            "ball\tball\tpos=foo",
+            ".\t.\tpos=foo",
+        ]
+        self.annotated_word2vec_missing_all = \
+            annotated_corpus.load_corpus_from_lines(lines)
 
     def test_window(self):
         feats = features.window(self.tagged_sent, self.annotated[0], 0)
@@ -90,6 +110,7 @@ class TestFeatures(unittest.TestCase):
                                             self.annotated[0],
                                             0)
         self.assertNotIn("brown_window_wikipedia(0000)", feats)
+        self.assertIn("brown_window_wikipedia(0001)", feats)
         self.assertIn("brown_window_wikipedia(0010)", feats)
         self.assertIn("brown_window_wikipedia(0011)", feats)
 
@@ -97,7 +118,7 @@ class TestFeatures(unittest.TestCase):
                                             self.annotated[0],
                                             8)
         self.assertIn("brown_window_wikipedia(1000)", feats)
-        self.assertNotIn("brown_window_wikipedia(0000)", feats)
+        self.assertIn("brown_window_wikipedia(0000)", feats)
         self.assertNotIn("brown_window_wikipedia(0001)", feats)
 
     def test_window_indices(self):
@@ -162,9 +183,21 @@ class TestFeatures(unittest.TestCase):
         feats = features.word2vec_windowsum(self.tagged_sent3,
                                       self.annotated_word2vec[0],
                                       2)
+        self.assertAlmostEqual(feats["word2vec_europarl_0"], 1.5)
+        self.assertAlmostEqual(feats["word2vec_europarl_1"], 1.5)
+        self.assertEqual(len(feats), 2)
+
+        feats = features.word2vec_windowsum(self.tagged_sent3,
+                                      self.annotated_word2vec_missing[0],
+                                      2)
         self.assertAlmostEqual(feats["word2vec_europarl_0"], 1.2)
         self.assertAlmostEqual(feats["word2vec_europarl_1"], 1.2)
         self.assertEqual(len(feats), 2)
+
+        feats = features.word2vec_windowsum(self.tagged_sent3,
+                                      self.annotated_word2vec_missing_all[0],
+                                      2)
+        self.assertEqual(feats, {})
 
 if __name__ == '__main__':
     unittest.main()
