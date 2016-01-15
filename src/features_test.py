@@ -50,6 +50,18 @@ class TestFeatures(unittest.TestCase):
         ]
         self.annotated_postags = annotated_corpus.load_corpus_from_lines(lines)
 
+        sent_en = "i kick the ball ."
+        sent_es = "yo pateo la pelota ."
+        self.tagged_sent3 = list(zip(sent_en.split(), sent_es.split()))
+        lines = [
+            "I\tI\tword2vec_europarl=0.1_0.1",
+            "kick\tkicked\tword2vec_europarl=0.2_0.2",
+            "the\tthe\ttword2vec_europarl=0.3_0.3",
+            "ball\tball\tword2vec_europarl=0.4_0.4",
+            ".\t.\tword2vec_europarl=0.5_0.5",
+        ]
+        self.annotated_word2vec = annotated_corpus.load_corpus_from_lines(lines)
+
     def test_window(self):
         feats = features.window(self.tagged_sent, self.annotated[0], 0)
         self.assertNotIn("w(one)", feats)
@@ -145,6 +157,14 @@ class TestFeatures(unittest.TestCase):
                                       self.annotated_postags[0],
                                       2)
         self.assertEqual({"postag_right(NOUN)": True}, feats)
+
+    def test_word2vec_windowsum(self):
+        feats = features.word2vec_windowsum(self.tagged_sent3,
+                                      self.annotated_word2vec[0],
+                                      2)
+        self.assertAlmostEqual(feats["word2vec_europarl_0"], 1.2)
+        self.assertAlmostEqual(feats["word2vec_europarl_1"], 1.2)
+        self.assertEqual(len(feats), 2)
 
 if __name__ == '__main__':
     unittest.main()

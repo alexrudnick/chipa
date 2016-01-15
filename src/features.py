@@ -123,6 +123,22 @@ def brown_window_europarl(tagged_sent, annotated, index):
         out.update(variations)
     return out
 
+def word2vec_windowsum(tagged_sent, annotated, index):
+    out = {}
+    word2vec_strings = clusters_for_sentence(annotated, "word2vec_europarl=")
+    w_indices = window_indices(index, WIDTH, len(annotated))
+
+    vectors = []
+    for w_index in w_indices:
+        ss = word2vec_strings[w_index]
+        vec = [float(s) for s in ss.split("_")]
+        vectors.append(vec)
+    summed_vector = [sum(vals) for vals in zip(*vectors)]
+
+    for i, val in enumerate(summed_vector):
+        out["word2vec_europarl_" + str(i)] = val
+    return out
+
 def postag(tagged_sent, annotated, index):
     out = {}
     token = annotated[index]
