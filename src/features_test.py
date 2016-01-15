@@ -154,6 +154,18 @@ class TestFeatures(unittest.TestCase):
         self.assertIn("brown_window_europarl(0001)", feats)
         self.assertIn("brown_window_europarl_4(0001)", feats)
 
+    def test_flat_brown_window_europarl(self):
+        feats = features.flat_brown_window_europarl(self.tagged_sent,
+                                                    self.annotated_europarl[0],
+                                                    2)
+        self.assertIn("fwe(0001)", feats)
+
+    def test_flat_brown_window_wikipedia(self):
+        feats = features.flat_brown_window_wikipedia(self.tagged_sent,
+                                                     self.annotated[0],
+                                                     2)
+        self.assertIn("fww(0001)", feats)
+
     def test_brown_variations(self):
         variations = features.brown_variations("foo", "11111111")
         self.assertIn("foo(11111111)", variations)

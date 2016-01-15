@@ -131,6 +131,34 @@ def brown_window_europarl(tagged_sent, annotated, index):
         out.update(variations)
     return out
 
+def flat_brown_bag_wikipedia(tagged_sent, annotated, index):
+    """Bag of all the brown_wikipedia clusters for this sentence."""
+    clusters = clusters_for_sentence(annotated, "brown_wikipedia=")
+    return dict([('fbw(%s)' % c, True) for c in clusters])
+
+def flat_brown_bag_europarl(tagged_sent, annotated, index):
+    out = {}
+    clusters = clusters_for_sentence(annotated, "brown_europarl=")
+    return dict([('fbe(%s)' % c, True) for c in clusters])
+
+def flat_brown_window_europarl(tagged_sent, annotated, index):
+    out = {}
+    clusters = clusters_for_sentence(annotated, "brown_europarl=")
+    w_indices = window_indices_inclusive(index, WIDTH, len(annotated))
+    for w_index in w_indices:
+        cluster = clusters[w_index]
+        out.update({"fwe(%s)" % cluster: True})
+    return out
+
+def flat_brown_window_wikipedia(tagged_sent, annotated, index):
+    out = {}
+    clusters = clusters_for_sentence(annotated, "brown_wikipedia=")
+    w_indices = window_indices_inclusive(index, WIDTH, len(annotated))
+    for w_index in w_indices:
+        cluster = clusters[w_index]
+        out.update({"fww(%s)" % cluster: True})
+    return out
+
 def word2vec_windowsum(tagged_sent, annotated, index):
     out = {}
     word2vec_strings = clusters_for_sentence(annotated, "word2vec_europarl=")
