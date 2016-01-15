@@ -84,9 +84,9 @@ def surfacewindow(tagged_sent, annotated, index):
 def brown_variations(featprefix, cluster):
     """Return all the feature variations for this brown cluster."""
     out = {}
-    out.update({'%s(%s)' % (featprefix, cluster): True})
     if cluster == "NONE":
         return out
+    out.update({'%s(%s)' % (featprefix, cluster): True})
     ## do prefixes of the complete cluster label at 4, 6, 10, and
     ## the whole cluster (like Turian et al 2010, but they maxed out
     ## at 20. Ours aren't wider than 20 though.)

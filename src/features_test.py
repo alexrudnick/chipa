@@ -139,8 +139,7 @@ class TestFeatures(unittest.TestCase):
         feats = features.brown_bag_europarl(self.tagged_sent,
                                             self.annotated[0],
                                             0)
-        self.assertIn("brown_bag_europarl(NONE)", feats)
-
+        self.assertEqual(feats, {})
 
         feats = features.brown_bag_europarl(self.tagged_sent,
                                             self.annotated_europarl[0],
