@@ -20,6 +20,12 @@ from sklearn.svm import LinearSVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import cross_validation
 
+
+from sklearn.feature_extraction.text import TfidfTransformer                 
+from sklearn.feature_selection import SelectKBest, chi2                      
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline                                        
+
 import annotated_corpus
 import features
 import learn
@@ -149,6 +155,15 @@ def main():
     classifier_pairs.append(("linearsvc-l2-c1", classifier))
     classifier = SklearnClassifier(RandomForestClassifier(), sparse=False)
     classifier_pairs.append(("random-forest-default", classifier))
+
+    pipeline = Pipeline([('tfidf', TfidfTransformer()),                          
+                         ('chi2', SelectKBest(chi2, k=1000)),                    
+                         ('scaling', StandardScaler(with_mean=False)),
+                         ('maxent', LogisticRegression(C=1,
+                                                       penalty='l2',
+                                                       tol=THETOL))])
+    classifier = SklearnClassifier(pipeline)                                        
+    classifier_pairs.append(("maxent-chi2-fs", classifier))
 
     language_pair = args.bitextfn.split(".")[1]
     stamp = util.timestamp() + "-" + language_pair
