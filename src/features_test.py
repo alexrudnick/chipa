@@ -210,7 +210,7 @@ class TestFeatures(unittest.TestCase):
                                       2)
         self.assertEqual(feats, {})
 
-    def test_word2vec_windowsum(self):
+    def test_surfaceform(self):
         feats = features.surfaceform(self.tagged_sent2,
                                      self.annotated_postags[0],
                                      0)
