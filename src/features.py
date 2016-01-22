@@ -81,6 +81,12 @@ def surfacewindow(tagged_sent, annotated, index):
     out.update(windowfeatures)
     return out
 
+def surfaceform(tagged_sent, annotated, index):
+    """The literal surface form of the focus word."""
+    out = {}
+    surface = [token.surface for token in annotated]
+    return {("surfaceform(%s)" % surface[index]) : True}
+
 def brown_variations(featprefix, cluster):
     """Return all the feature variations for this brown cluster."""
     out = {}

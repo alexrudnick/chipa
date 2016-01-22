@@ -210,5 +210,16 @@ class TestFeatures(unittest.TestCase):
                                       2)
         self.assertEqual(feats, {})
 
+    def test_word2vec_windowsum(self):
+        feats = features.surfaceform(self.tagged_sent2,
+                                     self.annotated_postags[0],
+                                     0)
+        self.assertEqual({"surfaceform(I)": True}, feats)
+
+        feats = features.surfaceform(self.tagged_sent2,
+                                     self.annotated_postags[0],
+                                     1)
+        self.assertEqual({"surfaceform(kicked)": True}, feats)
+
 if __name__ == '__main__':
     unittest.main()
