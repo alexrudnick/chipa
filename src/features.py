@@ -6,6 +6,7 @@ return feature dictionaries.
 """
 
 import nltk
+from collections import Counter
 
 DEBUG=False
 
@@ -16,7 +17,7 @@ def NOFEATURES(tagged_sent, annotated, index):
 def bagofwords(tagged_sent, annotated, index):
     """Bag of words features."""
     source = nltk.tag.untag(tagged_sent)
-    return dict([('cw(%s)' % w, True) for w in source])
+    return Counter('cw(%s)' % w for w in source)
 
 def window_indices(index, width, length):
     """Return a list of the indices in the window, for width before and after
@@ -63,7 +64,7 @@ def clusters_for_sentence(annotated, clusterprefix):
 def bagofsurface(tagged_sent, annotated, index):
     """Bag of words features."""
     surface = [token.surface for token in annotated]
-    return dict([('bs(%s)' % w, True) for w in surface])
+    return Counter('bs(%s)' % w for w in surface)
 
 def surfacewindow(tagged_sent, annotated, index):
     """Immediate surrounding context features from the surface forms."""
@@ -104,10 +105,12 @@ def brown_variations(featprefix, cluster):
 
 def brown_bag_wikipedia(tagged_sent, annotated, index):
     """Bag of all the brown_wikipedia clusters for this sentence."""
-    out = {}
+    out = Counter()
     clusters = clusters_for_sentence(annotated, "brown_wikipedia=")
     for cluster in clusters:
-        out.update(brown_variations("brown_bag_wikipedia", cluster))
+        variations = brown_variations("brown_bag_wikipedia", cluster)
+        for k in variations:
+            out.update({k : 1})
     return out
 
 def brown_window_wikipedia(tagged_sent, annotated, index):
@@ -121,10 +124,12 @@ def brown_window_wikipedia(tagged_sent, annotated, index):
     return out
 
 def brown_bag_europarl(tagged_sent, annotated, index):
-    out = {}
+    out = Counter()
     clusters = clusters_for_sentence(annotated, "brown_europarl=")
     for cluster in clusters:
-        out.update(brown_variations("brown_bag_europarl", cluster))
+        variations = brown_variations("brown_bag_europarl", cluster)
+        for k in variations:
+            out.update({k : 1})
     return out
 
 def brown_window_europarl(tagged_sent, annotated, index):
@@ -140,12 +145,12 @@ def brown_window_europarl(tagged_sent, annotated, index):
 def flat_brown_bag_wikipedia(tagged_sent, annotated, index):
     """Bag of all the brown_wikipedia clusters for this sentence."""
     clusters = clusters_for_sentence(annotated, "brown_wikipedia=")
-    return dict([('fbw(%s)' % c, True) for c in clusters])
+    return Counter(['fbw(%s)' % c for c in clusters])
 
 def flat_brown_bag_europarl(tagged_sent, annotated, index):
     out = {}
     clusters = clusters_for_sentence(annotated, "brown_europarl=")
-    return dict([('fbe(%s)' % c, True) for c in clusters])
+    return Counter(['fbe(%s)' % c for c in clusters])
 
 def flat_brown_window_europarl(tagged_sent, annotated, index):
     out = {}

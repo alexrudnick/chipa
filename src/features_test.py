@@ -82,6 +82,32 @@ class TestFeatures(unittest.TestCase):
         self.annotated_word2vec_missing_all = \
             annotated_corpus.load_corpus_from_lines(lines)
 
+        lines = [
+            "the\tThe\tpos=foo",
+            "quick\tquick\tpos=foo",
+            "brown\tbrown\tpos=foo",
+            "fox\tfox\tpos=foo",
+            "jump\tjumped\tpos=foo",
+            "over\tover\tpos=foo",
+            "the\tthe\tpos=foo",
+            "lazy\tlazy\tpos=foo",
+            "sleep\tsleeping\tpos=foo",
+            "dog\tdog\tpos=foo",
+            ".\t.\tpos=foo",
+        ]
+        self.annotated_quickbrown = \
+            annotated_corpus.load_corpus_from_lines(lines)
+        sent_en = "the quick brown fox jump over the lazy sleeping dog ."
+        sent_es = "the quick brown fox jump over the lazy sleeping dog ."
+        self.tagged_sent3 = list(zip(sent_en.split(), sent_es.split()))
+
+    def test_bagofwords(self):
+        feats = features.bagofwords(self.tagged_sent3,
+                                    self.annotated_quickbrown[0],
+                                    0)
+        self.assertIn("cw(the)", feats)
+        self.assertEqual(feats["cw(the)"], 2)
+
     def test_window(self):
         feats = features.window(self.tagged_sent, self.annotated[0], 0)
         self.assertNotIn("w(one)", feats)

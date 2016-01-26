@@ -55,8 +55,9 @@ def cross_validate(classifier, top_words, nonnull=False):
         if len(training) < 10:
             print("not enough samples for", w)
             continue
+        ## using constant random_state of 0 for reproducibility
         cv = cross_validation.KFold(len(training), n_folds=10,
-                                    shuffle=False, random_state=None)
+                                    shuffle=False, random_state=0)
         for traincv, testcv in cv:
             mytraining = [training[i] for i in traincv]
             mytesting = [training[i] for i in testcv]
@@ -157,13 +158,13 @@ def main():
     classifier_pairs.append(("random-forest-default", classifier))
 
     pipeline = Pipeline([('tfidf', TfidfTransformer()),                          
-                         ('chi2', SelectKBest(chi2, k=1000)),                    
+                         ('chi2', SelectKBest(chi2, k=100)),
                          ('scaling', StandardScaler(with_mean=False)),
                          ('maxent', LogisticRegression(C=1,
                                                        penalty='l2',
                                                        tol=THETOL))])
     classifier = SklearnClassifier(pipeline)                                        
-    classifier_pairs.append(("maxent-chi2-fs", classifier))
+    classifier_pairs.append(("pipeline", classifier))
 
     language_pair = args.bitextfn.split(".")[1]
     stamp = util.timestamp() + "-" + language_pair
