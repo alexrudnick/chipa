@@ -147,19 +147,19 @@ def main():
     classifier = SklearnClassifier(LogisticRegression(C=1,
                                    penalty='l1',
                                    tol=THETOL))
-    classifier_pairs.append(("maxent-l1-c1", classifier))
+    # classifier_pairs.append(("maxent-l1-c1", classifier))
     classifier = SklearnClassifier(LogisticRegression(C=1,
                                    penalty='l2',
                                    tol=THETOL))
     classifier_pairs.append(("maxent-l2-c1", classifier))
     classifier = SklearnClassifier(LinearSVC(C=1, penalty='l2', tol=THETOL))
-    classifier_pairs.append(("linearsvc-l2-c1", classifier))
+    # classifier_pairs.append(("linearsvc-l2-c1", classifier))
     classifier = SklearnClassifier(RandomForestClassifier(), sparse=False)
-    classifier_pairs.append(("random-forest-default", classifier))
+    # classifier_pairs.append(("random-forest-default", classifier))
 
     pipeline = Pipeline([('tfidf', TfidfTransformer()),                          
-                         ('chi2', SelectKBest(chi2, k=100)),
-                         ('scaling', StandardScaler(with_mean=False)),
+                         # ('chi2', SelectKBest(chi2, k=100)),
+                         # ('scaling', StandardScaler(with_mean=False)),
                          ('maxent', LogisticRegression(C=1,
                                                        penalty='l2',
                                                        tol=THETOL))])
