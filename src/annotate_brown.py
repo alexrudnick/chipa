@@ -13,7 +13,7 @@ def get_argparser():
     parser.add_argument('--annotatedfn', type=str, required=True)
     parser.add_argument('--clusterfn', type=str, required=True)
     parser.add_argument('--featureprefix', type=str, required=True)
-    # parser.add_argument('--lemmas', type=bool, required=False)
+    parser.add_argument('--lemmas', type=bool, required=False)
     return parser
 
 def load_word_to_cluster(clusterfn):
@@ -34,9 +34,8 @@ def main():
     for sentence in corpus:
         for token in sentence:
             # use the full actual surface form for real, for now.
-            ## w = token.lemma if args.lemmas else token.surface
+            w = token.lemma if args.lemmas else token.surface
             ## w = w.lower()
-            w = token.surface
             if w in word_to_cluster:
                 token.annotations.add(args.featureprefix + "=" +
                                       word_to_cluster[w])

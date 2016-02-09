@@ -10,8 +10,15 @@ python3 annotate_brown.py \
 
 python3 annotate_brown.py \
   --annotatedfn annotated/tmp2.annotated \
+  --clusterfn /space/clustering/brown-spanish-europarl-lemmas/paths \
+  --featureprefix brown_europarl_lemma \
+  --lemmas True \
+  > annotated/tmp3.annotated
+
+python3 annotate_brown.py \
+  --annotatedfn annotated/tmp3.annotated \
   --clusterfn /space/clustering/brown-spanish-wikipedia/paths \
   --featureprefix brown_wikipedia \
   > annotated/bible.es-gn.source.annotated
 
-rm -f annotated/tmp.annotated annotated/tmp2.annotated
+rm -f annotated/tmp.annotated annotated/tmp2.annotated annotated/tmp3.annotated
