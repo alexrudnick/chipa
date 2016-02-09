@@ -19,7 +19,7 @@ def main():
             count = int(count)
             counters[cluster][word] = count
 
-    for cluster in sorted(counters.keys()):
+    for cluster in sorted(counters.keys(), key=lambda x: int(x, base=2)):
         topwords = [word for word, count in counters[cluster].most_common(N)]
         print(cluster, " ".join(topwords))
 
