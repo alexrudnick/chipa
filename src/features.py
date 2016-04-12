@@ -189,9 +189,9 @@ def flat_brown_window_wikipedia(tagged_sent, annotated, index):
         out.update({"fww(%s)" % cluster: True})
     return out
 
-def word2vec_windowsum(tagged_sent, annotated, index):
+def word2vec_windowsum(embedding_name, tagged_sent, annotated, index):
     out = {}
-    word2vec_strings = clusters_for_sentence(annotated, "word2vec_europarl=")
+    word2vec_strings = clusters_for_sentence(annotated, embedding_name + "=")
     w_indices = window_indices_inclusive(index, WIDTH, len(annotated))
 
     vectors = []
@@ -204,8 +204,20 @@ def word2vec_windowsum(tagged_sent, annotated, index):
     summed_vector = [sum(vals) for vals in zip(*vectors)]
 
     for i, val in enumerate(summed_vector):
-        out["word2vec_europarl_" + str(i)] = val
+        out[embedding_name + "_" + str(i)] = val
     return out
+
+def word2vec_windowsum_europarl(tagged_sent, annotated, index):
+    return word2vec_windowsum("word2vec_europarl",
+                              tagged_sent,
+                              annotated,
+                              index)
+
+def word2vec_windowsum_wikipedia(tagged_sent, annotated, index):
+    return word2vec_windowsum("word2vec_wikipedia",
+                              tagged_sent,
+                              annotated,
+                              index)
 
 def postag(tagged_sent, annotated, index):
     out = {}
