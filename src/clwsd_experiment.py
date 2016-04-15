@@ -140,26 +140,26 @@ def main():
     print("## THEY ARE:", top_words)
 
     ## default is 1e-4.
-    THETOL = 1e-3
+    THETOL = 1e-4
     classifier_pairs = []
     classifier_pairs.append(("MFS", learn.MFSClassifier()))
 
     classifier = SklearnClassifier(LogisticRegression(C=1,
                                    penalty='l1',
                                    tol=THETOL))
-    # classifier_pairs.append(("maxent-l1-c1", classifier))
+    classifier_pairs.append(("maxent-l1-c1", classifier))
     classifier = SklearnClassifier(LogisticRegression(C=1,
                                    penalty='l2',
                                    tol=THETOL))
     classifier_pairs.append(("maxent-l2-c1", classifier))
     classifier = SklearnClassifier(LinearSVC(C=1, penalty='l2', tol=THETOL))
-    # classifier_pairs.append(("linearsvc-l2-c1", classifier))
+    classifier_pairs.append(("linearsvc-l2-c1", classifier))
     classifier = SklearnClassifier(RandomForestClassifier(), sparse=False)
-    # classifier_pairs.append(("random-forest-default", classifier))
+    classifier_pairs.append(("random-forest-default", classifier))
 
     pipeline = Pipeline([('tfidf', TfidfTransformer()),                          
                          # ('chi2', SelectKBest(chi2, k=100)),
-                         # ('scaling', StandardScaler(with_mean=False)),
+                         ('scaling', StandardScaler(with_mean=False)),
                          ('maxent', LogisticRegression(C=1,
                                                        penalty='l2',
                                                        tol=THETOL))])
