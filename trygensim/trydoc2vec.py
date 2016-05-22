@@ -4,6 +4,8 @@ from gensim.models import Doc2Vec
 import gensim.models.doc2vec
 from collections import OrderedDict
 
+CORPUS = "/space/spanish-wikipedia/spanish-wikipedia.txt"
+SAVED_MODEL = "spanish-wikipedia-doc2vec.model"
 
 def magnitude(vec):
     import math
@@ -16,38 +18,19 @@ def cosine(vec1, vec2):
     ## ... divided by product of magnitudes
     return top / (magnitude(vec1) * magnitude(vec2))
 
-cores = multiprocessing.cpu_count()
-assert gensim.models.doc2vec.FAST_VERSION > -1, "this will be painfully slow"
+def main():
+    cores = multiprocessing.cpu_count()
+    assert gensim.models.doc2vec.FAST_VERSION > -1, "need fast version"
 
-documents = gensim.models.doc2vec.TaggedLineDocument("europarl-es-10k.txt")
+    documents = gensim.models.doc2vec.TaggedLineDocument(CORPUS)
+    ## XXX: tunable parameter. 100 seems slightly small.
+    model = Doc2Vec(documents, size=100, window=8, min_count=1, workers=cores)
 
-## xxx: need some size more like 100
-model = Doc2Vec(documents, size=10, window=8, min_count=1, workers=cores)
+    for epoch in range(10):
+        print("training step", epoch)
+        model.train(documents)
+        model.alpha -= 0.002  # decrease the learning rate
+        model.min_alpha = model.alpha  # fix the learning rate, no decay
+    model.save(SAVED_MODEL)
 
-inferred = model.infer_vector("Esta directiva trata más concretamente sobre la materia prima que sobre aditivos.".split())
-print(inferred)
-
-for epoch in range(10):
-    print("training step", epoch)
-    model.train(documents)
-    model.alpha -= 0.002  # decrease the learning rate
-    model.min_alpha = model.alpha  # fix the learning rate, no decay
-
-print("now we have trained")
-inferred1 = model.infer_vector("Esta directiva trata más concretamente sobre la materia prima que sobre aditivos.".split())
-print(inferred1)
-print("one versus one:", cosine(inferred1, inferred1))
-
-inferred2 = model.infer_vector("Esta ley trata más concretamente sobre la materia prima que sobre aditivos.".split())
-print(inferred2)
-print("one versus two:", cosine(inferred1, inferred2))
-
-inferred3 = model.infer_vector("Estas leyes tratan más concretamente sobre la materia prima que sobre aditivos.".split())
-print(inferred3)
-print("one versus three:", cosine(inferred1, inferred3))
-print("two versus three:", cosine(inferred2, inferred3))
-
-
-inferred4 = model.infer_vector("La votación tendrá lugar mañana a las 11.30 horas.")
-print(inferred4)
-print("one versus four:", cosine(inferred1, inferred4))
+if __name__ == "__main__": main()
