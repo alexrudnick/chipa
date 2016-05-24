@@ -51,6 +51,6 @@ def main():
         model.train(documents)
         model.alpha -= 0.002  # decrease the learning rate
         model.min_alpha = model.alpha  # fix the learning rate, no decay
-    model.save(SAVED_MODEL)
+    model.save(savedmodel)
 
 if __name__ == "__main__": main()
