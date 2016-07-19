@@ -44,7 +44,7 @@ def main():
 
     documents = gensim.models.doc2vec.TaggedLineDocument(thecorpus)
     ## XXX: tunable parameter. 100 seems slightly small.
-    model = Doc2Vec(documents, size=100, window=8, min_count=1, workers=cores)
+    model = Doc2Vec(documents, size=400, window=8, min_count=1, workers=cores)
 
     for epoch in range(10):
         print("training step", epoch)
