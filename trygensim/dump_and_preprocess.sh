@@ -6,3 +6,7 @@ python3 dumpwikipedia.py $WIKIPEDIA ./eswiki.txt
 analyze -f $FREELINGCONFIGDIR/es.cfg \
   < eswiki.txt \
   > eswiki.tagged
+
+cut -f 1 -d " " < eswiki.tagged > eswiki.justwords
+
+python3 joinsentences.py eswiki.justwords > eswiki.sentences

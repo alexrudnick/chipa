@@ -7,11 +7,11 @@ from gensim.models import Doc2Vec
 import gensim.models.doc2vec
 from collections import OrderedDict
 
-CORPUS = "/space/spanish-wikipedia/spanish-wikipedia.txt"
+CORPUS = "eswiki.sentences"
 SAVED_MODEL = "spanish-wikipedia-doc2vec.model"
 
-TINY_SAVED_MODEL = "europarl-es-10k-doc2vec.model"
 TINYCORPUS = "europarl-es-10k.txt"
+TINY_SAVED_MODEL = "europarl-es-10k-doc2vec.model"
 
 def get_argparser():
     parser = argparse.ArgumentParser(description='trydoc2vec')
