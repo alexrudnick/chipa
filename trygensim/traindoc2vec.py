@@ -43,8 +43,11 @@ def main():
         savedmodel = TINY_SAVED_MODEL
 
     documents = gensim.models.doc2vec.TaggedLineDocument(thecorpus)
-    ## XXX: tunable parameter. 100 seems slightly small.
-    model = Doc2Vec(documents, size=400, window=8, min_count=1, workers=cores)
+    print("built the documents object!")
+
+    model = Doc2Vec(documents, size=400, window=8, min_count=5,
+                    max_vocab_size=(1000*1000), workers=cores)
+    print("built the model object!")
 
     for epoch in range(10):
         print("training step", epoch)
