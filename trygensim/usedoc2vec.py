@@ -7,7 +7,7 @@ from gensim.models import Doc2Vec
 import gensim.models.doc2vec
 from collections import OrderedDict
 
-import trydoc2vec
+import traindoc2vec
 
 SAVED_MODEL = "spanish-wikipedia-doc2vec.model"
 
@@ -18,7 +18,7 @@ v2 = model.infer_vector('eso es perfecto'.split())
 v3 = model.infer_vector('eso es malo'.split())
 
 print("should be low")
-print(trydoc2vec.cosine(v1, v2))
+print(traindoc2vec.cosine(v1, v2))
 
 print("should be higher")
-print(trydoc2vec.cosine(v1, v3))
+print(traindoc2vec.cosine(v1, v3))

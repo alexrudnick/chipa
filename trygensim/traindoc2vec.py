@@ -7,7 +7,7 @@ from gensim.models import Doc2Vec
 import gensim.models.doc2vec
 from collections import OrderedDict
 
-CORPUS = "eswiki.sentences"
+CORPUS = "eswiki.million.sentences"
 SAVED_MODEL = "spanish-wikipedia-doc2vec.model"
 
 TINYCORPUS = "europarl-es-10k.txt"
@@ -46,7 +46,7 @@ def main():
     print("built the documents object!")
 
     model = Doc2Vec(documents, size=400, window=8, min_count=5,
-                    max_vocab_size=(1000*1000), workers=cores)
+                    max_vocab_size=(160 * 1000), workers=cores)
     print("built the model object!")
 
     for epoch in range(10):
