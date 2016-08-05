@@ -13,9 +13,9 @@ SAVED_MODEL = "spanish-wikipedia-doc2vec.model"
 
 model = Doc2Vec.load(SAVED_MODEL)
 
-v1 = model.infer_vector('eso es bueno'.split())
-v2 = model.infer_vector('eso es perfecto'.split())
-v3 = model.infer_vector('eso es malo'.split())
+v1 = model.infer_vector('La desalinización es un proceso mediante el cual se elimina la sal del agua de mar o salobre .'.split())
+v2 = model.infer_vector('Justin Drew Bieber ( London , Canadá , 1 de marzo de 1994 ) , más conocido como Justin Bieber , es un cantante y compositor canadiense .'.split())
+v3 = model.infer_vector('Los requerimientos energéticos de la desalinización varían en función de la tecnología empleada , aunque hay una tendencia hacia su reducción , gracias a los avances tecnológicos .'.split())
 
 print("should be low")
 print(traindoc2vec.cosine(v1, v2))

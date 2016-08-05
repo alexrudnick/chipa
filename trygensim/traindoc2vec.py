@@ -7,7 +7,7 @@ from gensim.models import Doc2Vec
 import gensim.models.doc2vec
 from collections import OrderedDict
 
-CORPUS = "eswiki.million.sentences"
+CORPUS = "eswiki.twentymillion.sentences"
 SAVED_MODEL = "spanish-wikipedia-doc2vec.model"
 
 TINYCORPUS = "europarl-es-10k.txt"
