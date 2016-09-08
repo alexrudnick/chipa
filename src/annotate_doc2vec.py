@@ -53,6 +53,5 @@ def main():
                 first = False
             print(token)
         print()
-        break
 
 if __name__ == "__main__": main()
