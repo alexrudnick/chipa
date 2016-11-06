@@ -2,21 +2,41 @@
 
 WORD2VECDIR=/home/alex/checkouts/word2vec/
 WORD2VEC=$WORD2VECDIR/word2vec
-DISTANCE=$WORD2VECDIR/distance
-
+WORD2PHRASE=$WORD2VECDIR/word2phrase
 CORPUS=/space/spanish-wikipedia/spanish-wikipedia.txt
 
-time $WORD2VEC -train $CORPUS \
-  -output /space/clustering/word2vec-spanish-wikipedia-200 \
+PHRASECORPUS=/space/spanish-wikipedia/spanish-wikipedia-phrase.txt
+PHRASECORPUS2=/space/spanish-wikipedia/spanish-wikipedia-phrase2.txt
+
+time $WORD2PHRASE -train $CORPUS -output $PHASECORPUS -threshold 100 -debug 2
+time $WORD2PHRASE -train $PHRASECORPUS -output $PHRASECORPUS2 -threshold 100 -debug 2
+
+time $WORD2VEC -train $PHRASECORPUS2 \
+  -output /space/clustering/word2vec-spanish-wikipedia-200.cbow \
   -cbow 1 -size 200 -window 8 -negative 25 -hs 0 -sample 1e-4 \
   -threads 20 -binary 0 -iter 15
 
-time $WORD2VEC -train $CORPUS \
-  -output /space/clustering/word2vec-spanish-wikipedia-100 \
+time $WORD2VEC -train $PHRASECORPUS2 \
+  -output /space/clustering/word2vec-spanish-wikipedia-200.skipgram \
+  -cbow 0 -size 200 -window 8 -negative 25 -hs 0 -sample 1e-4 \
+  -threads 20 -binary 0 -iter 15
+
+time $WORD2VEC -train $PHRASECORPUS2 \
+  -output /space/clustering/word2vec-spanish-wikipedia-100.cbow \
   -cbow 1 -size 100 -window 8 -negative 25 -hs 0 -sample 1e-4 \
   -threads 20 -binary 0 -iter 15
 
-time $WORD2VEC -train $CORPUS \
-  -output /space/clustering/word2vec-spanish-wikipedia-50 \
+time $WORD2VEC -train $PHRASECORPUS2 \
+  -output /space/clustering/word2vec-spanish-wikipedia-100.skipgram \
+  -cbow 0 -size 100 -window 8 -negative 25 -hs 0 -sample 1e-4 \
+  -threads 20 -binary 0 -iter 15
+
+time $WORD2VEC -train $PHRASECORPUS2 \
+  -output /space/clustering/word2vec-spanish-wikipedia-50.cbow \
   -cbow 1 -size 50 -window 8 -negative 25 -hs 0 -sample 1e-4 \
+  -threads 20 -binary 0 -iter 15
+
+time $WORD2VEC -train $PHRASECORPUS2 \
+  -output /space/clustering/word2vec-spanish-wikipedia-50.skipgram \
+  -cbow 0 -size 50 -window 8 -negative 25 -hs 0 -sample 1e-4 \
   -threads 20 -binary 0 -iter 15
