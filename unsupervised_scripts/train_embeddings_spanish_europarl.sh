@@ -16,7 +16,7 @@ if [ ! -e "/tmp/europarl-v7.es-en.es.tok" ]; then
 fi
 
 time $WORD2PHRASE -train $CORPUS -output $PHRASECORPUS -threshold 100 -debug 2
-time $WORD2PHRASE -train $PHASECORPUS -output $PHRASECORPUS2 -threshold 100 -debug 2
+time $WORD2PHRASE -train $PHRASECORPUS -output $PHRASECORPUS2 -threshold 100 -debug 2
 
 time $WORD2VEC -train $PHRASECORPUS2 \
   -output /space/clustering/word2vec-spanish-europarl-200.cbow \

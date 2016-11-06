@@ -8,7 +8,7 @@ CORPUS=/space/spanish-wikipedia/spanish-wikipedia.txt
 PHRASECORPUS=/space/spanish-wikipedia/spanish-wikipedia-phrase.txt
 PHRASECORPUS2=/space/spanish-wikipedia/spanish-wikipedia-phrase2.txt
 
-time $WORD2PHRASE -train $CORPUS -output $PHASECORPUS -threshold 100 -debug 2
+time $WORD2PHRASE -train $CORPUS -output $PHRASECORPUS -threshold 100 -debug 2
 time $WORD2PHRASE -train $PHRASECORPUS -output $PHRASECORPUS2 -threshold 100 -debug 2
 
 time $WORD2VEC -train $PHRASECORPUS2 \
