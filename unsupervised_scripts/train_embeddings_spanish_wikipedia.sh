@@ -12,6 +12,16 @@ time $WORD2PHRASE -train $CORPUS -output $PHRASECORPUS -threshold 100 -debug 2
 time $WORD2PHRASE -train $PHRASECORPUS -output $PHRASECORPUS2 -threshold 100 -debug 2
 
 time $WORD2VEC -train $PHRASECORPUS2 \
+  -output /space/clustering/word2vec-spanish-wikipedia-400.cbow \
+  -cbow 1 -size 400 -window 8 -negative 25 -hs 0 -sample 1e-4 \
+  -threads 20 -binary 0 -iter 15
+
+time $WORD2VEC -train $PHRASECORPUS2 \
+  -output /space/clustering/word2vec-spanish-wikipedia-400.skipgram \
+  -cbow 0 -size 400 -window 8 -negative 25 -hs 0 -sample 1e-4 \
+  -threads 20 -binary 0 -iter 15
+
+time $WORD2VEC -train $PHRASECORPUS2 \
   -output /space/clustering/word2vec-spanish-wikipedia-200.cbow \
   -cbow 1 -size 200 -window 8 -negative 25 -hs 0 -sample 1e-4 \
   -threads 20 -binary 0 -iter 15
