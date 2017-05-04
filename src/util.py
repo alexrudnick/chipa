@@ -2,7 +2,7 @@ import time
 import sys
 from datetime import datetime
 
-DPRINT=False
+DPRINT=True
 def dprint(*a,**aa):
     if DPRINT:
         print(file=sys.stderr, *a, **aa)

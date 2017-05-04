@@ -135,7 +135,7 @@ def main():
     trainingdata.set_sl_annotated(source_annotated)
 
     top_words = trainingdata.get_top_words(sl_sentences)
-    top_words = [w for (w,count) in top_words][:1]
+    top_words = [w for (w,count) in top_words]
 
     print("## GOT THIS MANY TOP WORDS:", len(top_words))
     print("## THEY ARE:", top_words)

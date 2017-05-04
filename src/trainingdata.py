@@ -37,6 +37,7 @@ def build_instance(tagged_sentence, annotated, index):
     label = tagged_sentence[index][1]
     return (feat, label)
 
+@util.timeexecution
 @functools.lru_cache(maxsize=100000)
 def trainingdata_for(word, nonnull=False):
     assert type(word) is str
