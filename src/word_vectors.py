@@ -23,13 +23,11 @@ class EmbeddingLoader:
         out = {}
         with open(embeddingfn) as infile:
             _ = infile.readline()
-            count = 0
             for line in infile:
                 try:
                     word, embeddingstr = line.strip().split(maxsplit=1)
                     embedding = [float(x) for x in embeddingstr.split()]
                     out[word] = embedding
-                    count += 1
                 except UnicodeDecodeError as e:
                     continue
         return out
