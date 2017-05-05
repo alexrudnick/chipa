@@ -3,6 +3,16 @@
 """
 Script for running in-vitro CL-WSD experiments with cross-validation, given
 some aligned bitext and quickly moving things into embedding space.
+
+Plan for this is going to look like...
+
+Simple version:
+- sum up the word vectors for the whole sentence, that's your features. done.
+  "continuous bag-of-words" features for the sentence.
+slightly more nuanced:
+- sum up the vectors for the window around the focus word.
+- alternatively: sum up the vectors for the whole sentence, but discount the
+  vectors as they get farther away from the focus word.
 """
 
 from collections import defaultdict
