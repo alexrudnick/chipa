@@ -116,7 +116,7 @@ def get_argparser():
     parser.add_argument('--bitextfn', type=str, required=True)
     parser.add_argument('--alignfn', type=str, required=True)
     parser.add_argument('--annotatedfn', type=str, required=True)
-    parser.add_argument('--featurefn', type=str, required=True)
+    # parser.add_argument('--featurefn', type=str, required=True)
     parser.add_argument('--dprint', type=bool, default=False, required=False)
     return parser
 
@@ -125,8 +125,8 @@ def main():
     args = parser.parse_args()
 
     util.DPRINT = args.dprint
-    featureset_name = os.path.basename(args.featurefn).split('.')[0]
-    features.load_featurefile(args.featurefn)
+    # featureset_name = os.path.basename(args.featurefn).split('.')[0]
+    # features.load_featurefile(args.featurefn)
 
     trainingdata.STOPWORDS = trainingdata.load_stopwords(args.bitextfn)
 
