@@ -116,18 +116,22 @@ def get_argparser():
     parser.add_argument('--bitextfn', type=str, required=True)
     parser.add_argument('--alignfn', type=str, required=True)
     parser.add_argument('--annotatedfn', type=str, required=True)
-    # parser.add_argument('--featurefn', type=str, required=True)
     parser.add_argument('--dprint', type=bool, default=False, required=False)
     return parser
+
+def load_top_words():
+    out = []
+    # XXX: make this a parameter
+    with open("focus_words/es-gn") as infile:
+        for line in infile:
+            out.append(line.strip())
+    return out
 
 def main():
     parser = get_argparser()
     args = parser.parse_args()
 
     util.DPRINT = args.dprint
-    # featureset_name = os.path.basename(args.featurefn).split('.')[0]
-    # features.load_featurefile(args.featurefn)
-
     trainingdata.STOPWORDS = trainingdata.load_stopwords(args.bitextfn)
 
     print("## RUNNING EXPERIMENT on {0} with features {1}".format(
@@ -143,12 +147,7 @@ def main():
 
     source_annotated = annotated_corpus.load_corpus(args.annotatedfn)
     trainingdata.set_sl_annotated(source_annotated)
-
-    top_words = trainingdata.get_top_words(sl_sentences)
-    top_words = [w for (w,count) in top_words]
-
-    print("## GOT THIS MANY TOP WORDS:", len(top_words))
-    print("## THEY ARE:", top_words)
+    top_words = load_top_words()[:5]
 
     ## default is 1e-4.
     THETOL = 1e-4
