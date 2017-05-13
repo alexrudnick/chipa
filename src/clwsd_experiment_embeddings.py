@@ -65,8 +65,6 @@ def cross_validate(classifier, top_words, nonnull=False):
             word_embeddings = [loader.embedding(word) for word in text]
             sent_vector = sum(word_embeddings)
             training.append((sent_vector, label))
-        training = training[:100]
-
         print("this many instances for {0}: {1}".format(w, len(training)))
         labels = set(label for (feat,label) in training)
 
@@ -90,8 +88,7 @@ def cross_validate(classifier, top_words, nonnull=False):
             mytesting_X = [x for (x, y) in mytesting]
             mytesting_Y = [y for (x, y) in mytesting]
             predicted = classifier.predict(mytesting_X)
-
-            ncorrect = sum([real == pred] for real, pred
+            ncorrect = sum(int(real == pred) for real, pred
                            in zip(mytesting_Y, predicted))
             out[w].append((ncorrect,len(mytesting)))
     return out
