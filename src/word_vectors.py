@@ -26,7 +26,8 @@ class EmbeddingLoader:
             for line in infile:
                 try:
                     word, embeddingstr = line.strip().split(maxsplit=1)
-                    embedding = [float(x) for x in embeddingstr.split()]
+                    embedding = np.array([float(x) 
+                                          for x in embeddingstr.split()])
                     out[word] = embedding
                 except UnicodeDecodeError as e:
                     continue

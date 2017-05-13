@@ -55,6 +55,22 @@ def trainingdata_for(word, nonnull=False):
     ## return training[:50]
     return training
 
+def text_label_pairs(word, nonnull=False):
+    assert type(word) is str
+    training = []
+    for (sent_index, (ss,tagged)) in enumerate(zip(SL_SENTENCES, TAGGED_SENTENCES)):
+        ## XXX: what if the word is in the source sentence more than once?
+        if word in ss:
+            index = ss.index(word)
+            label = tagged[index][1]
+            annotated = SL_SENTENCES_ANNOTATED[sent_index]
+            surface_sent = [token.surface for token in annotated]
+            training.append((surface_sent, label))
+    if nonnull:
+        training = [(text,label) for (text,label) in training
+                                 if label != UNTRANSLATED]
+    return training
+
 ## XXX: what we should be doing here is setting the corpus so that we know what
 ## words we're going to be looking for ahead of time.
 ## as we go through, save the training data for each relevant word.

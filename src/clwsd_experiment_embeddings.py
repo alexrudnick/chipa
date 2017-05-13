@@ -29,17 +29,13 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import cross_validation
-
-
-from sklearn.feature_extraction.text import TfidfTransformer                 
-from sklearn.feature_selection import SelectKBest, chi2                      
-from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import Pipeline                                        
+from sklearn.metrics import accuracy_score
 
 import annotated_corpus
 import features
 import learn
 import trainingdata
+import word_vectors
 import util
 
 def count_correct(classifier, testdata):
@@ -56,11 +52,24 @@ def cross_validate(classifier, top_words, nonnull=False):
     ## return a map from word to [(ncorrect,size)]
     out = defaultdict(list)
     util.dprint("cross validating this many words:", len(top_words))
+
+    loader = word_vectors.EmbeddingLoader(
+        "/space/clustering/word2vec-spanish-wikipedia-100.skipgram", 100)
+
     for w in top_words:
         util.dprint("cross validating:", w)
-        training = trainingdata.trainingdata_for(w, nonnull=nonnull)
+        text_with_labels = trainingdata.text_label_pairs(w, nonnull=nonnull)
+
+        training = []
+        for text, label in text_with_labels:
+            word_embeddings = [loader.embedding(word) for word in text]
+            sent_vector = sum(word_embeddings)
+            training.append((sent_vector, label))
+        training = training[:100]
+
         print("this many instances for {0}: {1}".format(w, len(training)))
         labels = set(label for (feat,label) in training)
+
         if len(labels) < 2:
             continue
         if len(training) < 10:
@@ -72,10 +81,18 @@ def cross_validate(classifier, top_words, nonnull=False):
         for traincv, testcv in cv:
             mytraining = [training[i] for i in traincv]
             mytesting = [training[i] for i in testcv]
-            mytraining = mytraining + [({"absolutelynotafeature":True},
-                                        "absolutelynotalabel")]
-            classifier.train(mytraining)
-            ncorrect = count_correct(classifier, mytesting)
+
+            mytraining_X = [x for (x, y) in mytraining]
+            mytraining_Y = [y for (x, y) in mytraining]
+            classifier.fit(mytraining_X, mytraining_Y) 
+            print("trained!!", classifier)
+
+            mytesting_X = [x for (x, y) in mytesting]
+            mytesting_Y = [y for (x, y) in mytesting]
+            predicted = classifier.predict(mytesting_X)
+
+            ncorrect = sum([real == pred] for real, pred
+                           in zip(mytesting_Y, predicted))
             out[w].append((ncorrect,len(mytesting)))
     return out
 
@@ -136,14 +153,14 @@ def main():
 
     print("## RUNNING EXPERIMENT on {0} with features {1}".format(
         os.path.basename(args.bitextfn),
-        os.path.basename(args.featurefn)))
+        os.path.basename("EMBEDDINGS")))
 
     triple_sentences = trainingdata.load_bitext(args.bitextfn, args.alignfn)
     tl_sentences = trainingdata.get_target_language_sentences(triple_sentences)
     sl_sentences = [s for (s,t,a) in triple_sentences]
     tagged_sentences = [list(zip(ss, ts))
                         for ss,ts in zip(sl_sentences, tl_sentences)]
-    trainingdata.set_examples(sl_sentences,tagged_sentences)
+    trainingdata.set_examples(sl_sentences, tagged_sentences)
 
     source_annotated = annotated_corpus.load_corpus(args.annotatedfn)
     trainingdata.set_sl_annotated(source_annotated)
@@ -152,12 +169,14 @@ def main():
     ## default is 1e-4.
     THETOL = 1e-4
     classifier_pairs = []
-    classifier = SklearnClassifier(LogisticRegression(C=1,
-                                   penalty='l1',
-                                   tol=THETOL))
+    ## classifier = SklearnClassifier(LogisticRegression(C=1,
+    ##                                penalty='l1',
+    ##                                tol=THETOL))
+    classifier = LogisticRegression(C=1, penalty='l1', tol=THETOL)
     classifier_pairs.append(("maxent-l1-c1", classifier))
     language_pair = args.bitextfn.split(".")[1]
     stamp = util.timestamp() + "-" + language_pair
+    featureset_name = "word2vec"
 
     for (clname, classifier) in classifier_pairs:
         casename = "{0}-{1}-regular".format(clname, featureset_name)
