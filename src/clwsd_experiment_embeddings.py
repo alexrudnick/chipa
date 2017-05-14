@@ -45,6 +45,8 @@ def count_correct(classifier, testdata):
     correct = [l==r for ((fs,l), r) in zip(testdata, results)]
     return correct.count(True)
 
+EMBEDDINGS=None
+EMBEDDING_DIM=None
 @util.timeexecution
 def cross_validate(classifier, top_words, nonnull=False):
     """Given the most common words in the Spanish corpus, cross-validate our
@@ -53,8 +55,7 @@ def cross_validate(classifier, top_words, nonnull=False):
     out = defaultdict(list)
     util.dprint("cross validating this many words:", len(top_words))
 
-    loader = word_vectors.EmbeddingLoader(
-        "/space/clustering/word2vec-spanish-wikipedia-100.skipgram", 100)
+    loader = word_vectors.EmbeddingLoader(EMBEDDINGS, EMBEDDING_DIM)
 
     for w in top_words:
         util.dprint("cross validating:", w)
@@ -131,6 +132,8 @@ def get_argparser():
     parser.add_argument('--alignfn', type=str, required=True)
     parser.add_argument('--annotatedfn', type=str, required=True)
     parser.add_argument('--dprint', type=bool, default=False, required=False)
+    parser.add_argument('--embeddings', type=str, default=False, required=True)
+    parser.add_argument('--embedding_dim', type=int, default=False, required=True)
     return parser
 
 def load_top_words():
@@ -142,15 +145,20 @@ def load_top_words():
     return out
 
 def main():
+    global EMBEDDINGS
+    global EMBEDDING_DIM
     parser = get_argparser()
     args = parser.parse_args()
+
+
+    EMBEDDINGS = args.embeddings
+    EMBEDDING_DIM = args.embedding_dim
 
     util.DPRINT = args.dprint
     trainingdata.STOPWORDS = trainingdata.load_stopwords(args.bitextfn)
 
     print("## RUNNING EXPERIMENT on {0} with features {1}".format(
-        os.path.basename(args.bitextfn),
-        os.path.basename("EMBEDDINGS")))
+        os.path.basename(args.bitextfn), "EMBEDDINGS"))
 
     triple_sentences = trainingdata.load_bitext(args.bitextfn, args.alignfn)
     tl_sentences = trainingdata.get_target_language_sentences(triple_sentences)
@@ -161,7 +169,7 @@ def main():
 
     source_annotated = annotated_corpus.load_corpus(args.annotatedfn)
     trainingdata.set_sl_annotated(source_annotated)
-    top_words = load_top_words()[:5]
+    top_words = load_top_words()
 
     ## default is 1e-4.
     THETOL = 1e-4
@@ -173,7 +181,7 @@ def main():
     classifier_pairs.append(("maxent-l1-c1", classifier))
     language_pair = args.bitextfn.split(".")[1]
     stamp = util.timestamp() + "-" + language_pair
-    featureset_name = "word2vec"
+    featureset_name = "word2vec_" + os.path.basename(args.embeddings)
 
     for (clname, classifier) in classifier_pairs:
         casename = "{0}-{1}-regular".format(clname, featureset_name)
