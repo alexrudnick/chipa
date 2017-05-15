@@ -121,6 +121,8 @@ def do_a_case(classifier, top_words, nonnull, casename, stamp):
         sizes = []
         for w, resultslist in results_table.items():
             for (correct,size) in resultslist:
+                print("{0}\t{1}\t{2}\t{3}".format(
+                    w, correct / size, correct, size), file=outfile)
                 corrects.append(correct)
                 sizes.append(size)
         avg = sum(corrects) / sum(sizes)
@@ -186,7 +188,7 @@ def main():
     for (clname, classifier) in classifier_pairs:
         casename = "{0}-{1}-regular".format(clname, featureset_name)
         do_a_case(classifier, top_words, False, casename, stamp)
-        # casename = "{0}-{1}-nonnull".format(clname, featureset_name)
-        # do_a_case(classifier, top_words, True, casename, stamp)
+        casename = "{0}-{1}-nonnull".format(clname, featureset_name)
+        do_a_case(classifier, top_words, True, casename, stamp)
 
 if __name__ == "__main__": main()
