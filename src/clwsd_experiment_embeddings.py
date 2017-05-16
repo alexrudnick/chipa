@@ -30,6 +30,7 @@ from sklearn.svm import LinearSVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import cross_validation
 from sklearn.metrics import accuracy_score
+from sklearn.neighbors import KNeighborsClassifier
 
 import annotated_corpus
 import features
@@ -37,13 +38,6 @@ import learn
 import trainingdata
 import word_vectors
 import util
-
-def count_correct(classifier, testdata):
-    """Given an NLTK-style classifier and some test data, count how many of the
-    test instances this classifier gets correct."""
-    results = [classifier.classify(fs) for (fs,l) in testdata]
-    correct = [l==r for ((fs,l), r) in zip(testdata, results)]
-    return correct.count(True)
 
 EMBEDDINGS=None
 EMBEDDING_DIM=None
@@ -83,6 +77,11 @@ def cross_validate(classifier, top_words, nonnull=False):
 
             mytraining_X = [x for (x, y) in mytraining]
             mytraining_Y = [y for (x, y) in mytraining]
+
+            if len(set(mytraining_Y)) == 1:
+                print("only one label, backing off to KNN.")
+                classifier = KNeighborsClassifier()
+
             classifier.fit(mytraining_X, mytraining_Y) 
             print("trained!!", classifier)
 
