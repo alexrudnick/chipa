@@ -41,6 +41,7 @@ import util
 
 EMBEDDINGS=None
 EMBEDDING_DIM=None
+WINDOW=False
 @util.timeexecution
 def cross_validate(classifier, top_words, nonnull=False):
     """Given the most common words in the Spanish corpus, cross-validate our
@@ -56,8 +57,15 @@ def cross_validate(classifier, top_words, nonnull=False):
         text_with_labels = trainingdata.text_label_pairs(w, nonnull=nonnull)
 
         training = []
-        for text, label in text_with_labels:
-            word_embeddings = [loader.embedding(word) for word in text]
+        for text, index, label in text_with_labels:
+            if WINDOW:
+                startindex = max(index - 3, 0)
+                endindex = min(index + 4, len(text))
+                word_embeddings = [loader.embedding(text[i])
+                                   for i in range(startindex, endindex)]
+            else:
+                word_embeddings = [loader.embedding(word) for word in text]
+
             sent_vector = sum(word_embeddings)
             training.append((sent_vector, label))
         print("this many instances for {0}: {1}".format(w, len(training)))
@@ -135,6 +143,7 @@ def get_argparser():
     parser.add_argument('--dprint', type=bool, default=False, required=False)
     parser.add_argument('--embeddings', type=str, default=False, required=True)
     parser.add_argument('--embedding_dim', type=int, default=False, required=True)
+    parser.add_argument('--window', type=bool, default=False, required=False)
     return parser
 
 def load_top_words():
@@ -148,12 +157,13 @@ def load_top_words():
 def main():
     global EMBEDDINGS
     global EMBEDDING_DIM
+    global WINDOW
     parser = get_argparser()
     args = parser.parse_args()
 
-
     EMBEDDINGS = args.embeddings
     EMBEDDING_DIM = args.embedding_dim
+    WINDOW = args.window
 
     util.DPRINT = args.dprint
     trainingdata.STOPWORDS = trainingdata.load_stopwords(args.bitextfn)
@@ -175,14 +185,14 @@ def main():
     ## default is 1e-4.
     THETOL = 1e-4
     classifier_pairs = []
-    ## classifier = SklearnClassifier(LogisticRegression(C=1,
-    ##                                penalty='l1',
-    ##                                tol=THETOL))
     classifier = LogisticRegression(C=1, penalty='l1', tol=THETOL)
     classifier_pairs.append(("maxent-l1-c1", classifier))
     language_pair = args.bitextfn.split(".")[1]
     stamp = util.timestamp() + "-" + language_pair
     featureset_name = "word2vec_" + os.path.basename(args.embeddings)
+
+    if args.window:
+        featureset_name = "window_" + featureset_name
 
     for (clname, classifier) in classifier_pairs:
         casename = "{0}-{1}-regular".format(clname, featureset_name)

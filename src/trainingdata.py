@@ -65,9 +65,9 @@ def text_label_pairs(word, nonnull=False):
             label = tagged[index][1]
             annotated = SL_SENTENCES_ANNOTATED[sent_index]
             surface_sent = [token.surface for token in annotated]
-            training.append((surface_sent, label))
+            training.append((surface_sent, index, label))
     if nonnull:
-        training = [(text,label) for (text,label) in training
+        training = [(text, index, label) for (text, index, label) in training
                                  if label != UNTRANSLATED]
     return training
 
