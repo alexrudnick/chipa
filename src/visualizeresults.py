@@ -15,9 +15,10 @@ def langpair(fn):
 
 def main():
     show_words = False
+    
+    # (accuracy, name, word_to_total, word_to_correct)
+    file_overviews = []
     for fn in sys.argv[1:]:
-        print("*" * 80)
-        print(fn)
         name = os.path.basename(fn)
         lp = langpair(fn)
 
@@ -38,15 +39,19 @@ def main():
 
                 overall_correct += ncorrect
                 overall_words += total
+        overall_accuracy = None
         if overall_words:
-            accuracy = overall_correct / overall_words 
-            print("file accuracy: {0:.3f}".format(accuracy))
+            overall_accuracy = overall_correct / overall_words 
+            file_overviews.append((overall_accuracy, name,
+                                   word_to_correct, word_to_total))
+
+    for (acc, name, w2c, w2t) in sorted(file_overviews, reverse=True):
+        print("*" * 80)
+        print("{0}\t{1:.3f}".format(name, acc))
 
         if show_words:
-            for word, total in word_to_total.most_common():
+            for word, total in w2t.most_common():
                 accuracy = word_to_correct[word] / word_to_total[word]
-                # total = word_to_total[word]
                 print("{0}\t{1}\t{2:.3f}".format(word, total, accuracy))
-        print()
 
 if __name__ == "__main__": main()
