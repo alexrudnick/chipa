@@ -14,11 +14,17 @@ def langpair(fn):
     return "{0}-{1}".format(sl, tl)
 
 def main():
-    word_to_total = Counter()
-    word_to_correct = Counter()
+    show_words = False
     for fn in sys.argv[1:]:
+        print("*" * 80)
+        print(fn)
         name = os.path.basename(fn)
         lp = langpair(fn)
+
+        word_to_total = Counter()
+        word_to_correct = Counter()
+        overall_words = 0
+        overall_correct = 0
 
         with open(fn) as infile:
             for line in infile:
@@ -29,9 +35,18 @@ def main():
                 total = int(total)
                 word_to_total[word] += total
                 word_to_correct[word] += ncorrect
-        for word, total in word_to_total.most_common():
-            accuracy = word_to_correct[word] / word_to_total[word]
-            total = word_to_total[word]
-            print("{0}\t{1}\t{2:.3f}".format(word, total, accuracy))
+
+                overall_correct += ncorrect
+                overall_words += total
+        if overall_words:
+            accuracy = overall_correct / overall_words 
+            print("file accuracy: {0:.3f}".format(accuracy))
+
+        if show_words:
+            for word, total in word_to_total.most_common():
+                accuracy = word_to_correct[word] / word_to_total[word]
+                # total = word_to_total[word]
+                print("{0}\t{1}\t{2:.3f}".format(word, total, accuracy))
+        print()
 
 if __name__ == "__main__": main()
