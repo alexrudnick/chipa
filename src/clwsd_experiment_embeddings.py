@@ -31,6 +31,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn import cross_validation
 from sklearn.metrics import accuracy_score
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neural_network import MLPClassifier
 
 import annotated_corpus
 import features
@@ -185,8 +186,25 @@ def main():
     ## default is 1e-4.
     THETOL = 1e-4
     classifier_pairs = []
+    classifier = MLPClassifier(solver='lbfgs', alpha=THETOL,
+                               hidden_layer_sizes=(20,20))
+    classifier_pairs.append(("mlp-20-20", classifier))
+
     classifier = LogisticRegression(C=1, penalty='l1', tol=THETOL)
     classifier_pairs.append(("maxent-l1-c1", classifier))
+
+    classifier = LogisticRegression(C=1, penalty='l2', tol=THETOL)
+    classifier_pairs.append(("maxent-l2-c1", classifier))
+
+    classifier = LinearSVC(C=1, penalty='l2', tol=THETOL)
+    classifier_pairs.append(("linearsvc-l2-c1", classifier))
+
+    classifier = RandomForestClassifier()
+    classifier_pairs.append(("random-forest-default", classifier))
+
+    classifier = KNeighborsClassifier()
+    classifier_pairs.append(("k-neighbors-default", classifier))
+
     language_pair = args.bitextfn.split(".")[1]
     stamp = util.timestamp() + "-" + language_pair
     featureset_name = "word2vec_" + os.path.basename(args.embeddings)
