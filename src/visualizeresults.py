@@ -17,7 +17,8 @@ def main():
     show_words = False
     
     # (accuracy, name, word_to_total, word_to_correct)
-    file_overviews = []
+    file_overviews_regular = []
+    file_overviews_nonnull = []
     for fn in sys.argv[1:]:
         name = os.path.basename(fn)
         lp = langpair(fn)
@@ -42,11 +43,22 @@ def main():
         overall_accuracy = None
         if overall_words:
             overall_accuracy = overall_correct / overall_words 
-            file_overviews.append((overall_accuracy, name,
-                                   word_to_correct, word_to_total))
+            if "regular" in name:
+                file_overviews_regular.append((overall_accuracy, name,
+                                               word_to_correct, word_to_total))
+            elif "nonnull" in name:
+                file_overviews_nonnull.append((overall_accuracy, name,
+                                               word_to_correct, word_to_total))
 
-    for (acc, name, w2c, w2t) in sorted(file_overviews, reverse=True):
-        print("*" * 80)
+    for (acc, name, w2c, w2t) in sorted(file_overviews_regular, reverse=True):
+        print("{0}\t{1:.3f}".format(name, acc))
+
+        if show_words:
+            for word, total in w2t.most_common():
+                accuracy = word_to_correct[word] / word_to_total[word]
+                print("{0}\t{1}\t{2:.3f}".format(word, total, accuracy))
+    print("*" * 80)
+    for (acc, name, w2c, w2t) in sorted(file_overviews_nonnull, reverse=True):
         print("{0}\t{1:.3f}".format(name, acc))
 
         if show_words:
