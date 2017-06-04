@@ -43,6 +43,7 @@ import util
 EMBEDDINGS=None
 EMBEDDING_DIM=None
 WINDOW=False
+MWEs=False
 @util.timeexecution
 def cross_validate(classifier, top_words, nonnull=False):
     """Given the most common words in the Spanish corpus, cross-validate our
@@ -59,6 +60,13 @@ def cross_validate(classifier, top_words, nonnull=False):
 
         training = []
         for text, index, label in text_with_labels:
+            if MWEs:
+                text = loader.replace_mwes_in_tokens(text)
+                for i,token in enumerate(text):
+                    if w in token.split("_"):
+                        index = i
+                        break
+
             if WINDOW:
                 startindex = max(index - 3, 0)
                 endindex = min(index + 4, len(text))
@@ -145,6 +153,7 @@ def get_argparser():
     parser.add_argument('--embeddings', type=str, default=False, required=True)
     parser.add_argument('--embedding_dim', type=int, default=False, required=True)
     parser.add_argument('--window', type=bool, default=False, required=False)
+    parser.add_argument('--mwes', type=bool, default=False, required=False)
     return parser
 
 def load_top_words():
@@ -159,12 +168,14 @@ def main():
     global EMBEDDINGS
     global EMBEDDING_DIM
     global WINDOW
+    global MWEs
     parser = get_argparser()
     args = parser.parse_args()
 
     EMBEDDINGS = args.embeddings
     EMBEDDING_DIM = args.embedding_dim
     WINDOW = args.window
+    MWEs = args.mwes
 
     util.DPRINT = args.dprint
     trainingdata.STOPWORDS = trainingdata.load_stopwords(args.bitextfn)
@@ -208,6 +219,9 @@ def main():
     language_pair = args.bitextfn.split(".")[1]
     stamp = util.timestamp() + "-" + language_pair
     featureset_name = "word2vec_" + os.path.basename(args.embeddings)
+
+    if args.mwes:
+        featureset_name = "mwes_" + featureset_name
 
     if args.window:
         featureset_name = "window_" + featureset_name
