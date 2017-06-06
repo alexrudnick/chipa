@@ -21,9 +21,8 @@ import argparse
 import os
 import sys
 
-import nltk
+import numpy as np
 
-from nltk.classify.scikitlearn import SklearnClassifier
 from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
@@ -60,10 +59,11 @@ def cross_validate(classifier, top_words, nonnull=False):
 
         training = []
         for text, index, label in text_with_labels:
+            surfaceword = text[index]
             if MWEs:
                 text = loader.replace_mwes_in_tokens(text)
                 for i,token in enumerate(text):
-                    if w in token.split("_"):
+                    if surfaceword in token.split("_"):
                         index = i
                         break
 
@@ -72,7 +72,7 @@ def cross_validate(classifier, top_words, nonnull=False):
                 endindex = min(index + 4, len(text))
                 word_embeddings = [loader.embedding(text[i])
                                    for i in range(startindex, endindex)]
-            else:
+            if not WINDOW:
                 word_embeddings = [loader.embedding(word) for word in text]
 
             sent_vector = sum(word_embeddings)
@@ -92,8 +92,8 @@ def cross_validate(classifier, top_words, nonnull=False):
             mytraining = [training[i] for i in traincv]
             mytesting = [training[i] for i in testcv]
 
-            mytraining_X = [x for (x, y) in mytraining]
-            mytraining_Y = [y for (x, y) in mytraining]
+            mytraining_X = np.array([x for (x, y) in mytraining])
+            mytraining_Y = np.array([y for (x, y) in mytraining])
 
             if len(set(mytraining_Y)) == 1:
                 print("only one label, backing off to KNN.")
@@ -102,8 +102,8 @@ def cross_validate(classifier, top_words, nonnull=False):
             classifier.fit(mytraining_X, mytraining_Y) 
             print("trained!!", classifier)
 
-            mytesting_X = [x for (x, y) in mytesting]
-            mytesting_Y = [y for (x, y) in mytesting]
+            mytesting_X = np.array([x for (x, y) in mytesting])
+            mytesting_Y = np.array([y for (x, y) in mytesting])
             predicted = classifier.predict(mytesting_X)
             ncorrect = sum(int(real == pred) for real, pred
                            in zip(mytesting_Y, predicted))

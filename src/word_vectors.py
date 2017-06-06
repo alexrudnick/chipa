@@ -21,6 +21,7 @@ class EmbeddingLoader:
         return np.array([0] * self.dimension)
 
     def replace_mwes_in_tokens(self, tokens):
+        assert type(tokens) is list
         working = " ".join(tokens)
         for mwe in self.mwes:
             joined_mwe = " ".join(mwe)
