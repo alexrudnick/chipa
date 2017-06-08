@@ -63,7 +63,7 @@ def cross_validate(classifier, top_words, nonnull=False):
             if MWEs:
                 text = loader.replace_mwes_in_tokens(text)
                 for i,token in enumerate(text):
-                    if surfaceword in token.split("_"):
+                    if surfaceword == token or surfaceword in token.split("_"):
                         index = i
                         break
 
@@ -76,6 +76,12 @@ def cross_validate(classifier, top_words, nonnull=False):
                 word_embeddings = [loader.embedding(word) for word in text]
 
             sent_vector = sum(word_embeddings)
+            if type(sent_vector) is not np.ndarray:
+                print(text)
+                print(word_embeddings)
+                print(surfaceword)
+                print(sent_vector)
+                raise ValueError("sent_vector not an array")
             training.append((sent_vector, label))
         print("this many instances for {0}: {1}".format(w, len(training)))
         labels = set(label for (feat,label) in training)
@@ -99,7 +105,13 @@ def cross_validate(classifier, top_words, nonnull=False):
                 print("only one label, backing off to KNN.")
                 classifier = KNeighborsClassifier()
 
-            classifier.fit(mytraining_X, mytraining_Y) 
+            try:
+                classifier.fit(mytraining_X, mytraining_Y) 
+            except ValueError as e:
+                print("failed out on word:", w)
+                print(mytraining_X)
+                print(mytraining_Y)
+                raise(e)
             print("trained!!", classifier)
 
             mytesting_X = np.array([x for (x, y) in mytesting])
