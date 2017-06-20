@@ -38,6 +38,7 @@ import learn
 import trainingdata
 import word_vectors
 import util
+import list_focus_words
 
 EMBEDDINGS=None
 EMBEDDING_DIM=None
@@ -168,14 +169,6 @@ def get_argparser():
     parser.add_argument('--mwes', type=bool, default=False, required=False)
     return parser
 
-def load_top_words():
-    out = []
-    # XXX: make this a parameter
-    with open("focus_words/es-gn") as infile:
-        for line in infile:
-            out.append(line.strip())
-    return out
-
 def main():
     global EMBEDDINGS
     global EMBEDDING_DIM
@@ -204,7 +197,10 @@ def main():
 
     source_annotated = annotated_corpus.load_corpus(args.annotatedfn)
     trainingdata.set_sl_annotated(source_annotated)
-    top_words = load_top_words()
+
+    language_pair = args.bitextfn.split(".")[1]
+    print(language_pair)
+    top_words = list_focus_words.load_top_words(language_pair)
 
     ## default is 1e-4.
     THETOL = 1e-4
@@ -228,7 +224,6 @@ def main():
     classifier = KNeighborsClassifier()
     classifier_pairs.append(("k-neighbors-default", classifier))
 
-    language_pair = args.bitextfn.split(".")[1]
     stamp = util.timestamp() + "-" + language_pair
     featureset_name = "word2vec_" + os.path.basename(args.embeddings)
 

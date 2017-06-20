@@ -9,6 +9,13 @@ import argparse
 
 import trainingdata
 
+def load_top_words(langpair):
+    out = []
+    with open("focus_words/" + langpair) as infile:
+        for line in infile:
+            out.append(line.strip())
+    return out
+
 def get_argparser():
     parser = argparse.ArgumentParser(description='clwsd_experiment')
     parser.add_argument('--bitextfn', type=str, required=True)
