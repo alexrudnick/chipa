@@ -31,6 +31,7 @@ import features
 import learn
 import trainingdata
 import util
+import list_focus_words
 
 def count_correct(classifier, testdata):
     """Given an NLTK-style classifier and some test data, count how many of the
@@ -133,8 +134,8 @@ def main():
     source_annotated = annotated_corpus.load_corpus(args.annotatedfn)
     trainingdata.set_sl_annotated(source_annotated)
 
-    top_words = trainingdata.get_top_words(sl_sentences)
-    top_words = [w for (w,count) in top_words]
+    language_pair = args.bitextfn.split(".")[1]
+    top_words = list_focus_words.load_top_words(language_pair)
 
     print("## GOT THIS MANY TOP WORDS:", len(top_words))
     print("## THEY ARE:", top_words)
@@ -166,9 +167,7 @@ def main():
     classifier = SklearnClassifier(pipeline)                                        
     classifier_pairs.append(("pipeline", classifier))
 
-    language_pair = args.bitextfn.split(".")[1]
     stamp = util.timestamp() + "-" + language_pair
-
     for (clname, classifier) in classifier_pairs:
         casename = "{0}-{1}-regular".format(clname, featureset_name)
         do_a_case(classifier, top_words, False, casename, stamp)
