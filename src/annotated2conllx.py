@@ -22,10 +22,17 @@ def main():
     for sentence in corpus:
         for index, token in enumerate(sentence):
             position = index + 1
-            print("{0}\t{1}\t{2}\t{3}\t-\t{4}\t-\t-\t-".format(
-                  position, token.surface, token.lemma,
-                  token.annotations["tag"]))
-                  ## TODO: use universal pos tags to get coarse tag?
+            tag = "-"
+            for annotation in token.annotations:
+                if "=" not in annotation: continue
+                k,v = annotation.split("=", maxsplit=1)
+                if k == "tag":
+                    tag = v
+
+            # id form lemma cpostag postag feats head deprel phead pdeprel
+            print("{0}\t{1}\t{2}\t{3}\t{4}\t-\t-\t-\t-\t-".format(
+                position, token.surface, token.lemma, "-", tag))
+            ## TODO: use universal pos tags to get coarse tag?
         print()
 
 if __name__ == "__main__": main()
