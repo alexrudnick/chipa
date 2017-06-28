@@ -23,12 +23,14 @@ def lookup_coarse_tag(tag):
         return "NOUN"
     if tag.startswith("NP"):
         return "PROPN"
-    if tag.startswith("V"):
+    if tag.startswith("VM"):
         return "VERB"
     if tag.startswith("I"):
         return "INTJ"
 
     ##           ADP AUX CCONJ DET NUM PART PRON SCONJ
+    if tag.startswith("VA") or tag.startswith("VS"):
+        return "AUX"
     if tag.startswith("S"):
         return "ADP"
     if tag.startswith("P"):
@@ -44,9 +46,7 @@ def lookup_coarse_tag(tag):
     ##           PUNCT SYM X
     if tag.startswith("F"):
         return "PUNCT"
-
     ## TODO: be able to detect X or SYM?
-
     return "-"
 
 def main():
