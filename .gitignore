@@ -48,4 +48,4 @@ semeval_2010_output/*.best
 semeval_2010_output/*.oof
 src/LOGS/*
 
-malt_parser/*
+maltparser/*
