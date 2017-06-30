@@ -47,7 +47,7 @@ def lookup_coarse_tag(tag):
     if tag.startswith("F"):
         return "PUNCT"
     ## TODO: be able to detect X or SYM?
-    return "-"
+    return "_"
 
 def main():
     parser = get_argparser()
@@ -58,7 +58,7 @@ def main():
     for sentence in corpus:
         for index, token in enumerate(sentence):
             position = index + 1
-            tag = "-"
+            tag = "_"
             for annotation in token.annotations:
                 if "=" not in annotation: continue
                 k,v = annotation.split("=", maxsplit=1)
@@ -68,9 +68,8 @@ def main():
             coarsetag = lookup_coarse_tag(tag)
 
             # id form lemma cpostag postag feats head deprel phead pdeprel
-            print("{0}\t{1}\t{2}\t{3}\t{4}\t-\t-\t-\t-\t-".format(
+            print("{0}\t{1}\t{2}\t{3}\t{4}\t_\t_\t_\t_\t_".format(
                 position, token.surface, token.lemma, coarsetag, tag))
-            ## TODO: use universal pos tags to get coarse tag?
         print()
 
 if __name__ == "__main__": main()
