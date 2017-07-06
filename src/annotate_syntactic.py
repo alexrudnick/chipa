@@ -15,6 +15,9 @@ def get_argparser():
     return parser
 
 def load_conll(conllfn):
+    """Returns a list of lists, one list per sentence. Each list contains tuples
+    of the shape (headindex, deprel). The head indices mark which 1-indexed
+    token in this sentence is the current token's head."""
     sentences = []
     sentence = []
 
@@ -22,11 +25,17 @@ def load_conll(conllfn):
         for line in infile:
             line = line.strip()
             if not line:
-                sentences.append(sentence)
+                if sentence:
+                    sentences.append(sentence)
                 sentence = []
+                continue
             fields = line.split('\t')
-            sentence.append(fields)
-            ## TODO: actually parse the fields here
+            headindex, deprel = fields[6], fields[7]
+
+            # XXX note that these are 1-indexed. 0 indicates having no head or
+            # being the ROOT of the sentence.
+            headindex = int(headindex)
+            sentence.append((headindex, deprel))
     return sentences
 
 def main():
@@ -38,9 +47,15 @@ def main():
 
     assert len(corpus) == len(parsed_sentences)
 
-    for sentence in corpus:
+    for sentence, parse in zip(corpus, parsed_sentences):
         for token in sentence:
-            ## TODO: add the features to the token
+            ## QUICK HACK: clearing out other features for visual clarity
+            removethis = None
+            for annotation in token.annotations:
+                if annotation.startswith("word2vec"):
+                    removethis = annotation
+            if removethis:
+                token.annotations.remove(removethis)
             print(token)
         print()
 
