@@ -38,6 +38,23 @@ def load_conll(conllfn):
             sentence.append((headindex, deprel))
     return sentences
 
+def find_token_heads(sentence, parse):
+    """For each token in the input sentence, return its syntactic head, if
+    any. If its head index is zero, mark it as special token for ROOT. This
+    version returns lemmas.
+
+    Returns a list of strings of the same length as the input sentence.
+    """
+    out = []
+    for token, (headindex, deprel) in zip(sentence, parse):
+        if headindex == 0:
+            out.append("ROOT")
+        else:
+            head_lemma = sentence[headindex - 1].lemma
+            out.append(head_lemma)
+    assert(len(out) == len(sentence))
+    return out
+
 def main():
     parser = get_argparser()
     args = parser.parse_args()
@@ -48,7 +65,10 @@ def main():
     assert len(corpus) == len(parsed_sentences)
 
     for sentence, parse in zip(corpus, parsed_sentences):
-        for token in sentence:
+        head_lemmas = find_token_heads(sentence, parse)
+        for token,head_lemma in zip(sentence, head_lemmas):
+            head_annotation = "head_lemma=" + head_lemma
+            token.annotations.add(head_annotation)
             ## QUICK HACK: clearing out other features for visual clarity
             removethis = None
             for annotation in token.annotations:
