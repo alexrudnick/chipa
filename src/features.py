@@ -219,6 +219,15 @@ def word2vec_windowsum_wikipedia(tagged_sent, annotated, index):
                               annotated,
                               index)
 
+def head_lemma(tagged_sent, annotated, index):
+    out = {}
+    token = annotated[index]
+    for annotation in token.annotations:
+        if annotation.startswith("head_lemma="):
+            hl = annotation[len("head_lemma="):]
+            out["head_lemma(%s)" % hl] = True
+    return out
+
 def postag(tagged_sent, annotated, index):
     out = {}
     token = annotated[index]
