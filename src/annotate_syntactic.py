@@ -5,6 +5,7 @@ Go over an annotated corpus file and a bunch of CONLL-x formatted parses of
 those same sentences and add syntactic features.
 """
 import argparse
+import copy
 
 import annotated_corpus
 
@@ -38,20 +39,20 @@ def load_conll(conllfn):
             sentence.append((headindex, deprel))
     return sentences
 
-def find_token_heads(sentence, parse):
+def find_head_tokens(sentence, parse):
     """For each token in the input sentence, return its syntactic head, if
-    any. If its head index is zero, mark it as special token for ROOT. This
-    version returns lemmas.
+    any. If its head index is zero, put None in there instead.
 
-    Returns a list of strings of the same length as the input sentence.
+    Returns a list of Token objects (or None) of the same length as the input
+    sentence.
     """
     out = []
     for token, (headindex, deprel) in zip(sentence, parse):
         if headindex == 0:
-            out.append("ROOT")
+            out.append(None)
         else:
-            head_lemma = sentence[headindex - 1].lemma
-            out.append(head_lemma)
+            head_token = copy.deepcopy(sentence[headindex - 1])
+            out.append(head_token)
     assert(len(out) == len(sentence))
     return out
 
@@ -65,17 +66,16 @@ def main():
     assert len(corpus) == len(parsed_sentences)
 
     for sentence, parse in zip(corpus, parsed_sentences):
-        head_lemmas = find_token_heads(sentence, parse)
-        for token,head_lemma in zip(sentence, head_lemmas):
-            head_annotation = "head_lemma=" + head_lemma
-            token.annotations.add(head_annotation)
-            ## QUICK HACK: clearing out other features for visual clarity
-            removethis = None
-            for annotation in token.annotations:
-                if annotation.startswith("word2vec"):
-                    removethis = annotation
-            if removethis:
-                token.annotations.remove(removethis)
+        head_tokens = find_head_tokens(sentence, parse)
+        for token,head_token in zip(sentence, head_tokens):
+            if head_token:
+                head_lemma_annotation = "head_lemma=" + head_token.lemma
+                head_surface_annotation = "head_surface=" + head_token.surface
+            else:
+                head_lemma_annotation = "head_lemma=ROOT"
+                head_surface_annotation = "head_surface=ROOT"
+            token.annotations.add(head_surface_annotation)
+            token.annotations.add(head_lemma_annotation)
             print(token)
         print()
 
