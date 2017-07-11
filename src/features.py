@@ -222,10 +222,25 @@ def word2vec_windowsum_wikipedia(tagged_sent, annotated, index):
 def head_lemma(tagged_sent, annotated, index):
     out = {}
     token = annotated[index]
+    found = False
     for annotation in token.annotations:
         if annotation.startswith("head_lemma="):
             hl = annotation[len("head_lemma="):]
             out["head_lemma(%s)" % hl] = True
+            found = True
+    assert found, "couldn't find head_lemma annotation"
+    return out
+
+def head_surface(tagged_sent, annotated, index):
+    out = {}
+    token = annotated[index]
+    found = False
+    for annotation in token.annotations:
+        if annotation.startswith("head_surface="):
+            hl = annotation[len("head_surface="):]
+            out["head_surface(%s)" % hl] = True
+            found = True
+    assert found, "couldn't find head_surface annotation"
     return out
 
 def postag(tagged_sent, annotated, index):
