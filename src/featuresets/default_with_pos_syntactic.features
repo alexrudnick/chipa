@@ -7,3 +7,5 @@ postag_left
 postag_right
 head_lemma
 head_surface
+child_lemma
+child_surface

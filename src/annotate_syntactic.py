@@ -56,6 +56,23 @@ def find_head_tokens(sentence, parse):
     assert(len(out) == len(sentence))
     return out
 
+def find_child_tokens(sentence, parse):
+    """For each token in the input sentence, return its syntactic children, if
+    any. If it doesn't have any syntactic children, that's fine -- just put an
+    empty list in that spot.
+
+    Returns a list of lists of Token objects of the same length as the input
+    sentence.
+    """
+    out = []
+    for _ in sentence:
+        out.append([])
+    for childtoken, (headindex, deprel) in zip(sentence, parse):
+        if headindex != 0:
+            out[headindex - 1].append(copy.deepcopy(childtoken))
+    assert(len(out) == len(sentence))
+    return out
+
 def main():
     parser = get_argparser()
     args = parser.parse_args()
@@ -67,13 +84,21 @@ def main():
 
     for sentence, parse in zip(corpus, parsed_sentences):
         head_tokens = find_head_tokens(sentence, parse)
-        for token,head_token in zip(sentence, head_tokens):
+        childrens = find_child_tokens(sentence, parse)
+        for token,head_token,children in zip(sentence, head_tokens, childrens):
             if head_token:
                 head_lemma_annotation = "head_lemma=" + head_token.lemma
                 head_surface_annotation = "head_surface=" + head_token.surface
             else:
                 head_lemma_annotation = "head_lemma=ROOT"
                 head_surface_annotation = "head_surface=ROOT"
+            for child_token in children:
+                child_lemma_annotation = "child_lemma=" + child_token.lemma
+                child_surface_annotation = ("child_surface=" +
+                                            child_token.surface)
+                token.annotations.add(child_surface_annotation)
+                token.annotations.add(child_lemma_annotation)
+
             token.annotations.add(head_surface_annotation)
             token.annotations.add(head_lemma_annotation)
             print(token)

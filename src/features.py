@@ -243,6 +243,24 @@ def head_surface(tagged_sent, annotated, index):
     assert found, "couldn't find head_surface annotation"
     return out
 
+def child_lemma(tagged_sent, annotated, index):
+    out = {}
+    token = annotated[index]
+    for annotation in token.annotations:
+        if annotation.startswith("child_lemma="):
+            hl = annotation[len("child_lemma="):]
+            out["child_lemma(%s)" % hl] = True
+    return out
+
+def child_surface(tagged_sent, annotated, index):
+    out = {}
+    token = annotated[index]
+    for annotation in token.annotations:
+        if annotation.startswith("child_surface="):
+            hl = annotation[len("child_surface="):]
+            out["child_surface(%s)" % hl] = True
+    return out
+
 def postag(tagged_sent, annotated, index):
     out = {}
     token = annotated[index]
