@@ -71,6 +71,29 @@ def text_label_pairs(word, nonnull=False):
                                  if label != UNTRANSLATED]
     return training
 
+def doc2vec_labels(word, doc2vec_prefix, nonnull=False):
+    """Return (d2v_string, label) pairs for all the sentences that contain the
+    specified word. Actually lemma."""
+    assert type(word) is str
+    training = []
+    for (sent_index, (ss,tagged)) in enumerate(zip(SL_SENTENCES, TAGGED_SENTENCES)):
+        if word in ss:
+            index = ss.index(word)
+            label = tagged[index][1]
+            annotated = SL_SENTENCES_ANNOTATED[sent_index]
+
+            d2v_string = None
+            for annotation in annotated[0].annotations:
+                prefix = doc2vec_prefix + "="
+                if annotation.startswith(prefix):
+                    d2v_string = annotation[len(prefix):]
+            assert d2v_string is not None
+            training.append((d2v_string, label))
+    if nonnull:
+        training = [(d2v_string, label) for (d2vstring, label) in training
+                                        if label != UNTRANSLATED]
+    return training
+
 ## XXX: what we should be doing here is setting the corpus so that we know what
 ## words we're going to be looking for ahead of time.
 ## as we go through, save the training data for each relevant word.
