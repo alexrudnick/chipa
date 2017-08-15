@@ -123,39 +123,13 @@ def cross_validate(classifier, top_words, nonnull=False):
             out[w].append((ncorrect,len(mytesting)))
     return out
 
-def words_with_differences(results_table):
-    """get the words with the biggest classifier vs mfs differences"""
-    ## these are going to be the proportion of the cases that classifiers win
-    ## over mfs.
-    word_diff_pairs = []
-    for w, resultslist in results_table.items():
-        totalcorrect = sum(correct for (correct,y,z) in resultslist)
-        totalmfscorrect = sum(correct for (x,mfscorrect,z) in resultslist)
-        totalsize = sum(correct for (x,z,size) in resultslist)
-        word_diff_pairs.append((word,
-                               (totalcorrect - totalmfscorrect) / totalsize))
-    words_with_differences.sort(key=itemgetter(1), reverse=True)
-    for word, diff in words_with_differences:
-        print("{0}\t{1}".format(word,diff))
-
 ## @util.timeexecution
 def do_a_case(classifier, top_words, nonnull, casename, stamp):
     print("[[next case]]", casename)
     sys.stdout.flush()
-    with open("results/{0}-{1}".format(stamp, casename), "w") as outfile:
-        results_table = cross_validate(classifier, top_words, nonnull=nonnull)
-        ## one entry into these per word
-        corrects = []
-        mfscorrects = []
-        sizes = []
-        for w, resultslist in results_table.items():
-            for (correct,size) in resultslist:
-                print("{0}\t{1}\t{2}\t{3}".format(
-                    w, correct / size, correct, size), file=outfile)
-                corrects.append(correct)
-                sizes.append(size)
-        avg = sum(corrects) / sum(sizes)
-        print("accuracy: {0:.4f}".format(avg), file=outfile)
+    results_table = cross_validate(classifier, top_words, nonnull=nonnull)
+    fn = "results/{0}-{1}".format(stamp, casename)
+    util.save_results_table(results_table, fn)
 
 def get_argparser():
     parser = argparse.ArgumentParser(description='clwsd_experiment')
