@@ -206,6 +206,8 @@ def main():
 
     if args.window:
         featureset_name = "window_" + featureset_name
+    else:
+        featureset_name = "fullsent_" + featureset_name
 
     for (clname, classifier) in classifier_pairs:
         casename = "{0}-{1}-regular".format(clname, featureset_name)
