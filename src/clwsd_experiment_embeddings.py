@@ -42,7 +42,7 @@ import list_focus_words
 
 EMBEDDINGS=None
 EMBEDDING_DIM=None
-WINDOW=False
+COMBINATION=None
 MWEs=False
 @util.timeexecution
 def cross_validate(classifier, top_words, nonnull=False):
@@ -53,6 +53,8 @@ def cross_validate(classifier, top_words, nonnull=False):
     util.dprint("cross validating this many words:", len(top_words))
 
     loader = word_vectors.EmbeddingLoader(EMBEDDINGS, EMBEDDING_DIM)
+
+    assert COMBINATION, "need to specify some kind of embedding combination"
 
     for w in top_words:
         util.dprint("cross validating:", w)
@@ -68,12 +70,12 @@ def cross_validate(classifier, top_words, nonnull=False):
                         index = i
                         break
 
-            if WINDOW:
+            if COMBINATION == "window":
                 startindex = max(index - 3, 0)
                 endindex = min(index + 4, len(text))
                 word_embeddings = [loader.embedding(text[i])
                                    for i in range(startindex, endindex)]
-            if not WINDOW:
+            elif COMBINATION == "fullsent":
                 word_embeddings = [loader.embedding(word) for word in text]
 
             sent_vector = sum(word_embeddings)
@@ -139,22 +141,24 @@ def get_argparser():
     parser.add_argument('--dprint', type=bool, default=False, required=False)
     parser.add_argument('--embeddings', type=str, default=False, required=True)
     parser.add_argument('--embedding_dim', type=int, default=False, required=True)
-    parser.add_argument('--window', type=bool, default=False, required=False)
+    parser.add_argument('--combination', type=str, required=True)
     parser.add_argument('--mwes', type=bool, default=False, required=False)
     return parser
 
 def main():
     global EMBEDDINGS
     global EMBEDDING_DIM
-    global WINDOW
+    global COMBINATION
     global MWEs
     parser = get_argparser()
     args = parser.parse_args()
 
     EMBEDDINGS = args.embeddings
     EMBEDDING_DIM = args.embedding_dim
-    WINDOW = args.window
     MWEs = args.mwes
+
+    COMBINATION = args.combination
+    assert COMBINATION in ["window", "fullsent", "pyramid"]
 
     util.DPRINT = args.dprint
     trainingdata.STOPWORDS = trainingdata.load_stopwords(args.bitextfn)
@@ -179,9 +183,9 @@ def main():
     ## default is 1e-4.
     THETOL = 1e-4
     classifier_pairs = []
-    classifier = MLPClassifier(solver='lbfgs', alpha=THETOL,
-                               hidden_layer_sizes=(20,20))
-    classifier_pairs.append(("mlp-20-20", classifier))
+    ## classifier = MLPClassifier(solver='lbfgs', alpha=THETOL,
+    ##                            hidden_layer_sizes=(20,20))
+    ## classifier_pairs.append(("mlp-20-20", classifier))
 
     classifier = LogisticRegression(C=1, penalty='l1', tol=THETOL)
     classifier_pairs.append(("maxent-l1-c1", classifier))
@@ -189,14 +193,12 @@ def main():
     classifier = LogisticRegression(C=1, penalty='l2', tol=THETOL)
     classifier_pairs.append(("maxent-l2-c1", classifier))
 
-    classifier = LinearSVC(C=1, penalty='l2', tol=THETOL)
-    classifier_pairs.append(("linearsvc-l2-c1", classifier))
-
-    classifier = RandomForestClassifier()
-    classifier_pairs.append(("random-forest-default", classifier))
-
-    classifier = KNeighborsClassifier()
-    classifier_pairs.append(("k-neighbors-default", classifier))
+    # classifier = LinearSVC(C=1, penalty='l2', tol=THETOL)
+    # classifier_pairs.append(("linearsvc-l2-c1", classifier))
+    # classifier = RandomForestClassifier()
+    # classifier_pairs.append(("random-forest-default", classifier))
+    # classifier = KNeighborsClassifier()
+    # classifier_pairs.append(("k-neighbors-default", classifier))
 
     stamp = util.timestamp() + "-" + language_pair
     featureset_name = "word2vec_" + os.path.basename(args.embeddings)
@@ -204,9 +206,9 @@ def main():
     if args.mwes:
         featureset_name = "mwes_" + featureset_name
 
-    if args.window:
+    if COMBINATION == "window":
         featureset_name = "window_" + featureset_name
-    else:
+    elif COMBINATION == "fullsent":
         featureset_name = "fullsent_" + featureset_name
 
     for (clname, classifier) in classifier_pairs:
