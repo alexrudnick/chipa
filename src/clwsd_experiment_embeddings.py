@@ -77,6 +77,14 @@ def cross_validate(classifier, top_words, nonnull=False):
                                    for i in range(startindex, endindex)]
             elif COMBINATION == "fullsent":
                 word_embeddings = [loader.embedding(word) for word in text]
+            elif COMBINATION == "pyramid":
+                word_embeddings = []
+                for position,word in enumerate(text): 
+                    scaling = (10 - abs(position - index)) / 10
+                    scaling = max(0, scaling)
+                    if scaling:
+                        vec = scaling * loader.embedding(word)
+                        word_embeddings.append(vec)
 
             sent_vector = sum(word_embeddings)
             if type(sent_vector) is not np.ndarray:
@@ -210,6 +218,8 @@ def main():
         featureset_name = "window_" + featureset_name
     elif COMBINATION == "fullsent":
         featureset_name = "fullsent_" + featureset_name
+    elif COMBINATION == "pyramid":
+        featureset_name = "pyramid_" + featureset_name
 
     for (clname, classifier) in classifier_pairs:
         casename = "{0}-{1}-regular".format(clname, featureset_name)
