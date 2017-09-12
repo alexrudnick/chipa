@@ -14,8 +14,6 @@ def langpair(fn):
     return "{0}-{1}".format(sl, tl)
 
 def main():
-    show_words = False
-    
     # (accuracy, name, word_to_total, word_to_correct)
     file_overviews_regular = []
     file_overviews_nonnull = []
@@ -55,19 +53,10 @@ def main():
         if "MFS" in name:
             print("^^^ MFS baseline ^^^")
 
-        if show_words:
-            for word, total in w2t.most_common():
-                accuracy = word_to_correct[word] / word_to_total[word]
-                print("{0}\t{1}\t{2:.3f}".format(word, total, accuracy))
     print("*" * 80)
     for (acc, name, w2c, w2t) in sorted(file_overviews_nonnull, reverse=True):
         print("{0}\t{1:.3f}".format(name, acc))
         if "MFS" in name:
             print("^^^ MFS baseline ^^^")
-
-        if show_words:
-            for word, total in w2t.most_common():
-                accuracy = word_to_correct[word] / word_to_total[word]
-                print("{0}\t{1}\t{2:.3f}".format(word, total, accuracy))
 
 if __name__ == "__main__": main()
