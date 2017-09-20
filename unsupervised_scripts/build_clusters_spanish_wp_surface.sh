@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BROWNCLUSTER=/home/alex/checkouts/brown-cluster/wcluster
+BROWNCLUSTER=$HOME/checkouts/brown-cluster/wcluster
 
 $BROWNCLUSTER \
   --threads 8 \
