@@ -8,10 +8,15 @@ from collections import Counter
 
 def langpair(fn):
     name = os.path.basename(fn)
-    splitted = name.split("-")
-    sl = splitted[5]
-    tl = splitted[6]
-    return "{0}-{1}".format(sl, tl)
+    try:
+        splitted = name.split("-")
+        sl = splitted[5]
+        tl = splitted[6]
+        return "{0}-{1}".format(sl, tl)
+    except:
+        print("failed to extract language pair.")
+        print("filename:", fn)
+        sys.exit(1)
 
 def main():
     # (accuracy, name, word_to_total, word_to_correct)
