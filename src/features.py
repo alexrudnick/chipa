@@ -113,6 +113,16 @@ def brown_bag_wikipedia(tagged_sent, annotated, index):
             out.update({k : 1})
     return out
 
+def brown_bag_wikipedia_lemma(tagged_sent, annotated, index):
+    """Bag of all the brown_wikipedia_lemma clusters for this sentence."""
+    out = Counter()
+    clusters = clusters_for_sentence(annotated, "brown_wikipedia_lemma=")
+    for cluster in clusters:
+        variations = brown_variations("brown_bag_wikipedia_lemma", cluster)
+        for k in variations:
+            out.update({k : 1})
+    return out
+
 def brown_window_wikipedia(tagged_sent, annotated, index):
     out = {}
     clusters = clusters_for_sentence(annotated, "brown_wikipedia=")
@@ -120,6 +130,16 @@ def brown_window_wikipedia(tagged_sent, annotated, index):
     for w_index in w_indices:
         cluster = clusters[w_index]
         variations = brown_variations("brown_window_wikipedia", cluster)
+        out.update(variations)
+    return out
+
+def brown_window_wikipedia_lemma(tagged_sent, annotated, index):
+    out = {}
+    clusters = clusters_for_sentence(annotated, "brown_wikipedia_lemma=")
+    w_indices = window_indices_inclusive(index, WIDTH, len(annotated))
+    for w_index in w_indices:
+        cluster = clusters[w_index]
+        variations = brown_variations("brown_window_wikipedia_lemma", cluster)
         out.update(variations)
     return out
 
