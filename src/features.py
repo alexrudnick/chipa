@@ -7,6 +7,7 @@ return feature dictionaries.
 
 import nltk
 from collections import Counter
+import word_vectors
 
 DEBUG=False
 
@@ -286,9 +287,10 @@ EMBEDDINGLOADER=None
 EMBEDDINGDIMS=0
 def set_embedding_file(fn, ndims):
     global EMBEDDINGLOADER
-    EMBEDDINGLOADER = EmbeddingLoader(filename, ndims)
+    EMBEDDINGLOADER = word_vectors.EmbeddingLoader(fn, ndims)
 
 def word2vec_pyramid(tagged_sent, annotated, index):
+    assert EMBEDDINGLOADER, "need to specify word embeddings"
     out = {}
     text = nltk.tag.untag(tagged_sent)
     word_embeddings = []
@@ -296,11 +298,11 @@ def word2vec_pyramid(tagged_sent, annotated, index):
         scaling = (10 - abs(position - index)) / 10
         scaling = max(0, scaling)
         if scaling:
-            vec = scaling * loader.embedding(word)
+            vec = scaling * EMBEDDINGLOADER.embedding(word)
             word_embeddings.append(vec)
     sent_vector = sum(word_embeddings)
     for i in range(len(sent_vector)):
-        out["word2vec_{}".format[i]] = sent_vector[i]
+        out["word2vec_{}".format(i)] = sent_vector[i]
     return out
 
 ### end code for word embedding features

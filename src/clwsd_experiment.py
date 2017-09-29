@@ -83,7 +83,7 @@ def get_argparser():
     parser.add_argument('--alignfn', type=str, required=True)
     parser.add_argument('--annotatedfn', type=str, required=True)
     parser.add_argument('--featurefn', type=str, required=True)
-    parser.add_argument('--embeddingfn', type=str, default=None, required=False)
+    parser.add_argument('--embeddings', type=str, default=None, required=False)
     parser.add_argument('--embedding_dim', type=int, default=None,
                         required=False)
     parser.add_argument('--dprint', type=bool, default=False, required=False)
@@ -99,9 +99,9 @@ def main():
 
     trainingdata.STOPWORDS = trainingdata.load_stopwords(args.bitextfn)
 
-    if args.embeddingfn:
+    if args.embeddings:
         assert args.embedding_dim, "need to specify an embedding dimension"
-        features.set_embedding_file(args.embeddingfn, args.embedding_dim)
+        features.set_embedding_file(args.embeddings, args.embedding_dim)
 
     print("## RUNNING EXPERIMENT on {0} with features {1}".format(
         os.path.basename(args.bitextfn),
