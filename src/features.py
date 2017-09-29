@@ -209,36 +209,6 @@ def flat_brown_window_wikipedia(tagged_sent, annotated, index):
         out.update({"fww(%s)" % cluster: True})
     return out
 
-def word2vec_windowsum(embedding_name, tagged_sent, annotated, index):
-    out = {}
-    word2vec_strings = clusters_for_sentence(annotated, embedding_name + "=")
-    w_indices = window_indices_inclusive(index, WIDTH, len(annotated))
-
-    vectors = []
-    for w_index in w_indices:
-        joined = word2vec_strings[w_index]
-        if joined == "NONE":
-            continue
-        vec = [float(s) for s in joined.split("_")]
-        vectors.append(vec)
-    summed_vector = [sum(vals) for vals in zip(*vectors)]
-
-    for i, val in enumerate(summed_vector):
-        out[embedding_name + "_" + str(i)] = val
-    return out
-
-def word2vec_windowsum_europarl(tagged_sent, annotated, index):
-    return word2vec_windowsum("word2vec_europarl",
-                              tagged_sent,
-                              annotated,
-                              index)
-
-def word2vec_windowsum_wikipedia(tagged_sent, annotated, index):
-    return word2vec_windowsum("word2vec_wikipedia",
-                              tagged_sent,
-                              annotated,
-                              index)
-
 def head_lemma(tagged_sent, annotated, index):
     out = {}
     token = annotated[index]
@@ -309,6 +279,31 @@ def postag_right(tagged_sent, annotated, index):
                 tag = annotation[4:]
                 out["postag_right(%s)" % tag] = True
     return out
+
+### code for word embedding features
+
+EMBEDDINGLOADER=None
+EMBEDDINGDIMS=0
+def set_embedding_file(fn, ndims):
+    global EMBEDDINGLOADER
+    EMBEDDINGLOADER = EmbeddingLoader(filename, ndims)
+
+def word2vec_pyramid(tagged_sent, annotated, index):
+    out = {}
+    text = nltk.tag.untag(tagged_sent)
+    word_embeddings = []
+    for position,word in enumerate(text): 
+        scaling = (10 - abs(position - index)) / 10
+        scaling = max(0, scaling)
+        if scaling:
+            vec = scaling * loader.embedding(word)
+            word_embeddings.append(vec)
+    sent_vector = sum(word_embeddings)
+    for i in range(len(sent_vector)):
+        out["word2vec_{}".format[i]] = sent_vector[i]
+    return out
+
+### end code for word embedding features
 
 FEATURES = []
 def load_featurefile(featurefn):
