@@ -51,7 +51,9 @@ def main():
 
     for epoch in range(10):
         print("training step", epoch)
-        model.train(documents)
+        model.train(documents,
+                    epochs=model.iter,
+                    total_examples=model.corpus_count)
         model.alpha -= 0.002  # decrease the learning rate
         model.min_alpha = model.alpha  # fix the learning rate, no decay
     model.save(savedmodel)
