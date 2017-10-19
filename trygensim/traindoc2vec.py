@@ -49,13 +49,11 @@ def main():
                     max_vocab_size=(160 * 1000), workers=cores)
     print("built the model object!")
 
-    for epoch in range(10):
-        print("training step", epoch)
-        model.train(documents,
-                    epochs=model.iter,
-                    total_examples=model.corpus_count)
-        model.alpha -= 0.002  # decrease the learning rate
-        model.min_alpha = model.alpha  # fix the learning rate, no decay
+    print("now training!")
+    model.train(documents,
+                epochs=model.iter,
+                total_examples=model.corpus_count)
     model.save(savedmodel)
+    print("done!")
 
 if __name__ == "__main__": main()
