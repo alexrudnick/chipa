@@ -8,7 +8,7 @@ import gensim.models.doc2vec
 from collections import OrderedDict
 
 CORPUS = "eswiki.twentymillion.sentences"
-SAVED_MODEL = "200-spanish-wikipedia-doc2vec.model"
+SAVED_MODEL = "-spanish-wikipedia-doc2vec.model"
 
 TINYCORPUS = "europarl-es-10k.txt"
 TINY_SAVED_MODEL = "europarl-es-10k-doc2vec.model"
@@ -16,6 +16,7 @@ TINY_SAVED_MODEL = "europarl-es-10k-doc2vec.model"
 def get_argparser():
     parser = argparse.ArgumentParser(description='trydoc2vec')
     parser.add_argument('--tiny', type=bool, default=False, required=False)
+    parser.add_argument('--size', type=int, required=True)
     return parser
 
 def magnitude(vec):
@@ -37,7 +38,7 @@ def main():
     args = parser.parse_args()
 
     thecorpus = CORPUS
-    savedmodel = SAVED_MODEL
+    savedmodel = str(args.size) + SAVED_MODEL
     if args.tiny:
         thecorpus = TINYCORPUS
         savedmodel = TINY_SAVED_MODEL
@@ -45,7 +46,7 @@ def main():
     documents = gensim.models.doc2vec.TaggedLineDocument(thecorpus)
     print("built the documents object!")
 
-    model = Doc2Vec(documents, size=200, window=8, min_count=5,
+    model = Doc2Vec(documents, size=args.size, window=8, min_count=5,
                     max_vocab_size=(160 * 1000), workers=cores)
     print("built the model object!")
 
