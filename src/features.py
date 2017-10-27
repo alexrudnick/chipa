@@ -347,7 +347,7 @@ def doc2vec_window(prefix, annotated, index):
     upperbound = index+WIDTH+1
     surface_window = surface[lowerbound:upperbound]
 
-    vec = model.infer_vector(surface_window)
+    vec = DOC2VECMODEL.infer_vector(surface_window)
     for i in range(len(vec)):
         out["{}_{}".format(prefix, i)] = sent_vector[i]
     return out
