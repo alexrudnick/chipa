@@ -9,7 +9,7 @@ from collections import OrderedDict
 
 import traindoc2vec
 
-SAVED_MODEL = "spanish-wikipedia-doc2vec.model"
+SAVED_MODEL = "400-spanish-wikipedia-doc2vec.model"
 
 model = Doc2Vec.load(SAVED_MODEL)
 
