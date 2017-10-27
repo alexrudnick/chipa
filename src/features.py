@@ -5,8 +5,12 @@ Feature detectors here take a tagged sentence of the shape [(s,t)  ...] and
 return feature dictionaries.
 """
 
-import nltk
 from collections import Counter
+
+import nltk
+from gensim.models import Doc2Vec
+import gensim.models.doc2vec
+
 import word_vectors
 
 DEBUG=False
@@ -306,6 +310,48 @@ def word2vec_pyramid(tagged_sent, annotated, index):
     return out
 
 ### end code for word embedding features
+
+
+### code for document embedding features
+DOC2VECMODEL = None
+
+def initialize_doc2vec200():
+    global DOC2VECMODEL
+    DOC2VECMODEL = Doc2Vec.load(
+        "../trygensim/200-spanish-wikipedia-doc2vec.model")
+
+def initialize_doc2vec400():
+    global DOC2VECMODEL
+    DOC2VECMODEL = Doc2Vec.load(
+        "../trygensim/400-spanish-wikipedia-doc2vec.model")
+
+def doc2vec_window_200(tagged_sent, annotated, index):
+    if not DOC2VECMODEL:
+        initialize_doc2vec200()
+    return doc2vec_window("doc2vec_window_200", annotated, index)
+
+def doc2vec_window_400(tagged_sent, annotated, index):
+    if not DOC2VECMODEL:
+        initialize_doc2vec400()
+    return doc2vec_window("doc2vec_window_400", annotated, index)
+
+def doc2vec_window(prefix, annotated, index):
+    if not DOC2VECMODEL:
+        assert False, "call doc2vec200 or doc2vec400"
+
+    out = {}
+
+    surface = [token.surface for token in annotated]
+
+    lowerbound = max(0, index-WIDTH)
+    upperbound = index+WIDTH+1
+    surface_window = surface[lowerbound:upperbound]
+
+    vec = model.infer_vector(surface_window)
+    for i in range(len(vec)):
+        out["{}_{}".format(prefix, i)] = sent_vector[i]
+    return out
+### end code for document embedding features
 
 FEATURES = []
 def load_featurefile(featurefn):
