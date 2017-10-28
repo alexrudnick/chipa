@@ -347,8 +347,8 @@ def doc2vec_window(prefix, annotated, index):
     upperbound = index+WIDTH+1
     surface_window = surface[lowerbound:upperbound]
 
-    vec = DOC2VECMODEL.infer_vector(surface_window)
-    for i in range(len(vec)):
+    sent_vector = DOC2VECMODEL.infer_vector(surface_window)
+    for i in range(len(sent_vector)):
         out["{}_{}".format(prefix, i)] = sent_vector[i]
     return out
 ### end code for document embedding features
