@@ -296,9 +296,10 @@ def set_embedding_file(fn, ndims):
 def word2vec_pyramid(tagged_sent, annotated, index):
     assert EMBEDDINGLOADER, "need to specify word embeddings"
     out = {}
-    text = nltk.tag.untag(tagged_sent)
+    surface = [token.surface for token in annotated]
+
     word_embeddings = []
-    for position,word in enumerate(text): 
+    for position,word in enumerate(surface): 
         scaling = (10 - abs(position - index)) / 10
         scaling = max(0, scaling)
         if scaling:
