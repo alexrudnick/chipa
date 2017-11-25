@@ -84,7 +84,7 @@ def main():
 
     for setting in sorted(settings_to_scores.keys()):
         scores = settings_to_scores[setting]
-        print("{0} & {1:.3f} & {2:.3f} & {3:.3f} & {4:.3f}".format(setting,
+        print("{0} & {1:.3f} & {2:.3f} & {3:.3f} & {4:.3f} \\\\".format(setting,
               scores[0], scores[1], scores[2], scores[3]))
 
     print()
