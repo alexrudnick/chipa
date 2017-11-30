@@ -136,8 +136,8 @@ def main():
                                    penalty='l2',
                                    tol=THETOL))
     classifier_pairs.append(("maxent-l2-c1", classifier))
-    ## classifier = SklearnClassifier(LinearSVC(C=1, penalty='l2', tol=THETOL))
-    ## classifier_pairs.append(("linearsvc-l2-c1", classifier))
+    classifier = SklearnClassifier(LinearSVC(C=1, penalty='l2', tol=THETOL))
+    classifier_pairs.append(("linearsvc-l2-c1", classifier))
     classifier = SklearnClassifier(RandomForestClassifier(), sparse=False)
     classifier_pairs.append(("random-forest-default", classifier))
 
