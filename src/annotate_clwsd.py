@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 """
-Go over an annotated corpus file and add Brown cluster annotations for the words
-in it.
+Go over an annotated corpus file and add CL-WSD predictions for all the tokens
+that we can.
 """
 
 from collections import defaultdict
@@ -30,7 +30,8 @@ def get_argparser():
     parser.add_argument('--featurefn', type=str, required=True)
     parser.add_argument('--dprint', type=bool, default=False, required=False)
     parser.add_argument('--featureprefix', type=str, required=True)
-    parser.add_argument('--input', type=str, required=True)
+    parser.add_argument('--annotated_to_classify', type=str, required=True)
+    parser.add_argument('--overwrite', type=bool, default=False, required=True)
     return parser
 
 ## OK, how are we going to do this?
@@ -63,7 +64,7 @@ def main():
     args = parser.parse_args()
     util.DPRINT = args.dprint
 
-    corpus = annotated_corpus.load_corpus(args.input)
+    corpus = annotated_corpus.load_corpus(args.annotated_to_classify)
     for sentence in corpus:
         for i, token in enumerate(sentence):
             w = token.lemma
@@ -71,7 +72,17 @@ def main():
             predicted = predict_class(sentence, i)
             if predicted:
                 token.annotations.add(args.featureprefix + "=" + predicted)
-            print(token)
-        print()
+            if not args.overwrite:
+                print(token)
+        if not args.overwrite:
+            print()
+
+    if args.overwrite:
+        with open(args.annotated_to_classify, "w") as outfile:
+            for sentence in corpus:
+                for i, token in enumerate(sentence):
+                    print(token, file=outfile)
+                print(file=outfile)
+
 
 if __name__ == "__main__": main()
