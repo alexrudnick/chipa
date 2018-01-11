@@ -64,6 +64,8 @@ def main():
     args = parser.parse_args()
     util.DPRINT = args.dprint
 
+    setup_training_data(args)
+
     corpus = annotated_corpus.load_corpus(args.annotated_to_classify)
     for sentence in corpus:
         for i, token in enumerate(sentence):
