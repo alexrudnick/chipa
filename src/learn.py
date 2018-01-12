@@ -35,24 +35,6 @@ def reverse_cfd(cfd):
             out[sample].inc(condition, cfd[condition][sample])
     return out
 
-
-@functools.lru_cache(maxsize=100000)
-def classifier_for(word, nonnull=False):
-    training = trainingdata.trainingdata_for(word, nonnull=nonnull)
-    
-    if not training:
-        return OOVClassifier()
-
-    labels = set(label for fs,label in training)
-
-    if len(labels) == 1:
-        classif = MFSClassifier()
-    else:
-        ## XXX: futz with regularization constant here.
-        classif = SklearnClassifier(LogisticRegression(C=0.1))
-    classif.train(training)
-    return classif
-
 @functools.lru_cache(maxsize=100000)
 def mfs_for(word):
     fd = nltk.probability.FreqDist()
@@ -96,43 +78,6 @@ class OOVClassifier(nltk.classify.ClassifierI):
         return OOV
     def prob_classify(self, featureset):
         return nltk.probability.DictionaryProbDist({OOV: 1.0})
-
-def disambiguate_words(words):
-    """Given a list of words/lemmas, return a list of disambiguation answers for
-    them."""
-    classifiers = [classifier_for(word, nonnull=True) for word in words]
-    answers = []
-    for i in range(len(words)):
-        faketagged = [(w,None) for w in words]
-        feat = features.extract(faketagged, i)
-        classif = classifiers[i]
-        ans = classif.classify(feat)
-        if ans == UNTRANSLATED:
-            ans = mfs_translation(words[i])
-            print("MFS!!!", words[i], "==>", ans)
-        answers.append(ans)
-    return [str(ans) for ans in answers]
-
-def prob_disambiguate_words(words):
-    """Given a list of words/lemmas, return a list of disambiguation answers for
-    them -- return a list of lists, where each sublist is ordered in decreasing
-    probability."""
-    classifiers = [classifier_for(word, nonnull=True) for word in words]
-    answers = []
-    for i in range(len(words)):
-        faketagged = [(w,None) for w in words]
-        feat = features.extract(faketagged, i)
-        classif = classifiers[i]
-
-        ## get all possible options, sorted in wrong order
-        dist = classif.prob_classify(feat)
-        options = [(dist.prob(samp), samp) for samp in dist.samples()]
-        options.sort(reverse=True)
-        myanswers = [str(lex) for (prob, lex) in options
-                              if prob > 0.01 ]
-        print(myanswers)
-        answers.append(myanswers)
-    return answers
 
 @functools.lru_cache(maxsize=100000)
 def distribution_for(word):
