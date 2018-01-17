@@ -39,14 +39,6 @@ def get_argparser():
 ## classifiers on demand. Then we blow through the input annotated corpus and we
 ## output classifications for that.
 
-def predict_class(sentence, index):
-    """Predict a translation for the token at the current index in this
-    annotated sentence."""
-
-    ## XXX: see what we've got in learn.py to pull up classifiers on demand.
-    ## Maybe it's good, but maybe it needs updates.
-    return "foo"
-
 def setup_training_data(args):
     ## XXX: maybe move this to trainingdata.py
     triple_sentences = trainingdata.load_bitext(args.bitextfn, args.alignfn)
@@ -59,6 +51,28 @@ def setup_training_data(args):
     source_annotated = annotated_corpus.load_corpus(args.annotatedfn)
     trainingdata.set_sl_annotated(source_annotated)
 
+@functools.lru_cache(maxsize=100000)
+def classifier_for_lemma(lemma):
+    # XXX: always doing nullable and Random Forest for initial version
+    classifier = SklearnClassifier(RandomForestClassifier(), sparse=False)
+    training = trainingdata.trainingdata_for(w, nonnull=False)
+    labels = set(label for (feat,label) in training)
+    if len(labels) < 2:
+        return None
+    classifier.train(training)
+    return classifier
+
+def predict_class(sentence, index):
+    """Predict a translation for the token at the current index in this
+    annotated sentence."""
+
+    lemma = sentence[i].lemma
+    classifier = classifier_for_lemma[lemma]
+
+    ## XXX: see what we've got in learn.py to pull up classifiers on demand.
+    ## Maybe it's good, but maybe it needs updates.
+    return "foo"
+
 def main():
     parser = get_argparser()
     args = parser.parse_args()
@@ -69,8 +83,6 @@ def main():
     corpus = annotated_corpus.load_corpus(args.annotated_to_classify)
     for sentence in corpus:
         for i, token in enumerate(sentence):
-            w = token.lemma
-            w = w.lower()
             predicted = predict_class(sentence, i)
             if predicted:
                 token.annotations.add(args.featureprefix + "=" + predicted)

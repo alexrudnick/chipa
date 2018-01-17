@@ -14,7 +14,6 @@ import sys
 import nltk
 
 from nltk.classify.scikitlearn import SklearnClassifier
-from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 from sklearn.ensemble import RandomForestClassifier
@@ -22,7 +21,6 @@ from sklearn import cross_validation
 
 
 from sklearn.feature_extraction.text import TfidfTransformer                 
-from sklearn.feature_selection import SelectKBest, chi2                      
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline                                        
 
