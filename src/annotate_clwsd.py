@@ -67,7 +67,7 @@ def predict_class(sentence, index):
     annotated sentence."""
 
     lemma = sentence[i].lemma
-    classifier = classifier_for_lemma[lemma]
+    classifier = classifier_for_lemma(lemma)
 
     ## XXX: see what we've got in learn.py to pull up classifiers on demand.
     ## Maybe it's good, but maybe it needs updates.
