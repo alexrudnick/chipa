@@ -10,10 +10,11 @@ from operator import itemgetter
 import argparse
 import os
 import sys
+import functools
 
 from nltk.classify.scikitlearn import SklearnClassifier
-from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
 import nltk
 
 import annotated_corpus
@@ -55,9 +56,9 @@ def setup_training_data(args):
 def classifier_for_lemma(lemma):
     # XXX: always doing nullable and Random Forest for initial version
     classifier = SklearnClassifier(RandomForestClassifier(), sparse=False)
-    training = trainingdata.trainingdata_for(w, nonnull=False)
+    training = trainingdata.trainingdata_for(lemma, nonnull=False)
     labels = set(label for (feat,label) in training)
-    if len(labels) < 2:
+    if (not training) or len(labels) < 2:
         return None
     classifier.train(training)
     return classifier
@@ -66,11 +67,13 @@ def predict_class(sentence, index):
     """Predict a translation for the token at the current index in this
     annotated sentence."""
 
-    lemma = sentence[i].lemma
+    lemma = sentence[index].lemma
     classifier = classifier_for_lemma(lemma)
+    print("got a classifier for", lemma)
+    print(classifier)
 
-    ## XXX: see what we've got in learn.py to pull up classifiers on demand.
-    ## Maybe it's good, but maybe it needs updates.
+    ## XXX: we just have to extract all the features from the sentence
+
     return "foo"
 
 def main():
@@ -79,6 +82,9 @@ def main():
     util.DPRINT = args.dprint
 
     setup_training_data(args)
+
+    featureset_name = os.path.basename(args.featurefn).split('.')[0]
+    features.load_featurefile(args.featurefn)
 
     corpus = annotated_corpus.load_corpus(args.annotated_to_classify)
     for sentence in corpus:
