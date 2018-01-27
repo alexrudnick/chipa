@@ -72,12 +72,19 @@ def predict_class(sentence, index):
 
     lemma = sentence[index].lemma
     classifier = classifier_for_lemma(lemma)
+    if not classifier:
+        return None
+
     print("got a classifier for", lemma)
-    print(classifier)
 
-    ## XXX: we just have to extract all the features from the sentence
+    # tags are just the lemma itself
+    tagged_sentence = [(tok.lemma, tok.lemma) for tok in sentence]
+    # nltk problem instance
 
-    return "foo"
+    fs, fakelabel = trainingdata.build_instance(tagged_sentence,
+                                                sentence,
+                                                index)
+    return classifier.classify(fs)
 
 def main():
     parser = get_argparser()
