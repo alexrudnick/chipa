@@ -20,6 +20,7 @@ import nltk
 import annotated_corpus
 import features
 import learn
+import list_focus_words
 import trainingdata
 import util
 
@@ -56,8 +57,10 @@ def setup_training_data(args):
 def classifier_for_lemma(lemma):
     # XXX: always doing nullable and Random Forest for initial version
     classifier = SklearnClassifier(RandomForestClassifier(), sparse=False)
+    print("loading training data for", lemma)
     training = trainingdata.trainingdata_for(lemma, nonnull=False)
     labels = set(label for (feat,label) in training)
+    print("loaded training data for", lemma)
     if (not training) or len(labels) < 2:
         return None
     classifier.train(training)
@@ -81,14 +84,21 @@ def main():
     args = parser.parse_args()
     util.DPRINT = args.dprint
 
-    setup_training_data(args)
-
     featureset_name = os.path.basename(args.featurefn).split('.')[0]
     features.load_featurefile(args.featurefn)
+    trainingdata.STOPWORDS = trainingdata.load_stopwords(args.bitextfn)
+
+    language_pair = args.annotated_to_classify.split(".")[1]
+    top_words = set(list_focus_words.load_top_words(language_pair))
+
+    setup_training_data(args)
+    print("training data has been loaded")
 
     corpus = annotated_corpus.load_corpus(args.annotated_to_classify)
     for sentence in corpus:
         for i, token in enumerate(sentence):
+            if token.lemma not in top_words: continue
+
             predicted = predict_class(sentence, i)
             if predicted:
                 token.annotations.add(args.featureprefix + "=" + predicted)
