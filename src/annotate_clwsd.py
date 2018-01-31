@@ -72,6 +72,14 @@ def classifier_for_lemma(lemma, filenames):
     training = trainingdata.trainingdata_for(lemma, nonnull=True)
     print("got {0} instances for {1}".format(len(training), lemma))
 
+    # delete the sentences themselves; we have the instances
+    trainingdata.set_examples([], [])
+    trainingdata.set_sl_annotated([])
+
+    if len(training) > (60 * 1000):
+        print("capping to 60k instances to fit in memory")
+        training = training[: 60 * 1000]
+
     labels = set(label for (feat,label) in training)
     print("loaded training data for", lemma)
     if (not training) or len(labels) < 2:
