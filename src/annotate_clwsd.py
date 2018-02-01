@@ -76,9 +76,9 @@ def classifier_for_lemma(lemma, filenames):
     trainingdata.set_examples([], [])
     trainingdata.set_sl_annotated([])
 
-    if len(training) > (60 * 1000):
-        print("capping to 60k instances to fit in memory")
-        training = training[: 60 * 1000]
+    if len(training) > (20 * 1000):
+        print("capping to 20k instances to fit in memory")
+        training = training[: 20 * 1000]
 
     labels = set(label for (feat,label) in training)
     print("loaded training data for", lemma)
