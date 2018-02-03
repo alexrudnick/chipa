@@ -11,7 +11,7 @@ from operator import itemgetter
 import argparse
 import os
 import sys
-import functools
+import gc
 
 from nltk.classify.scikitlearn import SklearnClassifier
 from sklearn.linear_model import LogisticRegression
@@ -34,7 +34,6 @@ def get_argparser():
     parser.add_argument('--dprint', type=bool, default=False, required=False)
     parser.add_argument('--featureprefix', type=str, required=True)
     parser.add_argument('--annotated_to_classify', type=str, required=True)
-    parser.add_argument('--overwrite', type=bool, default=False, required=True)
     return parser
 
 Filenames = namedtuple("Filenames", ["bitextfn", "alignfn", "annotatedfn"])
@@ -61,7 +60,6 @@ def load_training_for_word(word, bitextfn, alignfn, annotatedfn):
 
 #### end stuff for loading training data from disk on demand
 
-@functools.lru_cache(maxsize=100000)
 def classifier_for_lemma(lemma, filenames):
     # XXX: always doing nullable and Random Forest for initial version
     classifier = SklearnClassifier(RandomForestClassifier(), sparse=False)
@@ -75,10 +73,11 @@ def classifier_for_lemma(lemma, filenames):
     # delete the sentences themselves; we have the instances
     trainingdata.set_examples([], [])
     trainingdata.set_sl_annotated([])
+    gc.collect()
 
-    if len(training) > (20 * 1000):
-        print("capping to 20k instances to fit in memory")
-        training = training[: 20 * 1000]
+    if len(training) > (50 * 1000):
+        print("capping to 50k instances to fit in memory")
+        training = training[: 50 * 1000]
 
     labels = set(label for (feat,label) in training)
     print("loaded training data for", lemma)
@@ -87,21 +86,13 @@ def classifier_for_lemma(lemma, filenames):
     classifier.train(training)
     return classifier
 
-def predict_class(sentence, index, filenames):
+def predict_class(classifier, sentence, index):
     """Predict a translation for the token at the current index in this
     annotated sentence."""
-
-    lemma = sentence[index].lemma
-    classifier = classifier_for_lemma(lemma, filenames)
-    if not classifier:
-        return None
-
-    print("got a classifier for", lemma)
 
     # tags are just the lemma itself
     tagged_sentence = [(tok.lemma, tok.lemma) for tok in sentence]
     # nltk problem instance
-
     fs, fakelabel = trainingdata.build_instance(tagged_sentence,
                                                 sentence,
                                                 index)
@@ -124,24 +115,25 @@ def main():
     top_words = set(list_focus_words.load_top_words(language_pair))
 
     corpus = annotated_corpus.load_corpus(args.annotated_to_classify)
-    for sentence in corpus:
-        for i, token in enumerate(sentence):
-            if token.lemma not in top_words: continue
 
-            predicted = predict_class(sentence, i, filenames)
-            if predicted:
-                token.annotations.add(args.featureprefix + "=" + predicted)
-            if not args.overwrite:
-                print(token)
-        if not args.overwrite:
-            print()
+    for cur_lemma in top_words:
+        classifier = classifier_for_lemma(cur_lemma, filenames)
+        if not classifier:
+            print("SKIP: no classifier for", cur_lemma)
+            continue
+        for sentence in corpus:
+            for i, token in enumerate(sentence):
+                if token.lemma != cur_lemma: continue
 
-    if args.overwrite:
-        with open(args.annotated_to_classify, "w") as outfile:
-            for sentence in corpus:
-                for i, token in enumerate(sentence):
-                    print(token, file=outfile)
-                print(file=outfile)
+                predicted = predict_class(classifier, sentence, i)
+                if predicted:
+                    token.annotations.add(args.featureprefix + "=" + predicted)
+
+    with open(args.annotated_to_classify, "w") as outfile:
+        for sentence in corpus:
+            for i, token in enumerate(sentence):
+                print(token, file=outfile)
+            print(file=outfile)
 
 
 if __name__ == "__main__": main()

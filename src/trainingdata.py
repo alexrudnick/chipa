@@ -1,5 +1,4 @@
 from operator import itemgetter
-import functools
 import re
 
 import nltk
