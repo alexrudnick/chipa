@@ -47,32 +47,25 @@ def load_corpus(fn):
         lines = infile.readlines()
     return load_corpus_from_lines(lines)
 
-
-
-def load_corpus_from_lines_for_word(word, lines):
-    sentences = []
-    sentence = []
-    for line in lines:
-        line = line.strip()
-        if line:
-            token = Token.from_string(line)
-            sentence.append(token)
-        elif sentence:
-            if word in [token.lemma for token in sentence]:
-                sentences.append(sentence)
-            sentence = []
-    if sentence:
-        if word in [token.lemma for token in sentence]:
-            sentences.append(sentence)
-    return sentences
-
-
 def load_corpus_for_word(word, fn):
     """Given a filename, load it up and return a list of list of Tokens. Each
     sublist is a sentence."""
     with open(fn) as infile:
-        lines = infile.readlines()
-    return load_corpus_from_lines_for_word(word, lines)
+        sentences = []
+        sentence = []
+        for line in infile:
+            line = line.strip()
+            if line:
+                token = Token.from_string(line)
+                sentence.append(token)
+            elif sentence:
+                if word in [token.lemma for token in sentence]:
+                    sentences.append(sentence)
+                sentence = []
+        if sentence:
+            if word in [token.lemma for token in sentence]:
+                sentences.append(sentence)
+    return sentences
 
 def main():
     tok = Token.from_string("cat\tcats\tpos=N\tcategory=animal")

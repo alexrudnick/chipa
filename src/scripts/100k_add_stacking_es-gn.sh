@@ -10,3 +10,5 @@ python3 ./annotate_clwsd.py \
   --featurefn featuresets/default.features \
   --annotated_to_classify annotated/bible.es-gn.source.annotated \
   --featureprefix stack_default_esfr \
+
+cat PROBLEMS

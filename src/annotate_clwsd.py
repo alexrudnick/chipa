@@ -55,6 +55,17 @@ def load_training_for_word(word, bitextfn, alignfn, annotatedfn):
     trainingdata.set_examples(sl_sentences,tagged_sentences)
 
     source_annotated = annotated_corpus.load_corpus_for_word(word, annotatedfn)
+
+    if len(sl_sentences) != len(source_annotated):
+        with open("PROBLEMS", "a") as problems:
+            print("PROBLEMS for", word, "-- skipping.", file=problems)
+            print("PROBLEMS this many source sentences: ", len(sl_sentences),
+                  file=problems)
+            print("PROBLEMS this many annotated sentences: ",
+            len(source_annotated), file=problems)
+        trainingdata.set_examples([], [])
+        trainingdata.set_sl_annotated([])
+
     trainingdata.set_sl_annotated(source_annotated)
     print("TRAINING DATA LOADED.")
 
