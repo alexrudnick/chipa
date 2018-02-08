@@ -127,7 +127,10 @@ def main():
 
     corpus = annotated_corpus.load_corpus(args.annotated_to_classify)
 
-    for cur_lemma in top_words:
+    for i, cur_lemma in enumerate(sorted(top_words)):
+        print("annotating for {} , lemma {} of {}".format(lemma,
+                                                          i,
+                                                          len(top_words)))
         classifier = classifier_for_lemma(cur_lemma, filenames)
         if not classifier:
             print("SKIP: no classifier for", cur_lemma)
