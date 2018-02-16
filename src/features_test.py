@@ -101,6 +101,18 @@ class TestFeatures(unittest.TestCase):
         sent_es = "the quick brown fox jump over the lazy sleeping dog ."
         self.tagged_sent3 = list(zip(sent_en.split(), sent_es.split()))
 
+        sent_es = "estación"
+        sent_eo = "sezono"
+        self.tagged_sent_stacking = list(zip(sent_es.split(), sent_eo.split()))
+        lines = [
+            "estación\testación\tpos=foo\t" +
+            "stack_default_esen=season\t" +
+            "stack_default_esfr=saison\t" +
+            "stack_default_esde=Saison"
+        ]
+        self.annotated_stacking = \
+            annotated_corpus.load_corpus_from_lines(lines)
+
     def test_bagofwords(self):
         feats = features.bagofwords(self.tagged_sent3,
                                     self.annotated_quickbrown[0],
@@ -226,6 +238,22 @@ class TestFeatures(unittest.TestCase):
                                      self.annotated_postags[0],
                                      1)
         self.assertEqual({"surfaceform(kicked)": True}, feats)
+
+    def test_stacking(self):
+        feats = features.stacking_de(self.tagged_sent_stacking,
+                                     self.annotated_stacking[0],
+                                     0)
+        self.assertEqual({"stacking_de(Saison)": True}, feats)
+
+        feats = features.stacking_en(self.tagged_sent_stacking,
+                                     self.annotated_stacking[0],
+                                     0)
+        self.assertEqual({"stacking_en(season)": True}, feats)
+
+        feats = features.stacking_fr(self.tagged_sent_stacking,
+                                     self.annotated_stacking[0],
+                                     0)
+        self.assertEqual({"stacking_fr(saison)": True}, feats)
 
 if __name__ == '__main__':
     unittest.main()
