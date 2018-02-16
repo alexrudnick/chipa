@@ -216,26 +216,6 @@ class TestFeatures(unittest.TestCase):
                                       2)
         self.assertEqual({"postag_right(NOUN)": True}, feats)
 
-    def test_word2vec_windowsum_europarl(self):
-        feats = features.word2vec_windowsum_europarl(self.tagged_sent3,
-                                      self.annotated_word2vec[0],
-                                      2)
-        self.assertAlmostEqual(feats["word2vec_europarl_0"], 1.5)
-        self.assertAlmostEqual(feats["word2vec_europarl_1"], 1.5)
-        self.assertEqual(len(feats), 2)
-
-        feats = features.word2vec_windowsum_europarl(self.tagged_sent3,
-                                      self.annotated_word2vec_missing[0],
-                                      2)
-        self.assertAlmostEqual(feats["word2vec_europarl_0"], 1.2)
-        self.assertAlmostEqual(feats["word2vec_europarl_1"], 1.2)
-        self.assertEqual(len(feats), 2)
-
-        feats = features.word2vec_windowsum_europarl(self.tagged_sent3,
-                                      self.annotated_word2vec_missing_all[0],
-                                      2)
-        self.assertEqual(feats, {})
-
     def test_surfaceform(self):
         feats = features.surfaceform(self.tagged_sent2,
                                      self.annotated_postags[0],
