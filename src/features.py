@@ -354,6 +354,37 @@ def doc2vec_window(prefix, annotated, index):
     return out
 ### end code for document embedding features
 
+
+### code for classifier stacking features
+def stacking_de(tagged_sent, annotated, index):
+    out = {}
+    token = annotated[index]
+    for annotation in token.annotations:
+        if annotation.startswith("stack_default_esde="):
+            label = annotation.split("=")[1]
+            out["stacking_de(%s)" % label] = True
+    return out
+
+def stacking_en(tagged_sent, annotated, index):
+    out = {}
+    token = annotated[index]
+    for annotation in token.annotations:
+        if annotation.startswith("stack_default_esen="):
+            label = annotation.split("=")[1]
+            out["stacking_en(%s)" % label] = True
+    return out
+
+def stacking_fr(tagged_sent, annotated, index):
+    out = {}
+    token = annotated[index]
+    for annotation in token.annotations:
+        if annotation.startswith("stack_default_esfr="):
+            label = annotation.split("=")[1]
+            out["stacking_fr(%s)" % label] = True
+    return out
+
+### end code for classifier stacking features
+
 FEATURES = []
 def load_featurefile(featurefn):
     """Given a filename, load it. Should be one name of a feature function per
