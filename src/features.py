@@ -383,6 +383,24 @@ def stacking_fr(tagged_sent, annotated, index):
             out["stacking_fr(%s)" % label] = True
     return out
 
+def stacking_it(tagged_sent, annotated, index):
+    out = {}
+    token = annotated[index]
+    for annotation in token.annotations:
+        if annotation.startswith("stack_default_esit="):
+            label = annotation.split("=")[1]
+            out["stacking_it(%s)" % label] = True
+    return out
+
+def stacking_nl(tagged_sent, annotated, index):
+    out = {}
+    token = annotated[index]
+    for annotation in token.annotations:
+        if annotation.startswith("stack_default_esnl="):
+            label = annotation.split("=")[1]
+            out["stacking_nl(%s)" % label] = True
+    return out
+
 ### end code for classifier stacking features
 
 FEATURES = []

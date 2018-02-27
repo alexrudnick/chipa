@@ -108,7 +108,9 @@ class TestFeatures(unittest.TestCase):
             "estación\testación\tpos=foo\t" +
             "stack_default_esen=season\t" +
             "stack_default_esfr=saison\t" +
-            "stack_default_esde=Saison"
+            "stack_default_esde=Saison\t" +
+            "stack_default_esit=stagione\t" +
+            "stack_default_esnl=seizoen"
         ]
         self.annotated_stacking = \
             annotated_corpus.load_corpus_from_lines(lines)
@@ -254,6 +256,17 @@ class TestFeatures(unittest.TestCase):
                                      self.annotated_stacking[0],
                                      0)
         self.assertEqual({"stacking_fr(saison)": True}, feats)
+
+        feats = features.stacking_it(self.tagged_sent_stacking,
+                                     self.annotated_stacking[0],
+                                     0)
+        self.assertEqual({"stacking_it(stagione)": True}, feats)
+
+        feats = features.stacking_nl(self.tagged_sent_stacking,
+                                     self.annotated_stacking[0],
+                                     0)
+        self.assertEqual({"stacking_nl(seizoen)": True}, feats)
+
 
 if __name__ == '__main__':
     unittest.main()
