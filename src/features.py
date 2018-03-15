@@ -412,6 +412,15 @@ def stacking_window(tagged_sent, annotated, index):
                 out[annotation] = True
     return out
 
+def bible_stacking_de(tagged_sent, annotated, index):
+    out = {}
+    token = annotated[index]
+    for annotation in token.annotations:
+        if annotation.startswith("stack_bible_esde="):
+            label = annotation.split("=")[1]
+            out["bible_stacking_de(%s)" % label] = True
+    return out
+
 def bible_stacking_en(tagged_sent, annotated, index):
     out = {}
     token = annotated[index]
@@ -419,6 +428,33 @@ def bible_stacking_en(tagged_sent, annotated, index):
         if annotation.startswith("stack_bible_esen="):
             label = annotation.split("=")[1]
             out["bible_stacking_en(%s)" % label] = True
+    return out
+
+def bible_stacking_fr(tagged_sent, annotated, index):
+    out = {}
+    token = annotated[index]
+    for annotation in token.annotations:
+        if annotation.startswith("stack_bible_esfr="):
+            label = annotation.split("=")[1]
+            out["bible_stacking_fr(%s)" % label] = True
+    return out
+
+def bible_stacking_it(tagged_sent, annotated, index):
+    out = {}
+    token = annotated[index]
+    for annotation in token.annotations:
+        if annotation.startswith("stack_bible_esit="):
+            label = annotation.split("=")[1]
+            out["bible_stacking_it(%s)" % label] = True
+    return out
+
+def bible_stacking_nl(tagged_sent, annotated, index):
+    out = {}
+    token = annotated[index]
+    for annotation in token.annotations:
+        if annotation.startswith("stack_bible_esnl="):
+            label = annotation.split("=")[1]
+            out["bible_stacking_nl(%s)" % label] = True
     return out
 
 def bible_stacking_window(tagged_sent, annotated, index):
