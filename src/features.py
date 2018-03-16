@@ -468,6 +468,17 @@ def bible_stacking_window(tagged_sent, annotated, index):
                 out[annotation] = True
     return out
 
+def bible_stacking_window_en(tagged_sent, annotated, index):
+    out = {}
+    w_indices = window_indices_inclusive(index, WIDTH, len(annotated))
+    for w_index in w_indices:
+        token = annotated[w_index]
+        for annotation in token.annotations:
+            ## just go ahead and take the whole annotations as a feature
+            if annotation.startswith("stack_bible_esen"):
+                out[annotation] = True
+    return out
+
 ### end code for classifier stacking features
 
 FEATURES = []
