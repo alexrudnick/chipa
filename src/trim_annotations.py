@@ -25,6 +25,14 @@ def main():
                 # XXX: change what you need to remove here
                 if annotation.startswith("stack_bible_"):
                     token.annotations.remove(annotation)
+                if annotation.startswith("child_lemma"):
+                    token.annotations.remove(annotation)
+                if annotation.startswith("head_lemma"):
+                    token.annotations.remove(annotation)
+                if annotation.startswith("head_surface"):
+                    token.annotations.remove(annotation)
+                if annotation.startswith("child_surface"):
+                    token.annotations.remove(annotation)
             print(token)
         print()
 

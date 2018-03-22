@@ -86,9 +86,9 @@ def classifier_for_lemma(lemma, filenames):
     trainingdata.set_sl_annotated([])
     gc.collect()
 
-    if len(training) > (50 * 1000):
-        print("capping to 50k instances to fit in memory")
-        training = training[: 50 * 1000]
+    if len(training) > (20 * 1000):
+        print("capping to 20k instances to fit in memory")
+        training = training[: 20 * 1000]
 
     labels = set(label for (feat,label) in training)
     print("loaded training data for", lemma)

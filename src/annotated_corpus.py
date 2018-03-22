@@ -50,6 +50,8 @@ def load_corpus(fn):
 def load_corpus_for_word(word, fn):
     """Given a filename, load it up and return a list of list of Tokens. Each
     sublist is a sentence."""
+
+    sentence_count = 0
     with open(fn) as infile:
         sentences = []
         sentence = []
@@ -60,11 +62,15 @@ def load_corpus_for_word(word, fn):
                 sentence.append(token)
             elif sentence:
                 if word in [token.lemma for token in sentence]:
-                    sentences.append(sentence)
+                    if sentence_count < (20 * 1000):
+                        sentences.append(sentence)
+                        sentence_count += 1
                 sentence = []
         if sentence:
             if word in [token.lemma for token in sentence]:
-                sentences.append(sentence)
+                if sentence_count < (20 * 1000):
+                    sentences.append(sentence)
+                    sentence_count += 1
     return sentences
 
 def main():

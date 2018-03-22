@@ -123,12 +123,19 @@ def load_bitext_for_word(word, bitextfn, alignfn):
     out_target = []
     out_align = []
 
+    sentence_count = 0
+
     with open(bitextfn) as infile_bitext, \
          open(alignfn) as infile_align:
         for bitext, alignment in zip(infile_bitext, infile_align):
             source, target = bitext.split("|||")
             if word not in (source.strip().lower().split()):
                 continue
+
+            if sentence_count == (20 * 1000):
+                break
+
+            sentence_count += 1
             out_source.append(source.strip().lower().split())
             out_target.append(target.strip().lower().split())
             out_align.append(alignment.strip().split())
