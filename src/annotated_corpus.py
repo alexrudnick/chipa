@@ -47,6 +47,21 @@ def load_corpus(fn):
         lines = infile.readlines()
     return load_corpus_from_lines(lines)
 
+def generate_sentences(fn):
+    """Given a filename, yield sentences one at a time."""
+    with open(fn) as infile:
+        sentence = []
+        for line in infile:
+            line = line.strip()
+            if line:
+                token = Token.from_string(line)
+                sentence.append(token)
+            elif sentence:
+                yield sentence
+                sentence = []
+        if sentence:
+            yield sentence
+
 def load_corpus_for_word(word, fn):
     """Given a filename, load it up and return a list of list of Tokens. Each
     sublist is a sentence."""
