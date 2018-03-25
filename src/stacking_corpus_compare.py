@@ -34,6 +34,12 @@ def main():
                 top_words_counts[token.lemma] += 1
 
     ## TODO: format output sensibly & do reasonable analysis
-    print(top_words_counts)
+    # print(top_words_counts)
+    print("*" * 80)
+    print("focus words that never appear in corpus")
+    appearing = set(top_words_counts.keys())
+    not_appearing = top_words - appearing
+    for word in sorted(not_appearing):
+        print(word)
 
 if __name__ == "__main__": main()
