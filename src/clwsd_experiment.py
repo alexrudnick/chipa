@@ -134,19 +134,19 @@ def main():
                                    penalty='l2',
                                    tol=THETOL))
     classifier_pairs.append(("maxent-l2-c1", classifier))
-    classifier = SklearnClassifier(LinearSVC(C=1, penalty='l2', tol=THETOL))
-    classifier_pairs.append(("linearsvc-l2-c1", classifier))
+    # classifier = SklearnClassifier(LinearSVC(C=1, penalty='l2', tol=THETOL))
+    # classifier_pairs.append(("linearsvc-l2-c1", classifier))
     classifier = SklearnClassifier(RandomForestClassifier(), sparse=False)
     classifier_pairs.append(("random-forest-default", classifier))
 
-    pipeline = Pipeline([('tfidf', TfidfTransformer()),                          
-                         # ('chi2', SelectKBest(chi2, k=100)),
-                         ('scaling', StandardScaler(with_mean=False)),
-                         ('maxent', LogisticRegression(C=1,
-                                                       penalty='l2',
-                                                       tol=THETOL))])
-    classifier = SklearnClassifier(pipeline)                                        
-    classifier_pairs.append(("pipeline", classifier))
+    # pipeline = Pipeline([('tfidf', TfidfTransformer()),
+    #                      # ('chi2', SelectKBest(chi2, k=100)),
+    #                      ('scaling', StandardScaler(with_mean=False)),
+    #                      ('maxent', LogisticRegression(C=1,
+    #                                                    penalty='l2',
+    #                                                    tol=THETOL))])
+    # classifier = SklearnClassifier(pipeline)
+    # classifier_pairs.append(("pipeline", classifier))
 
     stamp = util.timestamp() + "-" + language_pair
     for (clname, classifier) in classifier_pairs:
