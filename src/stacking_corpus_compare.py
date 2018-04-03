@@ -42,4 +42,10 @@ def main():
     for word in sorted(not_appearing):
         print(word)
 
+    print("*" * 80)
+    print("focus words that appear in corpus but <50 times")
+    for word, count in top_word_counts.items():
+        if count in range(1, 50):
+            print(word, count)
+
 if __name__ == "__main__": main()
