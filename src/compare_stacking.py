@@ -87,8 +87,12 @@ def main():
     print("this many with bible", instances_with_bible_stacking)
     print("this many with europarl", instances_with_europarl_stacking)
 
-    print("these words had bible but not europarl:",
-        focus_words_with_bible_stacking - focus_words_with_europarl_stacking) 
+    bible_but_not_europarl = (focus_words_with_bible_stacking -
+                              focus_words_with_europarl_stacking)
+    print("these words had bible but not europarl ({})".format(
+        len(bible_but_not_europarl)))
+    for lemma in bible_but_not_europarl:
+        print("  ", lemma)
 
     print("these words had europarl but not bible:",
         focus_words_with_europarl_stacking - focus_words_with_bible_stacking)
