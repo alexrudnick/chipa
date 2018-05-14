@@ -72,7 +72,7 @@ def load_training_for_word(word, bitextfn, alignfn, annotatedfn):
 #### end stuff for loading training data from disk on demand
 
 def classifier_for_lemma(lemma, filenames):
-    # XXX: always doing nullable and Random Forest for initial version
+    # XXX: always doing non-null and Random Forest for initial version
     classifier = SklearnClassifier(RandomForestClassifier(), sparse=False)
     print("loading training data for", lemma)
     load_training_for_word(lemma, filenames.bitextfn, filenames.alignfn,
