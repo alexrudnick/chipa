@@ -7,12 +7,15 @@
 ## And probably also cdec's tokenizer.
 
 ## XXX: magic string pointing into my files on my one particular computer.
-FREELINGCONFIGDIR = "/home/alex/terere/bibletools/freeling-config"
 
 import fileinput
 from subprocess import Popen, PIPE, STDOUT
+import os
 
 from annotated_corpus import Token
+
+home = os.path.expanduser("~")
+FREELINGCONFIGDIR = home + "/terere/bibletools/freeling-config"
 
 def freeling_output_to_sentence(freeling_output):
     """Return a list of tokens. We should only be given a single sentence at
