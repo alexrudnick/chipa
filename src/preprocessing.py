@@ -9,6 +9,7 @@
 ## XXX: magic string pointing into my files on my one particular computer.
 
 import fileinput
+import functools
 from subprocess import Popen, PIPE, STDOUT
 import os
 
@@ -53,6 +54,7 @@ def run_freeling(sentence, sl):
         stdout = stdout_b[0].decode("utf-8")
         return freeling_output_to_sentence(stdout)
 
+@functools.lru_cache(maxsize=100000)
 def preprocess(sentence, sl):
     """Run the preprocessing pipeline on the sentence, which should be a
     string."""
