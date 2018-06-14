@@ -109,7 +109,7 @@ def main():
         sentence, index, translation = line.split('\t')
         index = int(index)
 
-        preprocessed = preprocessing.preprocess(sentence, "es")
+        preprocessed = preprocessing.preprocess(sentence, "es", tokenize=False)
         lemma = preprocessed[index].lemma
         print("getting classifier for", lemma)
         classifier = classifier_for_lemma(lemma)

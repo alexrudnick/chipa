@@ -509,6 +509,9 @@ def extract(tagged_sent, annotated, index):
     out = {}
     allfeatures = [globals()[funkname] for funkname in FEATURES]
     assert(allfeatures), "need some features"
+    if len(tagged_sent) != len(annotated):
+        print(tagged_sent)
+        print(annotated)
     assert len(tagged_sent) == len(annotated), \
            "length mismatch in tokens vs annotated tokens"
     for funk in allfeatures:
