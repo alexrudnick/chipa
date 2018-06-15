@@ -87,6 +87,9 @@ def main():
     features.load_featurefile(args.featurefn)
     trainingdata.STOPWORDS = trainingdata.load_stopwords(args.bitextfn)
 
+    language_pair = args.bitextfn.split(".")[1]
+    top_words = set(list_focus_words.load_top_words(language_pair))
+
     ## Setting up training data...
     triple_sentences = trainingdata.load_bitext(args.bitextfn, args.alignfn)
     tl_sentences = trainingdata.get_target_language_sentences(triple_sentences)
@@ -109,10 +112,14 @@ def main():
         sentence, index, translation = line.split('\t')
         index = int(index)
 
-        preprocessed = preprocessing.preprocess(sentence, "es", tokenize=False)
+        preprocessed = preprocessing.preprocess(sentence, "es", tokenize=True)
         lemma = preprocessed[index].lemma
-        print("getting classifier for", lemma)
-        classifier = classifier_for_lemma(lemma)
+
+        if lemma in top_words:
+            print("getting classifier for", lemma)
+            classifier = classifier_for_lemma(lemma)
+        else:
+            print("lemma not in top words:", lemma)
 
         send_response(line + '\t' + str(len(line)))
 

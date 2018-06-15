@@ -36,7 +36,6 @@ def freeling_output_to_sentence(freeling_output):
             ## There can actually be more than the first four fields.
             ## But we just take the first four.
             surface, lemma, tag, confidence = line.split()[:4]
-            print("lemma", lemma)
             token = Token(lemma, surface)
             token.annotations.add("tag=" + tag)
             sentence.append(token)
@@ -59,7 +58,6 @@ def run_freeling(sentence, sl, tokenize):
     with Popen(command, stdout=PIPE, stdin=PIPE, stderr=STDOUT) as p:
         stdout_b = p.communicate(input=sentence.encode("utf-8"))
         stdout = stdout_b[0].decode("utf-8")
-        print("stdout", stdout)
         return freeling_output_to_sentence(stdout)
 
 @functools.lru_cache(maxsize=100000)
