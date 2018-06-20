@@ -63,6 +63,7 @@ def classifier_for_lemma(lemma):
     classifier.train(training)
     return classifier
 
+@functools.lru_cache(maxsize=100000)
 def predict_class(classifier, sentence, index):
     """Predict a translation for the token at the current index in this
     annotated sentence."""
@@ -108,19 +109,26 @@ def main():
         with open(CLIENT_TO_SERVER_PATH, "r") as c2s:
             line = c2s.readline()
             line = line.strip()
-        print("Received: " + line)
-        sentence, index, translation = line.split('\t')
+        sentence, index, proposed = line.split('\t')
         index = int(index)
 
         preprocessed = preprocessing.preprocess(sentence, "es", tokenize=True)
+        if index not in range(len(preprocessed)):
+            print(list(enumerate(preprocessed)))
+            print(index)
         lemma = preprocessed[index].lemma
 
-        if lemma in top_words:
-            print("getting classifier for", lemma)
-            classifier = classifier_for_lemma(lemma)
+        if lemma not in top_words:
+            penalty = 0
         else:
-            print("lemma not in top words:", lemma)
+            classifier = classifier_for_lemma(lemma)
+            prediction = predict_class(classifier, tuple(preprocessed), index)
+            print("I PREDICT", prediction)
+            print("proposed:", proposed)
 
-        send_response(line + '\t' + str(len(line)))
+            ## XXX make this proportional to classifier probabilities
+            penalty = int(proposed != prediction)
+
+        send_response(line + '\t' + str(penalty))
 
 if __name__ == "__main__": main()
