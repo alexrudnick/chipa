@@ -17,6 +17,7 @@ import preprocessing
 import trainingdata
 import util
 
+HARDPENALTY = False
 
 SERVER_TO_CLIENT_PATH = "/tmp/server_to_client.fifo"
 CLIENT_TO_SERVER_PATH = "/tmp/client_to_server.fifo"
@@ -76,6 +77,19 @@ def predict_class(classifier, sentence, index):
                                                 index)
     return classifier.classify(fs)
 
+@functools.lru_cache(maxsize=100000)
+def translation_dist(classifier, sentence, index):
+    """Predict a translation for the token at the current index in this
+    annotated sentence."""
+
+    # tags are just the lemma itself
+    tagged_sentence = [(tok.lemma, tok.lemma) for tok in sentence]
+    # nltk problem instance
+    fs, fakelabel = trainingdata.build_instance(tagged_sentence,
+                                                sentence,
+                                                index)
+    return classifier.prob_classify(fs)
+
 
 def main():
     init_fifos()
@@ -122,12 +136,15 @@ def main():
             penalty = 0
         else:
             classifier = classifier_for_lemma(lemma)
-            prediction = predict_class(classifier, tuple(preprocessed), index)
-            print("I PREDICT", prediction)
-            print("proposed:", proposed)
 
-            ## XXX make this proportional to classifier probabilities
-            penalty = int(proposed != prediction)
+            if HARDPENALTY:
+                prediction = predict_class(classifier,
+                                           tuple(preprocessed),
+                                           index)
+                penalty = int(proposed != prediction)
+            else:
+                dist = translation_dist(classifier, tuple(preprocessed), index)
+                penalty = 1 - dist.prob(proposed)
 
         send_response(line + '\t' + str(penalty))
 
