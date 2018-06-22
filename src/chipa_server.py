@@ -17,8 +17,6 @@ import preprocessing
 import trainingdata
 import util
 
-HARDPENALTY = False
-
 SERVER_TO_CLIENT_PATH = "/tmp/server_to_client.fifo"
 CLIENT_TO_SERVER_PATH = "/tmp/client_to_server.fifo"
 
@@ -43,6 +41,7 @@ def get_argparser():
     parser.add_argument('--alignfn', type=str, required=True)
     parser.add_argument('--annotatedfn', type=str, required=True)
     parser.add_argument('--featurefn', type=str, required=True)
+    parser.add_argument('--mode', type=str, default="penalty", required=False)
     parser.add_argument('--dprint', type=bool, default=False, required=False)
     return parser
 
@@ -98,6 +97,10 @@ def main():
     args = parser.parse_args()
     util.DPRINT = args.dprint
 
+    if args.mode not in ["hardpenalty", "penalty", "none"]:
+        print("--mode must be one of: penalty hardpenalty none")
+        return -1
+
     featureset_name = os.path.basename(args.featurefn).split('.')[0]
     features.load_featurefile(args.featurefn)
     trainingdata.STOPWORDS = trainingdata.load_stopwords(args.bitextfn)
@@ -135,16 +138,21 @@ def main():
         if lemma not in top_words:
             penalty = 0
         else:
-            classifier = classifier_for_lemma(lemma)
+            if args.mode != "none":
+                classifier = classifier_for_lemma(lemma)
 
-            if HARDPENALTY:
+            if args.mode == "none":
+                penalty = 0
+
+            elif args.mode == "hardpenalty":
                 prediction = predict_class(classifier,
                                            tuple(preprocessed),
                                            index)
-                penalty = int(proposed != prediction)
-            else:
+                penalty = 10 * int(proposed != prediction)
+            elif args.mode == "penalty":
                 dist = translation_dist(classifier, tuple(preprocessed), index)
-                penalty = 1 - dist.prob(proposed)
+                # negative logprob!
+                penalty = -1.0 * dist.logprob(proposed)
 
         send_response(line + '\t' + str(penalty))
 
