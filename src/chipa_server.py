@@ -136,23 +136,24 @@ def main():
         lemma = preprocessed[index].lemma
 
         if lemma not in top_words:
-            penalty = 0
+            penalty = -1.0
         else:
             if args.mode != "none":
                 classifier = classifier_for_lemma(lemma)
 
             if args.mode == "none":
-                penalty = 0
+                penalty = -1.0
 
             elif args.mode == "hardpenalty":
+                ## XXX: fix this up later, make this do something reasonable?
                 prediction = predict_class(classifier,
                                            tuple(preprocessed),
                                            index)
                 penalty = 10 * int(proposed != prediction)
             elif args.mode == "penalty":
                 dist = translation_dist(classifier, tuple(preprocessed), index)
-                # negative logprob!
-                penalty = -1.0 * dist.logprob(proposed)
+                # logprobs! they can be negative, it's ok!
+                penalty = dist.logprob(proposed)
 
         send_response(line + '\t' + str(penalty))
 
