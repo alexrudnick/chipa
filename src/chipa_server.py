@@ -2,9 +2,10 @@
 
 """Version of Chipa that speaks fiforpc."""
 
-import os
-import functools
 import argparse
+import functools
+import math
+import os
 
 from nltk.classify.scikitlearn import SklearnClassifier
 from sklearn.ensemble import RandomForestClassifier
@@ -145,16 +146,24 @@ def main():
                 penalty = -1.0
 
             elif args.mode == "hardpenalty":
-                ## XXX: fix this up later, make this do something reasonable?
                 prediction = predict_class(classifier,
                                            tuple(preprocessed),
                                            index)
-                penalty = 10 * int(proposed != prediction)
+                if proposed == prediction:
+                    penalty = math.log(0.99, 2)
+                else:
+                    penalty = math.log(0.01, 2)
             elif args.mode == "penalty":
                 dist = translation_dist(classifier, tuple(preprocessed), index)
-                # logprobs! they can be negative, it's ok!
-                penalty = dist.logprob(proposed)
 
+                if proposed in dist.samples():
+                    prob = dist.prob(proposed)
+                    prob = max(prob, 0.01)
+                    prob = min(prob, 0.99)
+                else:
+                    # HACKS HACKS HACKS
+                    prob = 0.01
+                penalty = math.log(prob, 2)
         send_response(line + '\t' + str(penalty))
 
 if __name__ == "__main__": main()
