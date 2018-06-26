@@ -4,6 +4,7 @@
 
 import argparse
 import functools
+import html
 import math
 import os
 
@@ -129,6 +130,11 @@ def main():
             line = line.strip()
         sentence, index, proposed = line.split('\t')
         index = int(index)
+
+        if "&" in sentence:
+            print("WORRY! APOSTROPHE!", sentence)
+        if "&" in proposed:
+            proposed = html.unescape(proposed)
 
         preprocessed = preprocessing.preprocess(sentence, "es", tokenize=True)
         if index not in range(len(preprocessed)):
