@@ -86,13 +86,21 @@ def main():
         sentnum = sentence.attrib['ref']
         tuples = get_tuples(sentence)
         surface = [tup[1] for tup in tuples]
+        lemmas = [tup[2] for tup in tuples]
         dprint("[SURFACE]", " ".join(surface))
+        dprint("[LEMMAS]", " ".join(lemmas))
 
         # answers = s.label_sentence(tuples)
         # dprint("[ANSWERS]", answers)
         ## all the NODE elements in the tree that have a SYN underneath
         target_nodes = sentence.findall(".//NODE/SYN/..")
-        print(list(target_nodes))
+        for node in target_nodes:
+            possible_lemmas = set()
+            for syn in node:
+                if 'lem' in syn.attrib:
+                    possible_lemmas.add(syn.attrib['lem'])
+            print(node.attrib["sform"], node.attrib["slem"], possible_lemmas)
+
         # changed = False
         # for node in target_nodes:
         #     changed_here = make_decision(node, answers)
@@ -100,8 +108,6 @@ def main():
         #         changed = True
         # if changed:
         #     dprint("[CLASSIFIERSENTENCE]", sentnum)
-
-    # print(ET.tostring(corpus,encoding="unicode"))
-    print(prettify(corpus))
+    # print(prettify(corpus))
 
 if __name__ == "__main__": main()
