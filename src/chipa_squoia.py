@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import functools
 import os
 import sys
 import xml.etree.ElementTree as ET
@@ -95,6 +96,37 @@ def make_decision(node, answers):
         node.remove(option_node)
     return True
 
+
+@functools.lru_cache(maxsize=100000)
+def classifier_for_lemma(lemma):
+    # XXX: always doing non-null and Random Forest for initial version
+    classifier = SklearnClassifier(RandomForestClassifier(), sparse=False)
+    training = trainingdata.trainingdata_for(lemma, nonnull=True)
+    print("got {0} instances for {1}".format(len(training), lemma))
+
+    if len(training) > (20 * 1000):
+        print("capping to 20k instances to fit in memory")
+        training = training[: 20 * 1000]
+
+    labels = set(label for (feat,label) in training)
+    print("loaded training data for", lemma)
+    if (not training) or len(labels) < 2:
+        return None
+    classifier.train(training)
+    return classifier
+
+def predict_class(classifier, sentence, index):
+    """Predict a translation for the token at the current index in this
+    annotated sentence."""
+
+    # tags are just the lemma itself
+    tagged_sentence = [(tok.lemma, tok.lemma) for tok in sentence]
+    # nltk problem instance
+    fs, fakelabel = trainingdata.build_instance(tagged_sentence,
+                                                sentence,
+                                                index)
+    return classifier.classify(fs)
+
 def main():
     parser = get_argparser()
     args = parser.parse_args()
@@ -142,6 +174,9 @@ def main():
             slem = node.attrib["slem"]
             if slem in top_words:
                 print("SOURCE LEMMA IN TOP WORDS, GOTTA MAKE A DECISION", slem)
+                classifier = classifier_for_lemma(slem)
+                if classifier:
+                    print("got a classifier!", classifier)
 
             for syn in node:
                 if 'lem' in syn.attrib:
