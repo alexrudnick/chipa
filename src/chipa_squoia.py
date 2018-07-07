@@ -24,13 +24,13 @@ def get_argparser():
     parser.add_argument('--annotatedfn', type=str, required=True)
     parser.add_argument('--featurefn', type=str, required=True)
     parser.add_argument('--dprint', type=bool, default=False, required=False)
+    parser.add_argument('--outfile', type=str, required=False)
     return parser
 
 def prettify(elem):
     from xml.dom import minidom
     """Return a pretty-printed XML string for the Element."""
     rough_string = ET.tostring(elem, 'unicode')
-    ## print(type(rough_string), file=sys.stderr)
     reparsed = minidom.parseString(rough_string)
     return reparsed.toprettyxml(indent="  ")
 
@@ -57,54 +57,17 @@ def get_tuples(corpus):
     tokens.sort()
     return tokens
 
-def make_decision(node, answers):
-    """Make a potentially-terrible decision."""
-    default = node.attrib['lem']
-    option_nodes = [child for child in node if child.tag == 'SYN']
-    option_lemmas = ([opt.attrib['lem'] for opt in option_nodes] +
-                     [default])
-
-    util.dprint("[DEFAULT]", default)
-    util.dprint("[OPTIONS]", " ".join(option_lemmas))
-
-    textref = node.attrib['ref']
-    try:
-        ref = int(textref)
-    except:
-        util.dprint("REFISNOTINT:", textref)
-        ref = int(float(textref))
-        
-    chipa_says = answers[ref - 1]
-    util.dprint("[CHIPASAYS]", chipa_says)
-
-    ## chipa_says is the list of things in descending order of goodness.
-    best = None
-    for ans in chipa_says:
-        if ans in option_lemmas:
-            best = ans
-            break
-
-    choice = None
-    for child in option_nodes:
-        if child.attrib['lem'] == best:
-            util.dprint("HOLY COW CLASSIFIER MADE A DECISION")
-            choice = child
-            break
-    if choice is None:
-        util.dprint("CLASSIFIER DIDN'T HELP, BAILING")
-        return True
-
-    for k,v in choice.attrib.items():
-        node.attrib[k] = v
-    ## remove the syn nodes.
-    for option_node in option_nodes:
-        node.remove(option_node)
-    return True
-
+def remove_mismatch_syns(node, prediction):
+    """Remove the syn subnodes that don't match the prediction."""
+    syns = [child for child in node if child.tag == 'SYN']
+    for syn in syns:
+        if syn.attrib['lem'] != prediction:
+            node.remove(syn)
+            print("WOW ELIMINATED SOME SYNS")
 
 @functools.lru_cache(maxsize=100000)
 def classifier_for_lemma(lemma):
-    # XXX: always doing non-null and Random Forest for initial version
+    # always doing non-null and Random Forest for initial version
     classifier = SklearnClassifier(RandomForestClassifier(), sparse=False)
     training = trainingdata.trainingdata_for(lemma, nonnull=True)
     print("got {0} instances for {1}".format(len(training), lemma))
@@ -177,15 +140,15 @@ def main():
         tuples = get_tuples(sentence)
         surface = [tup[1] for tup in tuples]
         lemmas = [tup[2] for tup in tuples]
-        util.dprint("[SURFACE]", " ".join(surface))
-        util.dprint("[LEMMAS]", " ".join(lemmas))
+        print("[SURFACE]", " ".join(surface))
+        print("[LEMMAS]", " ".join(lemmas))
 
-        # answers = s.label_sentence(tuples)
-        # dprint("[ANSWERS]", answers)
         ## all the NODE elements in the tree that have a SYN underneath
         target_nodes = sentence.findall(".//NODE/SYN/..")
         for node in target_nodes:
             possible_lemmas = set()
+            classifier = None
+
             slem = node.attrib["slem"]
 
             if slem in top_words:
@@ -193,6 +156,10 @@ def main():
                 classifier = classifier_for_lemma(slem)
                 if classifier:
                     print("got a classifier!", classifier)
+            else:
+                print("LEMMA NOT IN TOP WORDS, SKIPPING", slem)
+                continue
+
             for syn in node:
                 if 'lem' in syn.attrib:
                     possible_lemmas.add(syn.attrib['lem'])
@@ -202,25 +169,29 @@ def main():
                 if tup[0] == get_node_ref(node):
                     token_index = i
             if token_index:
-                util.dprint("FOUND THE RIGHT NODE", token_index)
+                print("FOUND THE RIGHT NODE", token_index)
             else:
-                util.dprint("COULD NOT FIND THE RIGHT NODE NO BUENO")
+                print("COULD NOT FIND THE RIGHT NODE NO BUENO")
 
             print("POSSIBILITIES FOR", node.attrib["sform"], node.attrib["slem"], possible_lemmas)
             if classifier and token_index:
                 prediction = predict_class(classifier,
                                            build_sentence(lemmas, surface),
                                            token_index)
-                util.dprint("PREDICTION", prediction)
+                print("PREDICTION", prediction)
+                if prediction in possible_lemmas:
+                    print("HOLY COW PREDICTION IS IN POSSIBLE LEMMAS")
 
+                    remove_mismatch_syns(node, prediction)
+                else:
+                    print("REGRETTABLE PREDICTION IS NOT IN POSSIBLE LEMMAS")
 
-        # changed = False
-        # for node in target_nodes:
-        #     changed_here = make_decision(node, answers)
-        #     if changed_here:
-        #         changed = True
-        # if changed:
-        #     dprint("[CLASSIFIERSENTENCE]", sentnum)
-    # print(prettify(corpus))
+        # just one sentence for now
+        # break
+    outfile = sys.stdout
+    if args.outfile:
+        outfile = open(args.outfile, "w")
+    print(prettify(corpus), file=outfile)
+    outfile.close()
 
 if __name__ == "__main__": main()
