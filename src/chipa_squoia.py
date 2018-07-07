@@ -34,21 +34,26 @@ def prettify(elem):
     reparsed = minidom.parseString(rough_string)
     return reparsed.toprettyxml(indent="  ")
 
+def get_node_ref(node):
+    ref = node.attrib['ref']
+    theref = None
+    try:
+        theref = int(ref)
+    except:
+        # util.dprint("REFISNOTINT:", ref)
+        theref = float(ref)
+    return theref
+
 def get_tuples(corpus):
     """Find all the nodes in the tree, return the list of source-language
     tuples."""
     target_nodes = corpus.findall(".//NODE")
     tokens = []
     for node in target_nodes:
-        ref = node.attrib['ref']
-        try:
-            theref = int(ref)
-        except:
-            util.dprint("REFISNOTINT:", ref)
-            theref = int(float(ref))
+        ref = get_node_ref(node)
         sform = node.attrib['sform']
         slem = node.attrib['slem']
-        tokens.append((theref, sform, slem))
+        tokens.append((ref, sform, slem))
     tokens.sort()
     return tokens
 
@@ -127,6 +132,16 @@ def predict_class(classifier, sentence, index):
                                                 index)
     return classifier.classify(fs)
 
+def build_sentence(lemmas, surfaces):
+    """Return a list of tokens. We should only be given a single sentence at
+    once."""
+    assert len(lemmas) == len(surfaces)
+    sentence = []
+    for (lemma, surface) in zip(lemmas, surfaces):
+        token = annotated_corpus.Token(lemma, surface)
+        sentence.append(token)
+    return sentence
+
 def main():
     parser = get_argparser()
     args = parser.parse_args()
@@ -172,16 +187,32 @@ def main():
         for node in target_nodes:
             possible_lemmas = set()
             slem = node.attrib["slem"]
+
             if slem in top_words:
                 print("SOURCE LEMMA IN TOP WORDS, GOTTA MAKE A DECISION", slem)
                 classifier = classifier_for_lemma(slem)
                 if classifier:
                     print("got a classifier!", classifier)
-
             for syn in node:
                 if 'lem' in syn.attrib:
                     possible_lemmas.add(syn.attrib['lem'])
-            print(node.attrib["sform"], node.attrib["slem"], possible_lemmas)
+
+            token_index = None
+            for i, tup in enumerate(tuples):
+                if tup[0] == get_node_ref(node):
+                    token_index = i
+            if token_index:
+                util.dprint("FOUND THE RIGHT NODE", token_index)
+            else:
+                util.dprint("COULD NOT FIND THE RIGHT NODE NO BUENO")
+
+            print("POSSIBILITIES FOR", node.attrib["sform"], node.attrib["slem"], possible_lemmas)
+            if classifier and token_index:
+                prediction = predict_class(classifier,
+                                           build_sentence(lemmas, surface),
+                                           token_index)
+                util.dprint("PREDICTION", prediction)
+
 
         # changed = False
         # for node in target_nodes:
