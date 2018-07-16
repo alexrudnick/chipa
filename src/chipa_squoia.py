@@ -61,7 +61,7 @@ def remove_mismatch_syns(node, prediction):
     """Remove the syn subnodes that don't match the prediction."""
     syns = [child for child in node if child.tag == 'SYN']
     for syn in syns:
-        if syn.attrib['lem'] != prediction:
+        if syn.attrib['lem'] not in prediction:
             node.remove(syn)
             print("WOW ELIMINATED SOME SYNS")
 
@@ -179,9 +179,18 @@ def main():
                                            build_sentence(lemmas, surface),
                                            token_index)
                 print("PREDICTION", prediction)
-                if prediction in possible_lemmas:
-                    print("HOLY COW PREDICTION IS IN POSSIBLE LEMMAS")
 
+                if prediction and "/" in prediction:
+                    print("WE GOT OPTIONS")                   
+
+                prediction_match = False
+                for possible in possible_lemmas:
+                    # Looking for substrings.
+                    if possible in prediction:
+                        prediction_match = True
+
+                if prediction_match:
+                    print("HOLY COW PREDICTION IS IN POSSIBLE LEMMAS")
                     remove_mismatch_syns(node, prediction)
                 else:
                     print("REGRETTABLE PREDICTION IS NOT IN POSSIBLE LEMMAS")
